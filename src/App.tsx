@@ -44,11 +44,12 @@ function App() {
   const summary = getDecisionSummary(matrix);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-black text-foreground">
       <LandingHero />
 
-      <div className="workspace-theme relative z-10 border-t border-border/70 bg-background/95">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent)]" />
+      <div className="workspace-theme relative isolate z-10 overflow-hidden border-t border-white/15 bg-background text-foreground">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(6,182,212,0.18),transparent_30%,rgba(249,115,22,0.14)_72%,transparent)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(0,0,0,0.48),transparent)]" />
         <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-14 sm:px-6 lg:px-8">
           <SectionTabs />
 
