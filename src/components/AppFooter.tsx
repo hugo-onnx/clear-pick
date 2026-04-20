@@ -8,15 +8,15 @@ export function AppFooter() {
   return (
     <footer
       aria-labelledby="site-footer-title"
-      className="rounded-[32px] border border-border/[0.55] bg-white/[0.7] px-6 py-7 shadow-[0_22px_70px_rgba(91,50,32,0.10)] backdrop-blur-xl sm:px-8"
+      className="rounded-lg border border-border bg-white/80 px-5 py-7 shadow-[0_20px_60px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:px-6"
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
             Weighted Matrix
           </p>
           <h2
-            className="font-display text-3xl font-semibold tracking-[-0.04em] text-foreground"
+            className="font-display text-3xl font-semibold tracking-normal text-foreground"
             id="site-footer-title"
           >
             A calmer way to compare the choices in front of you.
@@ -33,7 +33,7 @@ export function AppFooter() {
         >
           {FOOTER_LINKS.map((link) => (
             <a
-              className="inline-flex items-center justify-center rounded-full border border-border/[0.6] bg-white/[0.7] px-4 py-2.5 text-sm font-medium text-foreground/80 transition hover:border-primary/[0.2] hover:text-primary"
+              className="inline-flex items-center justify-center rounded-md border border-border bg-white/70 px-4 py-2.5 text-sm font-medium text-foreground/80 transition hover:border-primary/25 hover:text-primary"
               href={link.href}
               key={link.label}
             >
