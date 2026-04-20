@@ -153,28 +153,9 @@ export default function ShaderShowcase({
             initial={{ opacity: 0, y: 30 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            <motion.span
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-              }}
-              className="mb-2 block pb-1 text-4xl font-light leading-[1.16] tracking-normal text-white/90 sm:text-5xl lg:text-6xl"
-              style={{
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                background:
-                  'linear-gradient(135deg, #ffffff 0%, #06b6d4 30%, #f97316 70%, #ffffff 100%)',
-                backgroundClip: 'text',
-                backgroundSize: '220% 220%',
-                filter: 'url(#text-glow)',
-              }}
-              transition={{
-                duration: 8,
-                ease: 'linear',
-                repeat: Number.POSITIVE_INFINITY,
-              }}
-            >
+            <span className="mb-2 block pb-1 text-5xl font-normal leading-[1.16] tracking-normal text-white sm:text-6xl lg:text-7xl">
               Make your hardest
-            </motion.span>
+            </span>
             <span className="block font-black text-white drop-shadow-2xl">
               decision
             </span>
