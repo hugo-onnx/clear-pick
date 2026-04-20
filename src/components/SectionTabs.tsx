@@ -3,7 +3,7 @@ const TAB_ITEMS = ['Overview', 'Matrix', 'Insights', 'History'];
 export function SectionTabs() {
   return (
     <section aria-labelledby="section-tabs-title" className="relative">
-      <div className="overflow-hidden rounded-lg border border-border bg-white/80 px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:px-6">
+      <div className="overflow-hidden rounded-lg border border-border bg-card px-5 py-5 shadow-[0_20px_70px_rgba(6,182,212,0.1)] backdrop-blur-2xl sm:px-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase text-muted-foreground">
@@ -30,8 +30,8 @@ export function SectionTabs() {
                     aria-current={isActive ? 'page' : undefined}
                     className={`inline-flex min-w-28 items-center justify-center rounded-md px-4 py-2.5 text-sm font-medium transition ${
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(15,23,42,0.16)]'
-                        : 'border border-border bg-white/70 text-foreground/75'
+                        ? 'bg-gradient-to-r from-cyan-500 to-orange-500 text-white shadow-[0_12px_32px_rgba(6,182,212,0.22)]'
+                        : 'border border-border bg-white/5 text-foreground/75 hover:border-cyan-300/35 hover:text-cyan-100'
                     }`}
                   >
                     {label}
