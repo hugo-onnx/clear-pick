@@ -53,7 +53,7 @@ export function ResultsPanel({
 
   return (
     <aside className="min-w-0">
-      <Card className="h-full bg-white/85">
+      <Card className="h-full">
         <CardHeader className="border-b border-border pb-6">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
             Results
@@ -75,8 +75,8 @@ export function ResultsPanel({
                   className={cn(
                     'rounded-lg border p-4 transition',
                     isLeading
-                      ? 'border-primary/30 bg-slate-50 shadow-[0_18px_45px_rgba(15,23,42,0.1)]'
-                      : 'border-border bg-white/75',
+                      ? 'border-cyan-300/35 bg-white/10 shadow-[0_18px_45px_rgba(6,182,212,0.16)]'
+                      : 'border-border bg-white/5',
                   )}
                   key={option.id}
                 >
@@ -95,7 +95,7 @@ export function ResultsPanel({
                       </div>
                     </div>
                     {isLeading ? (
-                      <span className="rounded-md bg-primary/10 px-3 py-1 text-xs font-semibold uppercase text-primary">
+                      <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase text-cyan-100">
                         Leading
                       </span>
                     ) : null}
@@ -103,10 +103,10 @@ export function ResultsPanel({
 
                   <div
                     aria-label={`${option.name} has a weighted fit of ${formatPercent(option.total)}`}
-                    className="mt-4 h-3 overflow-hidden rounded-full bg-primary/10"
+                    className="mt-4 h-3 overflow-hidden rounded-full bg-white/10"
                   >
                     <div
-                      className="h-full rounded-full bg-primary transition-[width] duration-300"
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 transition-[width] duration-300"
                       style={{ width: `${width}%` }}
                     />
                   </div>
@@ -115,7 +115,7 @@ export function ResultsPanel({
             })}
           </div>
 
-          <div className="rounded-lg border border-border bg-white/75 p-5">
+          <div className="rounded-lg border border-border bg-white/5 p-5">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
                 Influence
@@ -149,7 +149,7 @@ export function ResultsPanel({
             )}
           </div>
 
-          <div className="flex flex-col gap-4 rounded-lg border border-border bg-slate-50/90 p-5">
+          <div className="flex flex-col gap-4 rounded-lg border border-border bg-white/5 p-5">
             <p className="text-sm leading-6 text-muted-foreground">
               One active decision is stored locally in this browser for quick
               return visits.
