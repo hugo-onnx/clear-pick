@@ -16,7 +16,7 @@ function FloatingPaths({ position }: { position: number }) {
     } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
       684 - i * 5 * position
     } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    opacity: Math.min(0.42, 0.08 + i * 0.01),
+    opacity: Math.min(0.58, 0.16 + i * 0.012),
     width: 0.5 + i * 0.03,
   }));
 
@@ -37,19 +37,19 @@ function FloatingPaths({ position }: { position: number }) {
             x="-50%"
             y="-50%"
           >
-            <feGaussianBlur stdDeviation="18" />
+            <feGaussianBlur stdDeviation="28" />
           </filter>
           <mask height="316" id={maskId} maskUnits="userSpaceOnUse" width="696" x="0" y="0">
             <rect fill="white" height="316" width="696" />
             <rect
               fill="black"
               filter={`url(#${blurId})`}
-              height="146"
-              opacity="0.86"
+              height="164"
+              opacity="0.94"
               rx="72"
-              width="592"
-              x="52"
-              y="66"
+              width="632"
+              x="32"
+              y="56"
             />
           </mask>
         </defs>
@@ -58,12 +58,12 @@ function FloatingPaths({ position }: { position: number }) {
           {paths.map((path) => (
             <motion.path
               animate={{
-                opacity: [0.28, 0.62, 0.28],
+                opacity: [0.42, 0.78, 0.42],
                 pathLength: 1,
                 pathOffset: [0, 1, 0],
               }}
               d={path.d}
-              initial={{ opacity: 0.46, pathLength: 0.3 }}
+              initial={{ opacity: 0.58, pathLength: 0.3 }}
               key={path.id}
               stroke="currentColor"
               strokeOpacity={path.opacity}
@@ -115,7 +115,7 @@ export function BackgroundPaths({
         >
           <h1
             aria-label={title}
-            className="mb-8 text-5xl font-bold tracking-normal drop-shadow-[0_2px_18px_rgba(255,255,255,0.95)] sm:text-7xl md:text-8xl dark:drop-shadow-[0_2px_18px_rgba(0,0,0,0.9)]"
+            className="hero-title mb-6 pb-2 text-5xl font-bold leading-[1.12] tracking-normal drop-shadow-[0_3px_30px_rgba(255,255,255,1)] sm:text-7xl md:text-8xl dark:drop-shadow-[0_2px_18px_rgba(0,0,0,0.9)]"
             id={headingId}
           >
             {words.map((word, wordIndex) => (
@@ -127,7 +127,7 @@ export function BackgroundPaths({
                 {word.split('').map((letter, letterIndex) => (
                   <motion.span
                     animate={{ opacity: 1, y: 0 }}
-                    className="inline-block bg-gradient-to-r from-neutral-900 to-neutral-700/80 bg-clip-text text-transparent dark:from-white dark:to-white/80"
+                    className="inline-block pb-[0.08em] bg-gradient-to-r from-black to-slate-950 bg-clip-text text-transparent dark:from-white dark:to-white/80"
                     initial={{ opacity: 0, y: 100 }}
                     key={`${wordIndex}-${letterIndex}-${letter}`}
                     transition={{
@@ -155,9 +155,9 @@ export function BackgroundPaths({
             </motion.p>
           ) : null}
 
-          <div className="group relative inline-block overflow-hidden rounded-2xl bg-gradient-to-b from-black/10 to-white/10 p-px shadow-lg backdrop-blur-lg transition-shadow duration-300 hover:shadow-xl dark:from-white/10 dark:to-black/10">
+          <div className="group relative inline-block overflow-visible rounded-2xl bg-gradient-to-b from-black/10 to-white/10 p-0.5 shadow-lg backdrop-blur-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:from-white/10 dark:to-black/10">
             <Button
-              className="rounded-[1.15rem] border border-black/10 bg-white/95 px-8 py-6 text-lg font-semibold text-black backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md group-hover:-translate-y-0.5 dark:border-white/10 dark:bg-black/95 dark:text-white dark:hover:bg-black dark:hover:shadow-neutral-800/50"
+              className="h-auto rounded-[1.15rem] border border-black/10 bg-white/95 px-8 py-4 text-lg font-semibold leading-none text-black backdrop-blur-md transition-all duration-300 hover:bg-white/95 hover:text-slate-950 hover:shadow-md dark:border-white/10 dark:bg-black/95 dark:text-white dark:hover:bg-black/95 dark:hover:text-white dark:hover:shadow-neutral-800/50"
               onClick={onCtaClick}
               variant="ghost"
             >
