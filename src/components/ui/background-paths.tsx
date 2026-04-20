@@ -4,21 +4,38 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
+const PATH_COUNT = 36;
+const FLOW_START_OFFSET = -0.24;
+const FLOW_END_OFFSET = 1.16;
+
 function FloatingPaths({ position }: { position: number }) {
   const maskId = `background-paths-title-mask-${position > 0 ? 'forward' : 'reverse'}`;
   const blurId = `background-paths-title-blur-${position > 0 ? 'forward' : 'reverse'}`;
-  const paths = Array.from({ length: 36 }, (_, i) => ({
-    id: i,
-    d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-      380 - i * 5 * position
-    } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-      152 - i * 5 * position
-    } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-      684 - i * 5 * position
-    } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    opacity: Math.min(0.58, 0.16 + i * 0.012),
-    width: 0.5 + i * 0.03,
-  }));
+  const flowOffsets =
+    position > 0
+      ? [FLOW_START_OFFSET, FLOW_END_OFFSET]
+      : [FLOW_END_OFFSET, FLOW_START_OFFSET];
+  const paths = Array.from({ length: PATH_COUNT }, (_, i) => {
+    const laneY = -82 + i * 13;
+    const drift = position * (28 + (i % 6) * 4);
+    const bend = (i % 2 === 0 ? 1 : -1) * (12 + (i % 4) * 3);
+    const startX = -220;
+    const endX = 916;
+    const startY = laneY;
+    const endY = laneY + drift;
+    const controlOneY = startY + drift * 0.25 + bend;
+    const controlTwoY = endY - drift * 0.25 - bend;
+
+    return {
+      id: i,
+      d: `M${startX} ${startY}C64 ${controlOneY} 632 ${controlTwoY} ${endX} ${endY}`,
+      opacity: Math.min(0.58, 0.16 + i * 0.012),
+      phase: (i * 0.72) % 18,
+      segmentLength: 0.14 + (i % 5) * 0.018,
+      travelDuration: 24 + (i % 7) * 1.8,
+      width: 0.5 + i * 0.03,
+    };
+  });
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -58,18 +75,21 @@ function FloatingPaths({ position }: { position: number }) {
           {paths.map((path) => (
             <motion.path
               animate={{
-                opacity: [0.42, 0.78, 0.42],
-                pathLength: 1,
-                pathOffset: [0, 1, 0],
+                pathOffset: flowOffsets,
               }}
               d={path.d}
-              initial={{ opacity: 0.58, pathLength: 0.3 }}
+              initial={{
+                pathLength: path.segmentLength,
+                pathOffset: flowOffsets[0],
+              }}
               key={path.id}
               stroke="currentColor"
+              strokeLinecap="round"
               strokeOpacity={path.opacity}
               strokeWidth={path.width}
               transition={{
-                duration: 20 + Math.random() * 10,
+                delay: -path.phase,
+                duration: path.travelDuration,
                 ease: 'linear',
                 repeat: Number.POSITIVE_INFINITY,
               }}
