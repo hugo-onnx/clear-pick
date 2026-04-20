@@ -1,24 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { MeshGradient, PulsingBorder } from '@paper-design/shaders-react';
+import { MeshGradient } from '@paper-design/shaders-react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ChartBar, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface ShaderShowcaseProps {
   headingId?: string;
   onPrimaryCtaClick?: () => void;
   onSecondaryCtaClick?: () => void;
 }
-
-const LOGO_PARTICLES = [
-  { delay: 0, left: '24%', top: '24%', x: 8 },
-  { delay: 0.2, left: '62%', top: '28%', x: -7 },
-  { delay: 0.4, left: '72%', top: '54%', x: 5 },
-  { delay: 0.6, left: '34%', top: '68%', x: -9 },
-  { delay: 0.8, left: '48%', top: '42%', x: 6 },
-  { delay: 1, left: '58%', top: '70%', x: -4 },
-];
 
 const SHADER_MIN_PIXEL_RATIO = 2;
 const SHADER_MAX_PIXEL_COUNT = 32_000_000;
@@ -75,23 +66,6 @@ export default function ShaderShowcase({
                       0 0 0 0.9 0"
             />
           </filter>
-          <filter id="gooey-filter" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              result="gooey"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
-            />
-            <feComposite in="SourceGraphic" in2="gooey" operator="atop" />
-          </filter>
-          <filter id="logo-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
           <filter id="text-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="2" result="coloredBlur" />
             <feMerge>
@@ -135,45 +109,8 @@ export default function ShaderShowcase({
       />
 
       <div className="relative z-20 flex min-h-[100svh] w-full flex-col">
-        <header className="flex items-center justify-between gap-4 px-5 py-5 sm:px-8 sm:py-6">
-          <motion.a
-            aria-label="Weighted Matrix home"
-            className="group relative flex items-center"
-            href={`#${headingId}`}
-            transition={{ damping: 10, stiffness: 400, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <span
-              className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/8 text-white shadow-[0_0_34px_rgba(6,182,212,0.22)] backdrop-blur-md transition duration-300 group-hover:border-cyan-300/40 group-hover:text-cyan-100"
-              style={{ filter: 'url(#logo-glow)' }}
-            >
-              <ChartBar aria-hidden="true" className="size-5" strokeWidth={1.9} />
-            </span>
-
-            <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              {LOGO_PARTICLES.map((particle) => (
-                <motion.span
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1, 0],
-                    x: [0, particle.x, 0],
-                    y: [-10, -20, -10],
-                  }}
-                  className="absolute size-1 rounded-full bg-white/60"
-                  key={`${particle.left}-${particle.top}`}
-                  style={{ left: particle.left, top: particle.top }}
-                  transition={{
-                    delay: particle.delay,
-                    duration: 2,
-                    ease: 'easeInOut',
-                    repeat: Number.POSITIVE_INFINITY,
-                  }}
-                />
-              ))}
-            </span>
-          </motion.a>
-
-          <nav className="hidden items-center space-x-2 sm:flex" aria-label="Hero navigation">
+        <header className="absolute left-0 top-0 z-30 hidden items-center px-8 py-6 sm:flex">
+          <nav className="flex items-center space-x-2" aria-label="Hero navigation">
             <a
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
               href="#decision-matrix"
@@ -193,30 +130,9 @@ export default function ShaderShowcase({
               Local save
             </a>
           </nav>
-
-          <div
-            className="group relative flex items-center"
-            style={{ filter: 'url(#gooey-filter)' }}
-          >
-            <button
-              aria-label="Open matrix workspace"
-              className="absolute right-0 z-0 flex h-8 -translate-x-10 cursor-pointer items-center justify-center rounded-full bg-white px-2.5 py-2 text-xs font-normal text-black transition-all duration-300 hover:bg-white/90 group-hover:-translate-x-[4.75rem]"
-              onClick={onPrimaryCtaClick}
-              type="button"
-            >
-              <ArrowUpRight aria-hidden="true" className="size-3" />
-            </button>
-            <button
-              className="z-10 flex h-8 cursor-pointer items-center rounded-full bg-white px-6 py-2 text-xs font-normal text-black transition-all duration-300 hover:bg-white/90"
-              onClick={onPrimaryCtaClick}
-              type="button"
-            >
-              Workspace
-            </button>
-          </div>
         </header>
 
-        <main className="relative z-20 mt-auto max-w-3xl px-5 pb-8 pt-24 text-left sm:px-8 sm:pb-10 lg:pb-12">
+        <main className="relative z-20 mx-auto flex min-h-[100svh] max-w-3xl flex-col items-center justify-center px-5 py-20 text-center sm:px-8">
           <motion.div
             animate={{ opacity: 1, y: 0 }}
             className="relative mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm"
@@ -269,7 +185,7 @@ export default function ShaderShowcase({
 
           <motion.p
             animate={{ opacity: 1, y: 0 }}
-            className="mb-7 max-w-xl text-base font-light leading-7 text-white/72 sm:text-lg sm:leading-8"
+            className="mx-auto mb-7 max-w-xl text-base font-light leading-7 text-white/72 sm:text-lg sm:leading-8"
             initial={{ opacity: 0, y: 20 }}
             transition={{ delay: 0.8, duration: 0.6 }}
           >
@@ -279,7 +195,7 @@ export default function ShaderShowcase({
 
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-wrap items-center gap-4 sm:gap-6"
+            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6"
             initial={{ opacity: 0, y: 20 }}
             transition={{ delay: 1, duration: 0.6 }}
           >
@@ -305,57 +221,6 @@ export default function ShaderShowcase({
         </main>
       </div>
 
-      <div className="absolute bottom-8 right-8 z-30 hidden sm:block">
-        <div className="relative flex size-20 items-center justify-center">
-          <PulsingBorder
-            bloom={0.9}
-            colorBack="#00000000"
-            colors={['#06b6d4', '#0891b2', '#f97316', '#00ff88', '#ffffff']}
-            frame={9161408.251009725}
-            intensity={0.75}
-            pulse={0.1}
-            roundness={1}
-            scale={0.65}
-            smoke={0.5}
-            smokeSize={0.65}
-            softness={0.2}
-            speed={1.5}
-            spotSize={0.1}
-            spots={5}
-            style={{
-              borderRadius: '50%',
-              height: '60px',
-              width: '60px',
-            }}
-            thickness={0.1}
-          />
-
-          <motion.svg
-            animate={{ rotate: 360 }}
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full"
-            style={{ transform: 'scale(1.6)' }}
-            transition={{
-              duration: 20,
-              ease: 'linear',
-              repeat: Number.POSITIVE_INFINITY,
-            }}
-            viewBox="0 0 100 100"
-          >
-            <defs>
-              <path
-                d="M 50, 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"
-                id="weighted-matrix-circle"
-              />
-            </defs>
-            <text className="fill-white/80 text-sm font-medium">
-              <textPath href="#weighted-matrix-circle" startOffset="0%">
-                Weight priorities - Score options - Compare outcomes -
-              </textPath>
-            </text>
-          </motion.svg>
-        </div>
-      </div>
     </section>
   );
 }
