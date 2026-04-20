@@ -22,7 +22,7 @@ interface MatrixEditorProps {
 
 function getRangeStyle(value: number): CSSProperties {
   return {
-    background: `linear-gradient(90deg, var(--primary) 0%, var(--primary) ${value}%, rgba(15, 23, 42, 0.1) ${value}%, rgba(14, 165, 233, 0.16) 100%)`,
+    background: `linear-gradient(90deg, var(--range-start, #06b6d4) 0%, var(--range-end, #f97316) ${value}%, var(--range-empty, rgba(255, 255, 255, 0.12)) ${value}%, rgba(6, 182, 212, 0.14) 100%)`,
   };
 }
 
@@ -31,7 +31,7 @@ function formatPoints(value: number): string {
 }
 
 const minorButtonClass =
-  'h-auto rounded-md px-2 py-1 text-[11px] font-semibold uppercase text-muted-foreground hover:bg-accent hover:text-accent-foreground';
+  'h-auto rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase text-muted-foreground hover:bg-white/10 hover:text-cyan-100';
 
 const labelClass =
   'text-[11px] font-semibold uppercase text-muted-foreground';
@@ -59,7 +59,7 @@ export function MatrixEditor({
 
   return (
     <section aria-label="Decision matrix editor" className="min-w-0">
-      <Card className="overflow-hidden bg-white/85">
+      <Card className="overflow-hidden">
         <CardHeader className="gap-5 border-b border-border pb-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
@@ -87,7 +87,7 @@ export function MatrixEditor({
 
         <CardContent className="pt-6">
           <div className="overflow-x-auto pb-2">
-            <div className="min-w-fit rounded-lg border border-border bg-slate-50/80 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-4">
+            <div className="min-w-fit rounded-lg border border-border bg-white/5 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-4">
               <div
                 aria-label="Decision matrix comparison"
                 className="grid gap-3"
@@ -95,7 +95,7 @@ export function MatrixEditor({
               >
                 <div className="grid gap-3" role="row" style={gridStyle}>
                   <div
-                    className="rounded-lg border border-border bg-white/80 p-5"
+                    className="rounded-lg border border-border bg-white/5 p-5"
                     role="columnheader"
                   >
                     <p className="font-display text-2xl tracking-normal text-foreground">
@@ -117,10 +117,10 @@ export function MatrixEditor({
                     return (
                       <div
                         className={cn(
-                          'rounded-lg border bg-white/80 p-5 transition',
+                          'rounded-lg border p-5 transition',
                           isLeading
-                            ? 'border-primary/30 shadow-[0_18px_45px_rgba(15,23,42,0.11)]'
-                            : 'border-border',
+                            ? 'border-cyan-300/35 bg-white/10 shadow-[0_18px_45px_rgba(6,182,212,0.16)]'
+                            : 'border-border bg-white/5',
                         )}
                         key={option.id}
                         role="columnheader"
@@ -141,7 +141,7 @@ export function MatrixEditor({
                           </Button>
                         </div>
                         <Input
-                          className="mt-3 h-11 rounded-md bg-white/90"
+                          className="mt-3 h-11"
                           id={`option-${option.id}`}
                           onChange={(event) =>
                             onOptionNameChange(option.id, event.target.value)
@@ -155,7 +155,7 @@ export function MatrixEditor({
                           </span>
                           <output
                             aria-label={`Live score for ${displayName}`}
-                            className="rounded-md bg-white/80 px-3 py-1 text-sm font-semibold text-foreground"
+                            className="rounded-md bg-black/20 px-3 py-1 text-sm font-semibold text-foreground"
                           >
                             {formatPoints(totalsByOptionId.get(option.id) ?? 0)}
                           </output>
@@ -173,7 +173,7 @@ export function MatrixEditor({
                     style={gridStyle}
                   >
                     <div
-                      className="rounded-lg border border-border bg-white/80 p-5"
+                      className="rounded-lg border border-border bg-white/5 p-5"
                       role="rowheader"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -193,7 +193,7 @@ export function MatrixEditor({
                       </div>
 
                       <Input
-                        className="mt-3 h-11 rounded-md bg-white/90"
+                        className="mt-3 h-11"
                         id={`category-${category.id}`}
                         onChange={(event) =>
                           onCategoryNameChange(category.id, event.target.value)
@@ -235,7 +235,7 @@ export function MatrixEditor({
 
                       return (
                         <div
-                          className="rounded-lg border border-border bg-white/80 p-5"
+                          className="rounded-lg border border-border bg-white/5 p-5"
                           key={`${option.id}-${category.id}`}
                         >
                           <div className="mb-3 flex items-center justify-between gap-3">
