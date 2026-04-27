@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     defaultVariants: {
       size: 'default',
@@ -20,16 +20,16 @@ const buttonVariants = cva(
       },
       variant: {
         default:
-          'bg-gradient-to-r from-cyan-500 to-orange-500 text-white shadow-[0_14px_34px_rgba(6,182,212,0.24)] hover:from-cyan-400 hover:to-orange-400 hover:shadow-[0_18px_42px_rgba(249,115,22,0.24)]',
+          'bg-gradient-to-r from-cyan-600 to-orange-600 text-white shadow-[0_12px_28px_rgba(8,145,178,0.2)] hover:from-cyan-500 hover:to-orange-500 hover:shadow-[0_16px_34px_rgba(234,88,12,0.18)]',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         ghost:
-          'text-muted-foreground hover:bg-white/10 hover:text-white',
-        link: 'text-primary underline-offset-4 hover:text-cyan-100 hover:underline',
+          'text-muted-foreground hover:bg-slate-900/5 hover:text-foreground',
+        link: 'text-primary underline-offset-4 hover:text-cyan-700 hover:underline',
         outline:
-          'border border-white/20 bg-white/5 text-foreground backdrop-blur-sm hover:border-cyan-300/45 hover:bg-white/10 hover:text-cyan-100',
+          'border border-border bg-white/70 text-foreground shadow-sm hover:border-primary/35 hover:bg-white hover:text-cyan-800',
         secondary:
-          'border border-white/15 bg-secondary text-secondary-foreground backdrop-blur-sm hover:border-cyan-300/35 hover:bg-white/15 hover:text-cyan-100',
+          'border border-border bg-secondary text-secondary-foreground shadow-sm hover:border-primary/35 hover:bg-white hover:text-cyan-800',
       },
     },
   },
