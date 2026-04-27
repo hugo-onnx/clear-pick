@@ -112,6 +112,55 @@ describe('App', () => {
     expect(firstOption.selectionEnd).toBe(optionName.length);
   });
 
+  it('renders option cards as a wrapped grid with the add card at the end', () => {
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+    const optionCardsGrid = within(optionsRegion).getByRole('group', {
+      name: /option cards/i,
+    });
+    const addCard = within(optionCardsGrid).getByRole('form', {
+      name: /add option/i,
+    });
+
+    expect(within(optionsRegion).getByText(/2 options/i)).toBeInTheDocument();
+    expect(Array.from(optionCardsGrid.children)).toHaveLength(3);
+    expect(optionCardsGrid.children[2]).toBe(addCard);
+    expect(within(addCard).getByLabelText(/new option/i)).toBeEnabled();
+    expect(
+      within(addCard).getByRole('button', { name: /add option/i }),
+    ).toBeEnabled();
+    expect(
+      within(optionsRegion).queryByText(/adds to this comparison/i),
+    ).not.toBeInTheDocument();
+    expect(optionsRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
+    expect(optionsRegion.querySelector('.grid-flow-col')).not.toBeInTheDocument();
+  });
+
+  it('adds a blank option without showing a live score until its name is committed', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+
+    await user.click(
+      within(optionsRegion).getByRole('button', { name: /add option/i }),
+    );
+
+    expect(within(optionsRegion).getByText(/3 options/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^option 3$/i)).toHaveValue('');
+    expect(
+      within(optionsRegion).queryByLabelText(/live score for option 3/i),
+    ).not.toBeInTheDocument();
+    expect(
+      within(optionsRegion).getAllByText(/add an option to score/i),
+    ).toHaveLength(3);
+  });
+
   it('restores the saved matrix and updates results live', async () => {
     const savedMatrix = createStarterMatrix();
     savedMatrix.options[0].name = 'Stay here';
@@ -153,6 +202,19 @@ describe('App', () => {
     await user.type(screen.getByLabelText(/new option/i), 'Start the business');
     await user.click(screen.getByRole('button', { name: /add option/i }));
     expect(screen.getByDisplayValue('Start the business')).toBeInTheDocument();
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+    const optionCardsGrid = within(optionsRegion).getByRole('group', {
+      name: /option cards/i,
+    });
+    const addCard = within(optionCardsGrid).getByRole('form', {
+      name: /add option/i,
+    });
+
+    expect(within(optionsRegion).getByText(/3 options/i)).toBeInTheDocument();
+    expect(Array.from(optionCardsGrid.children)).toHaveLength(4);
+    expect(optionCardsGrid.children[3]).toBe(addCard);
 
     await user.click(screen.getByRole('button', { name: /add category/i }));
     const categoryTwo = screen.getByDisplayValue('Category 2');
@@ -167,16 +229,130 @@ describe('App', () => {
     expect(screen.queryByDisplayValue('Meaning')).not.toBeInTheDocument();
   });
 
-  it('commits predefined option names when Enter is pressed', async () => {
+  it('limits new options to six and re-enables adding after removal', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const addOption = async (name: string) => {
+      const newOptionInput = screen.getByLabelText(/new option/i);
+      await user.clear(newOptionInput);
+      await user.type(newOptionInput, name);
+      await user.click(screen.getByRole('button', { name: /add option/i }));
+    };
+
+    await addOption('Third path');
+    await addOption('Fourth path');
+    await addOption('Fifth path');
+    await addOption('Sixth path');
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+    const optionCardsGrid = within(optionsRegion).getByRole('group', {
+      name: /option cards/i,
+    });
+
+    expect(within(optionsRegion).getByText(/6 options/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Third path')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fourth path')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fifth path')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Sixth path')).toBeInTheDocument();
+    expect(
+      within(optionCardsGrid).queryByRole('form', { name: /add option/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /add option/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/limit reached: remove an option to add another/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /remove third path/i }));
+
+    expect(within(optionsRegion).getByText(/5 options/i)).toBeInTheDocument();
+    expect(
+      within(optionCardsGrid).getByRole('form', { name: /add option/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/new option/i)).toBeEnabled();
+    expect(screen.getByRole('button', { name: /add option/i })).toBeEnabled();
+    expect(
+      screen.queryByText(/limit reached: remove an option to add another/i),
+    ).not.toBeInTheDocument();
+
+    await addOption('Replacement path');
+
+    expect(within(optionsRegion).getByText(/6 options/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Replacement path')).toBeInTheDocument();
+  });
+
+  it('preserves saved matrices above the option limit without allowing more additions', async () => {
+    const user = userEvent.setup();
+    const savedMatrix = createStarterMatrix();
+    const categoryId = savedMatrix.categories[0].id;
+
+    savedMatrix.options = Array.from({ length: 7 }, (_, index) => ({
+      id: `saved-option-${index + 1}`,
+      name: `Saved option ${index + 1}`,
+    }));
+    savedMatrix.scores = Object.fromEntries(
+      savedMatrix.options.map((option) => [option.id, { [categoryId]: 50 }]),
+    );
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+
+    expect(within(optionsRegion).getByText(/7 options/i)).toBeInTheDocument();
+    for (let index = 1; index <= 7; index += 1) {
+      expect(screen.getByDisplayValue(`Saved option ${index}`)).toBeInTheDocument();
+    }
+    expect(
+      within(optionsRegion).queryByRole('form', { name: /add option/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: /remove saved option 7/i }),
+    );
+
+    expect(within(optionsRegion).getByText(/6 options/i)).toBeInTheDocument();
+    expect(
+      within(optionsRegion).queryByRole('form', { name: /add option/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: /remove saved option 6/i }),
+    );
+
+    expect(within(optionsRegion).getByText(/5 options/i)).toBeInTheDocument();
+    expect(
+      within(optionsRegion).getByRole('form', { name: /add option/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/new option/i)).toBeEnabled();
+  });
+
+  it('commits option names and focuses the next text box when Enter is pressed', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     const firstOption = screen.getByLabelText(/^option 1$/i);
+    const secondOption = screen.getByLabelText(/^option 2$/i);
     await user.type(firstOption, 'Remote role');
     await user.keyboard('{Enter}');
 
     expect(firstOption).toHaveValue('Remote role');
-    expect(firstOption).not.toHaveFocus();
+    expect(secondOption).toHaveFocus();
+
+    await user.type(secondOption, 'Office role');
+    await user.keyboard('{Enter}');
+
+    expect(secondOption).toHaveValue('Office role');
+    expect(screen.getByLabelText(/new option/i)).toHaveFocus();
   });
 
   it('persists edits and can reset back to the blank default matrix', async () => {
