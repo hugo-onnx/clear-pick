@@ -4,8 +4,6 @@ import { getDecisionSummary } from './scoring';
 
 function createMatrix(overrides?: Partial<DecisionMatrix>): DecisionMatrix {
   return {
-    title: 'Test decision',
-    updatedAt: '2026-04-17T10:00:00.000Z',
     options: [
       { id: 'stay', name: 'Stay' },
       { id: 'go', name: 'Go' },
