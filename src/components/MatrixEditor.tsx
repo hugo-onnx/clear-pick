@@ -12,7 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { DecisionMatrix } from '../types';
-import { MIN_CATEGORIES, MIN_OPTIONS, getDisplayName } from '../utils/matrix';
+import {
+  MAX_OPTIONS,
+  MIN_CATEGORIES,
+  MIN_OPTIONS,
+  getDisplayName,
+} from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
 
 interface MatrixEditorProps {
@@ -29,8 +34,32 @@ interface MatrixEditorProps {
 }
 
 function getRangeStyle(value: number): CSSProperties {
+  const clampedValue = Math.max(0, Math.min(100, value));
+  const fadeStart = Math.max(0, clampedValue - 8);
+  const fadeEnd = Math.min(100, clampedValue + 14);
+
+  if (clampedValue <= 0) {
+    return {
+      background: 'var(--range-empty, rgba(255, 255, 255, 0.12))',
+      transition: 'background 180ms ease',
+    };
+  }
+
+  if (clampedValue >= 100) {
+    return {
+      background: 'linear-gradient(90deg, var(--range-start, #06b6d4) 0%, var(--range-end, #f97316) 100%)',
+      transition: 'background 180ms ease',
+    };
+  }
+
   return {
-    background: `linear-gradient(90deg, var(--range-start, #06b6d4) 0%, var(--range-end, #f97316) ${value}%, var(--range-empty, rgba(255, 255, 255, 0.12)) ${value}%, var(--range-empty, rgba(255, 255, 255, 0.12)) 100%)`,
+    background: `linear-gradient(90deg,
+      var(--range-start, #06b6d4) 0%,
+      var(--range-end, #f97316) ${fadeStart}%,
+      rgba(249, 115, 22, 0.76) ${clampedValue}%,
+      var(--range-empty, rgba(255, 255, 255, 0.12)) ${fadeEnd}%,
+      var(--range-empty, rgba(255, 255, 255, 0.12)) 100%)`,
+    transition: 'background 180ms ease',
   };
 }
 
@@ -38,13 +67,14 @@ function formatPoints(value: number): string {
   return `${value.toFixed(1)} pts`;
 }
 
-function getProgressWidth(value: number): string {
-  return `${Math.max(0, Math.min(100, value))}%`;
-}
-
 function moveCaretToEnd(input: HTMLInputElement) {
   const end = input.value.length;
   input.setSelectionRange(end, end);
+}
+
+function selectInputText(input: HTMLInputElement) {
+  input.focus();
+  input.setSelectionRange(0, input.value.length);
 }
 
 const minorButtonClass =
@@ -73,6 +103,7 @@ export function MatrixEditor({
       ),
   );
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
+  const canAddOptions = matrix.options.length < MAX_OPTIONS;
   const canRemoveCategories = matrix.categories.length > MIN_CATEGORIES;
   const gridStyle: CSSProperties = {
     gridTemplateColumns: `minmax(260px, 1.15fr) repeat(${matrix.options.length}, minmax(220px, 1fr))`,
@@ -82,16 +113,42 @@ export function MatrixEditor({
   );
   const handleAddOptionSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onAddOption(pendingOptionName.trim() || undefined);
+    if (!canAddOptions) {
+      return;
+    }
+
+    onAddOption(pendingOptionName.trim());
     setPendingOptionName('');
   };
-  const handleOptionNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleOptionNameKeyDown = (
+    event: KeyboardEvent<HTMLInputElement>,
+    optionId: string,
+    optionIndex: number,
+  ) => {
     if (event.key !== 'Enter') {
       return;
     }
 
     event.preventDefault();
-    event.currentTarget.blur();
+    onOptionNameChange(optionId, event.currentTarget.value);
+
+    const nextOption = matrix.options[optionIndex + 1];
+    const nextInputId = nextOption?.id
+      ? `option-${nextOption.id}`
+      : canAddOptions
+        ? 'new-option-name'
+        : null;
+
+    if (!nextInputId) {
+      event.currentTarget.blur();
+      return;
+    }
+
+    const nextInput = document.getElementById(nextInputId);
+
+    if (nextInput instanceof HTMLInputElement) {
+      selectInputText(nextInput);
+    }
   };
   const handleOptionNameFocus = (event: FocusEvent<HTMLInputElement>) => {
     moveCaretToEnd(event.currentTarget);
@@ -125,142 +182,147 @@ export function MatrixEditor({
         className="space-y-4"
         role="region"
       >
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
             <h2 className="font-display text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
               Options to compare
             </h2>
+            <p className="text-sm font-medium text-muted-foreground">
+              {matrix.options.length} options
+            </p>
           </div>
-          <p className="text-sm font-medium text-muted-foreground">
-            {matrix.options.length} options
-          </p>
+          {!canAddOptions ? (
+            <p className="text-sm font-medium text-muted-foreground">
+              Limit reached: remove an option to add another.
+            </p>
+          ) : null}
         </div>
 
-        <div className="overflow-x-auto pb-4 pt-3">
-          <div className="grid min-w-fit grid-flow-col auto-cols-[minmax(17.5rem,20rem)] items-stretch gap-4">
-            {matrix.options.map((option, index) => {
-              const displayName = getDisplayName(
-                option.name,
-                `Option ${index + 1}`,
-              );
-              const hasOptionName = option.name.trim().length > 0;
-              const isLeading =
-                hasOptionName && summary.leadingOptionIds.includes(option.id);
-              const optionTotal = totalsByOptionId.get(option.id) ?? 0;
-              const draftOptionName = draftOptionNames[option.id] ?? option.name;
+        <div
+          aria-label="Option cards"
+          className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          role="group"
+        >
+          {matrix.options.map((option, index) => {
+            const displayName = getDisplayName(
+              option.name,
+              `Option ${index + 1}`,
+            );
+            const hasOptionName = option.name.trim().length > 0;
+            const isLeading =
+              hasOptionName && summary.leadingOptionIds.includes(option.id);
+            const optionTotal = totalsByOptionId.get(option.id) ?? 0;
+            const draftOptionName = draftOptionNames[option.id] ?? option.name;
 
-              return (
-                <article
+            return (
+              <article
+                className={cn(
+                  'relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-lg border bg-white/85 p-4 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55',
+                  isLeading
+                    ? 'border-cyan-400/60 bg-[linear-gradient(180deg,rgba(236,254,255,0.9),rgba(255,255,255,0.86))]'
+                    : 'border-border',
+                )}
+                key={option.id}
+              >
+                {isLeading ? (
+                  <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+                ) : null}
+
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
+                    <label className={labelClass} htmlFor={`option-${option.id}`}>
+                      Option {index + 1}
+                    </label>
+                    {isLeading ? (
+                      <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-cyan-800">
+                        Leading
+                      </span>
+                    ) : null}
+                  </div>
+                  <Button
+                    aria-label={`Remove ${displayName}`}
+                    className={minorButtonClass}
+                    disabled={!canRemoveOptions}
+                    onClick={() => onRemoveOption(option.id)}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <X aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <Input
+                  className="mt-3 h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
+                  id={`option-${option.id}`}
+                  onKeyDown={(event) =>
+                    handleOptionNameKeyDown(event, option.id, index)
+                  }
+                  onFocus={handleOptionNameFocus}
+                  onMouseDown={handleOptionNameMouseDown}
+                  onBlur={(event) =>
+                    onOptionNameChange(option.id, event.currentTarget.value)
+                  }
+                  onChange={(event) => {
+                    const { value } = event.target;
+                    setDraftOptionNames((current) => ({
+                      ...current,
+                      [option.id]: value,
+                    }));
+                  }}
+                  placeholder={`Option ${index + 1}`}
+                  value={draftOptionName}
+                />
+
+                <div
                   className={cn(
-                    'relative flex min-h-[13.5rem] flex-col overflow-hidden rounded-lg border bg-white/85 p-4 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55',
-                    isLeading
-                      ? 'border-cyan-400/60 bg-[linear-gradient(180deg,rgba(236,254,255,0.9),rgba(255,255,255,0.86))]'
-                      : 'border-border',
+                    'mt-auto rounded-md bg-slate-950/[0.035] p-3',
+                    hasOptionName ? 'min-h-[4.5rem] space-y-3' : 'py-2',
                   )}
-                  key={option.id}
                 >
-                  {isLeading ? (
-                    <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
-                  ) : null}
-
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
-                      <label className={labelClass} htmlFor={`option-${option.id}`}>
-                        Option {index + 1}
-                      </label>
-                      {isLeading ? (
-                        <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-cyan-800">
-                          Leading
+                  {hasOptionName ? (
+                    <>
+                      <div className="flex items-end justify-between gap-3">
+                        <span className="text-xs font-semibold uppercase text-muted-foreground">
+                          Live total
                         </span>
-                      ) : null}
-                    </div>
-                    <Button
-                      aria-label={`Remove ${displayName}`}
-                      className={minorButtonClass}
-                      disabled={!canRemoveOptions}
-                      onClick={() => onRemoveOption(option.id)}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <X aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <Input
-                    className="mt-4 h-12 rounded-lg bg-white/90 text-lg font-semibold shadow-sm placeholder:text-foreground/45"
-                    id={`option-${option.id}`}
-                    onKeyDown={handleOptionNameKeyDown}
-                    onFocus={handleOptionNameFocus}
-                    onMouseDown={handleOptionNameMouseDown}
-                    onBlur={(event) =>
-                      onOptionNameChange(option.id, event.currentTarget.value)
-                    }
-                    onChange={(event) => {
-                      const { value } = event.target;
-                      setDraftOptionNames((current) => ({
-                        ...current,
-                        [option.id]: value,
-                      }));
-                    }}
-                    placeholder={`Option ${index + 1}`}
-                    value={draftOptionName}
-                  />
-
-                  <div className="mt-auto min-h-[4.75rem] space-y-3 rounded-md bg-slate-950/[0.035] p-3">
-                    {hasOptionName ? (
-                      <>
-                        <div className="flex items-end justify-between gap-3">
-                          <span className="text-xs font-semibold uppercase text-muted-foreground">
-                            Live total
-                          </span>
-                          <output
-                            aria-label={`Live score for ${displayName}`}
-                            className="text-xl font-semibold leading-none text-foreground"
-                          >
-                            {formatPoints(optionTotal)}
-                          </output>
-                        </div>
-                        <div
-                          aria-hidden="true"
-                          className="h-2 overflow-hidden rounded-full bg-slate-200/80"
+                        <output
+                          aria-label={`Live score for ${displayName}`}
+                          className="text-xl font-semibold leading-none text-foreground"
                         >
-                          <div
-                            className={cn(
-                              'h-full rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 transition-[width] duration-300',
-                            )}
-                            style={{ width: getProgressWidth(optionTotal) }}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <p
-                        className="flex min-h-[3.25rem] items-center text-sm font-medium text-muted-foreground"
-                      >
-                        Add an option to score
-                      </p>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
+                          {formatPoints(optionTotal)}
+                        </output>
+                      </div>
+                      <div
+                        aria-hidden="true"
+                        className="h-2 rounded-full"
+                        style={getRangeStyle(optionTotal)}
+                      />
+                    </>
+                  ) : (
+                    <p className="text-sm font-medium leading-5 text-muted-foreground">
+                      Add an option to score
+                    </p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
 
+          {canAddOptions ? (
             <form
               aria-label="Add option"
-              className="flex min-h-[13.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
+              className="flex min-h-[12.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
               onSubmit={handleAddOptionSubmit}
             >
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-dashed border-primary/35 bg-white/70 text-primary">
-                    <Plus aria-hidden="true" className="h-4 w-4" />
-                  </span>
+                <div className="flex items-center">
                   <label className={labelClass} htmlFor="new-option-name">
                     New option
                   </label>
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    className="h-12 rounded-lg bg-white/90 text-lg font-semibold shadow-sm placeholder:text-foreground/45"
+                    className="h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
                     id="new-option-name"
                     onChange={(event) => setPendingOptionName(event.target.value)}
                     placeholder={`Option ${matrix.options.length + 1}`}
@@ -268,7 +330,7 @@ export function MatrixEditor({
                   />
                   <Button
                     aria-label="Add option"
-                    className="h-12 w-12 shrink-0"
+                    className="h-11 w-11 shrink-0"
                     size="icon"
                     type="submit"
                   >
@@ -276,11 +338,8 @@ export function MatrixEditor({
                   </Button>
                 </div>
               </div>
-              <div className="rounded-md bg-slate-950/[0.025] px-3 py-2 text-xs font-medium text-muted-foreground">
-                Adds to this comparison
-              </div>
             </form>
-          </div>
+          ) : null}
         </div>
       </section>
 
