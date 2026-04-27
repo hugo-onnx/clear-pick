@@ -2,6 +2,7 @@ import type { Category, DecisionMatrix, Option, ScoresByOption } from '../types'
 
 export const DEFAULT_SCORE = 50;
 export const MIN_OPTIONS = 2;
+export const MAX_OPTIONS = 6;
 export const MIN_CATEGORIES = 1;
 
 const STARTER_OPTIONS = ['', ''];
