@@ -12,8 +12,6 @@ export interface Category {
 export type ScoresByOption = Record<string, Record<string, number>>;
 
 export interface DecisionMatrix {
-  title: string;
-  updatedAt: string;
   options: Option[];
   categories: Category[];
   scores: ScoresByOption;
