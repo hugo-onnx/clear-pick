@@ -3,19 +3,9 @@ import type { Category, DecisionMatrix, Option, ScoresByOption } from '../types'
 export const DEFAULT_SCORE = 50;
 export const MIN_OPTIONS = 2;
 export const MIN_CATEGORIES = 1;
-export const STARTER_TITLE = 'Career crossroads';
 
-const STARTER_OPTIONS = ['Stay where you are', 'Take the new job'];
-const STARTER_CATEGORIES = [
-  { name: 'Growth', weight: 40 },
-  { name: 'Stability', weight: 35 },
-  { name: 'Flexibility', weight: 25 },
-];
-
-const STARTER_SCORES = [
-  [55, 85, 60],
-  [90, 50, 70],
-];
+const STARTER_OPTIONS = ['', ''];
+const STARTER_CATEGORIES = [{ name: '', weight: DEFAULT_SCORE }];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -88,13 +78,6 @@ export function synchronizeScores(matrix: DecisionMatrix): DecisionMatrix {
   };
 }
 
-export function touchDecisionMatrix(matrix: DecisionMatrix): DecisionMatrix {
-  return {
-    ...matrix,
-    updatedAt: new Date().toISOString(),
-  };
-}
-
 export function createStarterMatrix(): DecisionMatrix {
   const options = STARTER_OPTIONS.map((name) => createOption(name));
   const categories = STARTER_CATEGORIES.map((category) =>
@@ -106,13 +89,11 @@ export function createStarterMatrix(): DecisionMatrix {
   options.forEach((option, optionIndex) => {
     scores[option.id] = {};
     categories.forEach((category, categoryIndex) => {
-      scores[option.id][category.id] = STARTER_SCORES[optionIndex][categoryIndex];
+      scores[option.id][category.id] = DEFAULT_SCORE;
     });
   });
 
   return {
-    title: STARTER_TITLE,
-    updatedAt: new Date().toISOString(),
     options,
     categories,
     scores,
@@ -157,16 +138,9 @@ export function normalizeDecisionMatrix(value: unknown): DecisionMatrix {
     return createStarterMatrix();
   }
 
-  const title = typeof value.title === 'string' ? value.title : STARTER_TITLE;
-  const updatedAt =
-    typeof value.updatedAt === 'string' && !Number.isNaN(Date.parse(value.updatedAt))
-      ? value.updatedAt
-      : new Date().toISOString();
   const rawScores = isRecord(value.scores) ? (value.scores as ScoresByOption) : {};
 
   return {
-    title,
-    updatedAt,
     options,
     categories,
     scores: buildScores(options, categories, rawScores),
