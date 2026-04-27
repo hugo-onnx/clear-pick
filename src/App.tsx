@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
-import { DecisionHeader } from './components/DecisionHeader';
 import { LandingHero } from './components/LandingHero';
 import { MatrixEditor } from './components/MatrixEditor';
 import { ResultsPanel } from './components/ResultsPanel';
-import { SectionTabs } from './components/SectionTabs';
 import type { DecisionMatrix } from './types';
 import {
   clampPercentage,
@@ -14,7 +12,6 @@ import {
   MIN_CATEGORIES,
   MIN_OPTIONS,
   synchronizeScores,
-  touchDecisionMatrix,
 } from './utils/matrix';
 import { getDecisionSummary } from './utils/scoring';
 import { loadActiveDecision, saveActiveDecision } from './utils/storage';
@@ -27,54 +24,38 @@ function App() {
   }, [matrix]);
 
   const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
-    setMatrix((current) => touchDecisionMatrix(synchronizeScores(transform(current))));
+    setMatrix((current) => synchronizeScores(transform(current)));
   };
 
   const handleReset = () => {
-    const shouldReset =
-      typeof window === 'undefined'
-        ? true
-        : window.confirm('Reset this decision and restore the starter matrix?');
-
-    if (shouldReset) {
-      setMatrix(createStarterMatrix());
-    }
+    setMatrix(createStarterMatrix());
   };
 
   const summary = getDecisionSummary(matrix);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-foreground">
+    <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
       <LandingHero />
 
-      <div className="workspace-theme relative isolate z-10 overflow-hidden border-t border-white/15 bg-background text-foreground">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(6,182,212,0.18),transparent_30%,rgba(249,115,22,0.14)_72%,transparent)]" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(0,0,0,0.48),transparent)]" />
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-14 sm:px-6 lg:px-8">
-          <SectionTabs />
+      <section
+        aria-label="Decision workspace"
+        className="matrix-theme relative isolate z-10 overflow-hidden bg-background text-foreground"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(244,247,244,0.98)_44%,rgba(238,246,247,0.96))]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(0,0,0,0.16),transparent)]" />
 
-          <main className="scroll-mt-12 space-y-8" id="decision-matrix">
-            <DecisionHeader
-              title={matrix.title}
-              updatedAt={matrix.updatedAt}
-              onTitleChange={(title) =>
-                applyChange((current) => ({
-                  ...current,
-                  title,
-                }))
-              }
-            />
-
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.82fr)] xl:items-start">
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+          <main className="scroll-mt-10 space-y-10" id="decision-matrix">
+            <div className="grid gap-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.72fr)] xl:items-start">
               <MatrixEditor
                 matrix={matrix}
                 summary={summary}
-                onAddOption={() =>
+                onAddOption={(name) =>
                   applyChange((current) => ({
                     ...current,
                     options: [
                       ...current.options,
-                      createOption(`Option ${current.options.length + 1}`),
+                      createOption(name ?? `Option ${current.options.length + 1}`),
                     ],
                   }))
                 }
@@ -161,7 +142,7 @@ function App() {
 
           <AppFooter />
         </div>
-      </div>
+      </section>
     </div>
   );
 }
