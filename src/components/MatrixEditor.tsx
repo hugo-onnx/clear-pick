@@ -176,23 +176,39 @@ export function MatrixEditor({
   }, [matrix.options]);
 
   return (
-    <section aria-label="Decision matrix editor" className="min-w-0 space-y-8">
+    <section aria-label="Decision matrix editor" className="min-w-0 space-y-10">
+      <header className="border-b border-border pb-8">
+        <div className="max-w-3xl">
+          <h2 className="font-display text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+            Weighted Scoring Model
+          </h2>
+          <p className="mt-3 text-base leading-7 text-muted-foreground lg:whitespace-nowrap">
+            Build a weighted comparison by naming your options, setting what
+            matters, and scoring each choice.
+          </p>
+        </div>
+      </header>
+
       <section
         aria-label="Options to compare"
         className="space-y-4"
         role="region"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1">
-            <h2 className="font-display text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+          <div>
+            <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
               Options to compare
-            </h2>
-            <p className="text-sm font-medium text-muted-foreground">
+            </h3>
+            <p className="mt-4 max-w-3xl text-base text-muted-foreground lg:whitespace-nowrap">
+              Name the choices you&apos;re deciding between. You&apos;ll score
+              each option against the weighted criteria below.
+            </p>
+            <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
               {matrix.options.length} options
             </p>
           </div>
           {!canAddOptions ? (
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
               Limit reached: remove an option to add another.
             </p>
           ) : null}
@@ -353,7 +369,7 @@ export function MatrixEditor({
               Weight and score
             </h3>
           </div>
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
             {matrix.categories.length} categories
           </p>
           <Button onClick={onAddCategory} size="sm" variant="secondary">
