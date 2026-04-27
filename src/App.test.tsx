@@ -29,6 +29,14 @@ describe('App', () => {
     expect(
       screen.getByRole('region', { name: /options to compare/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /weighted scoring model/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /build a weighted comparison by naming your options, setting what matters, and scoring each choice/i,
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /about/i })).toHaveAttribute(
@@ -126,6 +134,11 @@ describe('App', () => {
     });
 
     expect(within(optionsRegion).getByText(/2 options/i)).toBeInTheDocument();
+    expect(
+      within(optionsRegion).getByText(
+        "Name the choices you're deciding between. You'll score each option against the weighted criteria below.",
+      ),
+    ).toBeInTheDocument();
     expect(Array.from(optionCardsGrid.children)).toHaveLength(3);
     expect(optionCardsGrid.children[2]).toBe(addCard);
     expect(within(addCard).getByLabelText(/new option/i)).toBeEnabled();
