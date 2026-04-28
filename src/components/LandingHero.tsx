@@ -1,4 +1,5 @@
 import ShaderShowcase from '@/components/ui/hero';
+import type { TranslationCopy } from '../i18n';
 
 function scrollToMatrix() {
   document.getElementById('decision-matrix')?.scrollIntoView({
@@ -7,6 +8,16 @@ function scrollToMatrix() {
   });
 }
 
-export function LandingHero() {
-  return <ShaderShowcase headingId="landing-title" onPrimaryCtaClick={scrollToMatrix} />;
+interface LandingHeroProps {
+  copy: TranslationCopy['hero'];
+}
+
+export function LandingHero({ copy }: LandingHeroProps) {
+  return (
+    <ShaderShowcase
+      copy={copy}
+      headingId="landing-title"
+      onPrimaryCtaClick={scrollToMatrix}
+    />
+  );
 }
