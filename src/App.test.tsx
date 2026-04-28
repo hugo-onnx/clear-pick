@@ -1,4 +1,11 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
@@ -108,16 +115,21 @@ describe('App', () => {
 
     await user.tab();
 
-    expect(within(optionsRegion).getByText(/^leading$/i)).toBeInTheDocument();
+    expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
     expect(
       within(optionsRegion).getByLabelText(/live score for remote role/i),
-    ).toHaveTextContent('1.0 pts');
+    ).toHaveTextContent('0.0 pts');
 
+    const tappedOffset = 'Remote'.length;
     firstOption.setSelectionRange(0, 0);
-    await user.click(firstOption);
+    await user.pointer({
+      keys: '[MouseLeft]',
+      target: firstOption,
+      offset: tappedOffset,
+    });
 
-    expect(firstOption.selectionStart).toBe(optionName.length);
-    expect(firstOption.selectionEnd).toBe(optionName.length);
+    expect(firstOption.selectionStart).toBe(tappedOffset);
+    expect(firstOption.selectionEnd).toBe(tappedOffset);
   });
 
   it('renders option cards as a wrapped grid with the add card at the end', () => {
@@ -186,22 +198,33 @@ describe('App', () => {
     const scoreRows = within(criteriaRegion).getByRole('group', {
       name: /criterion 1 option scores/i,
     });
+    const criteriaHeading = within(criteriaRegion).getByRole('heading', {
+      name: /criteria, weights, and scores/i,
+    });
+    const criteriaCount = within(criteriaRegion).getByText(/1 criterion/i);
 
-    expect(within(criteriaRegion).getByText(/1 criterion/i)).toBeInTheDocument();
+    expect(criteriaHeading.parentElement).toContainElement(criteriaCount);
     expect(within(criteriaList).getAllByRole('listitem')).toHaveLength(1);
+    expect(criteriaList.nextElementSibling).toBe(
+      within(criteriaRegion).getByRole('form', { name: /add criterion/i }),
+    );
+    expect(within(criteriaRegion).getByLabelText(/new criterion/i)).toHaveAttribute(
+      'placeholder',
+      'Criterion 2',
+    );
     expect(
       within(criteriaRegion).getByRole('button', { name: /add criterion/i }),
-    ).toBeInTheDocument();
+    ).toBeEnabled();
     expect(
       within(criteriaRegion).getByLabelText(/importance for criterion 1/i),
-    ).toHaveValue('1');
+    ).toHaveValue('0');
     expect(
       within(criteriaRegion).getAllByLabelText(/score for option \d on criterion 1/i),
     ).toHaveLength(2);
     for (const scoreSlider of within(criteriaRegion).getAllByLabelText(
       /score for option \d on criterion 1/i,
     )) {
-      expect(scoreSlider).toHaveValue('1');
+      expect(scoreSlider).toHaveValue('0');
     }
     expect(scoreRows).toHaveClass('criteria-score-rows');
     expect(Array.from(scoreRows.children)).toHaveLength(2);
@@ -210,7 +233,7 @@ describe('App', () => {
     expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
   });
 
-  it('migrates a saved blank default card from old 50 sliders to one', () => {
+  it('migrates a saved blank default card from old 50 sliders to current defaults', () => {
     const savedMatrix = createStarterMatrix();
     const categoryId = savedMatrix.categories[0].id;
 
@@ -226,9 +249,9 @@ describe('App', () => {
       name: /options to compare/i,
     });
 
-    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('1');
-    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('1');
-    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
+    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
+    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
   });
 
@@ -266,6 +289,8 @@ describe('App', () => {
     expect(screen.getByDisplayValue('Stay here')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^tied$/i)).toHaveLength(4);
+    expect(screen.queryByText(/^leading$/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/live score for move abroad/i)).toHaveTextContent(
       '5.0 pts',
     );
@@ -311,17 +336,32 @@ describe('App', () => {
     expect(Array.from(optionCardsGrid.children)).toHaveLength(4);
     expect(optionCardsGrid.children[3]).toBe(addCard);
 
+    await user.type(screen.getByLabelText(/new criterion/i), 'Meaning');
     await user.click(screen.getByRole('button', { name: /add criterion/i }));
-    const categoryTwo = screen.getByDisplayValue('Criterion 2');
-    await user.clear(categoryTwo);
-    await user.type(categoryTwo, 'Meaning');
+
     expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
+    expect(screen.getByLabelText(/new criterion/i)).toHaveValue('');
+    expect(screen.getByLabelText(/importance for meaning/i)).toHaveValue('0');
 
     await user.click(screen.getByRole('button', { name: /remove start the business/i }));
     await user.click(screen.getByRole('button', { name: /remove meaning/i }));
 
     expect(screen.queryByDisplayValue('Start the business')).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('Meaning')).not.toBeInTheDocument();
+  });
+
+  it('keeps the add criterion box focused after submitting a named criterion', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/new criterion/i), 'Meaning{Enter}');
+
+    expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
+
+    const nextCriterionInput = screen.getByLabelText(/new criterion/i);
+    expect(nextCriterionInput).toHaveValue('');
+    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+    expect(nextCriterionInput).toHaveFocus();
   });
 
   it('limits new options to six and re-enables adding after removal', async () => {
@@ -462,19 +502,29 @@ describe('App', () => {
     expect(screen.getByLabelText(/new option/i)).toHaveFocus();
   });
 
-  it('sets criterion names when Enter is pressed', async () => {
+  it('sets criterion names and focuses a new criterion when Enter is pressed', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole('button', { name: /add criterion/i }));
 
     const secondCriterion = screen.getByLabelText(/^criterion 2$/i);
-    await user.clear(secondCriterion);
+    expect(secondCriterion).toHaveValue('');
+    expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
     await user.type(secondCriterion, 'Long-term fit');
-    await user.keyboard('{Enter}');
+    await act(async () => {
+      fireEvent.keyDown(secondCriterion, { key: 'Enter' });
+    });
 
     expect(secondCriterion).toHaveValue('Long-term fit');
-    expect(secondCriterion).not.toHaveFocus();
+    await waitFor(() => {
+      const thirdCriterion = screen.getByLabelText(
+        /^criterion 3$/i,
+      ) as HTMLInputElement;
+      expect(thirdCriterion).toHaveFocus();
+      expect(thirdCriterion.selectionStart).toBe(0);
+      expect(thirdCriterion.selectionEnd).toBe(0);
+    });
     expect(
       screen.getByRole('button', { name: /remove long-term fit/i }),
     ).toBeInTheDocument();
@@ -504,8 +554,8 @@ describe('App', () => {
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
-    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('1');
-    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('1');
-    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
+    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
+    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
   });
 });
