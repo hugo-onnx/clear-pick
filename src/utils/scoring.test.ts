@@ -37,6 +37,24 @@ describe('getDecisionSummary', () => {
     expect(summary.rankedOptions[1]?.total).toBeCloseTo(6.8);
   });
 
+  it('excludes zero-weight criteria from normalized scoring', () => {
+    const summary = getDecisionSummary(
+      createMatrix({
+        categories: [
+          { id: 'growth', name: 'Growth', weight: 0 },
+          { id: 'balance', name: 'Balance', weight: 10 },
+        ],
+      }),
+    );
+
+    expect(summary.totalWeight).toBe(10);
+    expect(summary.categoryInfluence[0]?.normalizedWeight).toBe(0);
+    expect(summary.categoryInfluence[1]?.normalizedWeight).toBe(1);
+    expect(summary.rankedOptions[0]?.name).toBe('Stay');
+    expect(summary.rankedOptions[0]?.total).toBeCloseTo(8);
+    expect(summary.rankedOptions[1]?.total).toBeCloseTo(5);
+  });
+
   it('returns zero totals and no active recommendation when all weights are zero', () => {
     const summary = getDecisionSummary(
       createMatrix({
