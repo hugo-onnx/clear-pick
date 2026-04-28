@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DecisionMatrix } from '../types';
+import { MAX_SCORE } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
 
 interface ResultsPanelProps {
@@ -11,6 +12,10 @@ interface ResultsPanelProps {
 
 function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+function formatWeightedScore(value: number): string {
+  return `${value.toFixed(1)}/10`;
 }
 
 function joinLabels(labels: string[]): string {
@@ -36,7 +41,7 @@ export function ResultsPanel({
     )
     .filter((name): name is string => Boolean(name));
 
-  let headline = 'Give at least one category some weight to surface a recommendation.';
+  let headline = 'Give at least one criterion some weight to surface a recommendation.';
 
   if (summary.hasScoringBasis && summary.isTie) {
     headline = `Current tie: ${joinLabels(leadingNames)} are evenly matched right now.`;
@@ -62,7 +67,10 @@ export function ResultsPanel({
         <section aria-label="Weighted ranking" className="space-y-4">
           {summary.rankedOptions.map((option, index) => {
             const isLeading = summary.leadingOptionIds.includes(option.id);
-            const width = Math.max(0, Math.min(100, option.total));
+            const width = Math.max(
+              0,
+              Math.min(100, (option.total / MAX_SCORE) * 100),
+            );
 
             return (
               <article
@@ -82,7 +90,7 @@ export function ResultsPanel({
                         {option.name}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {formatPercent(option.total)} weighted fit
+                        {formatWeightedScore(option.total)} weighted score
                       </p>
                     </div>
                   </div>
@@ -94,7 +102,7 @@ export function ResultsPanel({
                 </div>
 
                 <div
-                  aria-label={`${option.name} has a weighted fit of ${formatPercent(option.total)}`}
+                  aria-label={`${option.name} has a weighted score of ${formatWeightedScore(option.total)}`}
                   className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/80"
                 >
                   <div
@@ -147,7 +155,7 @@ export function ResultsPanel({
             </div>
           ) : (
             <p className="text-sm leading-6 text-muted-foreground">
-              All category weights are at zero, so every option is currently
+              No criterion weights are available, so every option is currently
               neutral.
             </p>
           )}
