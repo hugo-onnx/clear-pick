@@ -1,5 +1,5 @@
 import type { DecisionMatrix } from '../types';
-import { getDisplayName } from './matrix';
+import { DEFAULT_SCORE, getDisplayName } from './matrix';
 
 export interface RankedOption {
   id: string;
@@ -36,7 +36,7 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
 
   const categoryInfluence = matrix.categories.map((category, index) => ({
     id: category.id,
-    name: getDisplayName(category.name, `Category ${index + 1}`),
+    name: getDisplayName(category.name, `Criterion ${index + 1}`),
     rawWeight: category.weight,
     normalizedWeight: totalWeight > 0 ? category.weight / totalWeight : 0,
   }));
@@ -45,7 +45,7 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
     .map((option, optionIndex) => {
       const total = matrix.categories.reduce((sum, category) => {
         const normalizedWeight = totalWeight > 0 ? category.weight / totalWeight : 0;
-        const score = matrix.scores[option.id]?.[category.id] ?? 0;
+        const score = matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
         return sum + normalizedWeight * score;
       }, 0);
 
@@ -58,9 +58,11 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
     .sort((left, right) => right.total - left.total);
 
   const topTotal = rankedOptions[0]?.total ?? 0;
-  const leadingOptionIds = rankedOptions
-    .filter((option) => Math.abs(option.total - topTotal) < EPSILON)
-    .map((option) => option.id);
+  const leadingOptionIds = hasScoringBasis
+    ? rankedOptions
+        .filter((option) => Math.abs(option.total - topTotal) < EPSILON)
+        .map((option) => option.id)
+    : [];
 
   return {
     rankedOptions,
