@@ -19,6 +19,7 @@ import {
   MIN_CATEGORIES,
   MIN_OPTIONS,
   MIN_SCORE,
+  clampScore,
   getDisplayName,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
@@ -36,12 +37,18 @@ interface MatrixEditorProps {
   onScoreChange: (optionId: string, categoryId: string, score: number) => void;
 }
 
+function clampVisualScore(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_SCORE;
+  }
+
+  return Math.min(MAX_SCORE, Math.max(MIN_SCORE, value));
+}
+
 function getRangeStyle(value: number): CSSProperties {
   const clampedValue = Math.max(MIN_SCORE, Math.min(MAX_SCORE, value));
   const progress =
     ((clampedValue - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)) * 100;
-  const fadeStart = Math.max(0, progress - 8);
-  const fadeEnd = Math.min(100, progress + 14);
 
   if (progress <= 0) {
     return {
@@ -60,12 +67,15 @@ function getRangeStyle(value: number): CSSProperties {
   return {
     background: `linear-gradient(90deg,
       var(--range-start, #06b6d4) 0%,
-      var(--range-end, #f97316) ${fadeStart}%,
-      rgba(249, 115, 22, 0.76) ${progress}%,
-      var(--range-empty, rgba(255, 255, 255, 0.12)) ${fadeEnd}%,
+      var(--range-end, #f97316) ${progress}%,
+      var(--range-empty, rgba(255, 255, 255, 0.12)) ${progress}%,
       var(--range-empty, rgba(255, 255, 255, 0.12)) 100%)`,
     transition: 'background 180ms ease',
   };
+}
+
+function formatSliderValue(value: number): string {
+  return `${clampScore(value)}/10`;
 }
 
 function formatPoints(value: number): string {
@@ -107,6 +117,9 @@ export function MatrixEditor({
         matrix.options.map((option) => [option.id, option.name]),
       ),
   );
+  const [draftSliderValues, setDraftSliderValues] = useState<
+    Record<string, number>
+  >({});
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
   const canAddOptions = matrix.options.length < MAX_OPTIONS;
   const canRemoveCategories = matrix.categories.length > MIN_CATEGORIES;
@@ -164,6 +177,54 @@ export function MatrixEditor({
     event.currentTarget.focus();
     moveCaretToEnd(event.currentTarget);
   };
+  const handleCategoryNameKeyDown = (
+    event: KeyboardEvent<HTMLInputElement>,
+    categoryId: string,
+  ) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
+
+    event.preventDefault();
+    onCategoryNameChange(categoryId, event.currentTarget.value);
+    event.currentTarget.blur();
+  };
+  const getSliderDisplayValue = (sliderId: string, value: number) => {
+    return draftSliderValues[sliderId] ?? value;
+  };
+  const setDraftSliderValue = (sliderId: string, value: number) => {
+    setDraftSliderValues((current) => ({
+      ...current,
+      [sliderId]: clampVisualScore(value),
+    }));
+  };
+  const clearDraftSliderValue = (sliderId: string) => {
+    setDraftSliderValues((current) => {
+      if (!(sliderId in current)) {
+        return current;
+      }
+
+      const { [sliderId]: _removedValue, ...nextDraftValues } = current;
+      return nextDraftValues;
+    });
+  };
+  const handleSliderStart = (sliderId: string, value: number) => {
+    setDraftSliderValue(sliderId, value);
+  };
+  const handleSliderChange = (
+    sliderId: string,
+    value: number,
+  ) => {
+    setDraftSliderValue(sliderId, value);
+  };
+  const handleSliderEnd = (
+    sliderId: string,
+    value: number,
+    commit: (value: number) => void,
+  ) => {
+    commit(clampScore(value));
+    clearDraftSliderValue(sliderId);
+  };
 
   useEffect(() => {
     setDraftOptionNames((current) => {
@@ -197,7 +258,7 @@ export function MatrixEditor({
         role="region"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+          <div className="min-w-0 sm:flex-1">
             <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
               Options to compare
             </h3>
@@ -366,21 +427,19 @@ export function MatrixEditor({
       <section aria-labelledby="criteria-heading" className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Criteria
-            </p>
             <h3
-              className="font-display text-2xl font-semibold tracking-normal text-foreground"
+              className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl"
               id="criteria-heading"
             >
-              Weight and score
+              Criteria, weights, and scores
             </h3>
-            <p className="mt-3 max-w-3xl text-base text-muted-foreground">
-              Set each criterion&apos;s importance, then score every option in
-              the same row.
+            <p className="mt-4 max-w-3xl text-base text-muted-foreground">
+              Name the factors that matter, set how strongly each one should
+              influence the decision, then score every option against each
+              factor on a 1-10 scale.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
             <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
               {matrix.categories.length}{' '}
               {matrix.categories.length === 1 ? 'criterion' : 'criteria'}
@@ -398,6 +457,11 @@ export function MatrixEditor({
             const criterionDisplayName = getDisplayName(
               category.name,
               criterionFallback,
+            );
+            const weightSliderId = `weight:${category.id}`;
+            const displayedWeight = getSliderDisplayValue(
+              weightSliderId,
+              category.weight,
             );
 
             return (
@@ -432,6 +496,9 @@ export function MatrixEditor({
                         onChange={(event) =>
                           onCategoryNameChange(category.id, event.target.value)
                         }
+                        onKeyDown={(event) =>
+                          handleCategoryNameKeyDown(event, category.id)
+                        }
                         placeholder={criterionFallback}
                         value={category.name}
                       />
@@ -443,7 +510,7 @@ export function MatrixEditor({
                           Importance
                         </label>
                         <output className="min-w-12 text-right text-sm font-semibold text-foreground">
-                          {category.weight}/10
+                          {formatSliderValue(displayedWeight)}
                         </output>
                       </div>
                       <input
@@ -452,16 +519,50 @@ export function MatrixEditor({
                         id={`weight-${category.id}`}
                         max={MAX_SCORE}
                         min={MIN_SCORE}
-                        onChange={(event) =>
-                          onCategoryWeightChange(
-                            category.id,
-                            Number(event.target.value),
+                        onBlur={(event) =>
+                          handleSliderEnd(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                            (value) => onCategoryWeightChange(category.id, value),
                           )
                         }
-                        step="1"
-                        style={getRangeStyle(category.weight)}
+                        onChange={(event) =>
+                          handleSliderChange(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                          )
+                        }
+                        onFocus={() =>
+                          handleSliderStart(weightSliderId, displayedWeight)
+                        }
+                        onKeyUp={(event) =>
+                          handleSliderEnd(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                            (value) => onCategoryWeightChange(category.id, value),
+                          )
+                        }
+                        onPointerCancel={(event) =>
+                          handleSliderEnd(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                            (value) => onCategoryWeightChange(category.id, value),
+                          )
+                        }
+                        onPointerDown={() =>
+                          handleSliderStart(weightSliderId, displayedWeight)
+                        }
+                        onPointerUp={(event) =>
+                          handleSliderEnd(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                            (value) => onCategoryWeightChange(category.id, value),
+                          )
+                        }
+                        step="0.1"
+                        style={getRangeStyle(displayedWeight)}
                         type="range"
-                        value={category.weight}
+                        value={displayedWeight}
                       />
                     </div>
                   </div>
@@ -487,6 +588,11 @@ export function MatrixEditor({
                         );
                         const score =
                           matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
+                        const scoreSliderId = `score:${option.id}:${category.id}`;
+                        const displayedScore = getSliderDisplayValue(
+                          scoreSliderId,
+                          score,
+                        );
 
                         return (
                           <div
@@ -503,7 +609,7 @@ export function MatrixEditor({
                                 {optionDisplayName}
                               </span>
                               <output className="text-sm font-semibold text-foreground sm:hidden">
-                                {score}/10
+                                {formatSliderValue(displayedScore)}
                               </output>
                             </div>
                             <input
@@ -512,20 +618,57 @@ export function MatrixEditor({
                               id={`score-${option.id}-${category.id}`}
                               max={MAX_SCORE}
                               min={MIN_SCORE}
-                              onChange={(event) =>
-                                onScoreChange(
-                                  option.id,
-                                  category.id,
-                                  Number(event.target.value),
+                              onBlur={(event) =>
+                                handleSliderEnd(
+                                  scoreSliderId,
+                                  Number(event.currentTarget.value),
+                                  (value) =>
+                                    onScoreChange(option.id, category.id, value),
                                 )
                               }
-                              step="1"
-                              style={getRangeStyle(score)}
+                              onChange={(event) =>
+                                handleSliderChange(
+                                  scoreSliderId,
+                                  Number(event.currentTarget.value),
+                                )
+                              }
+                              onFocus={() =>
+                                handleSliderStart(scoreSliderId, displayedScore)
+                              }
+                              onKeyUp={(event) =>
+                                handleSliderEnd(
+                                  scoreSliderId,
+                                  Number(event.currentTarget.value),
+                                  (value) =>
+                                    onScoreChange(option.id, category.id, value),
+                                )
+                              }
+                              onPointerCancel={(event) =>
+                                handleSliderEnd(
+                                  scoreSliderId,
+                                  Number(event.currentTarget.value),
+                                  (value) =>
+                                    onScoreChange(option.id, category.id, value),
+                                )
+                              }
+                              onPointerDown={() =>
+                                handleSliderStart(scoreSliderId, displayedScore)
+                              }
+                              onPointerUp={(event) =>
+                                handleSliderEnd(
+                                  scoreSliderId,
+                                  Number(event.currentTarget.value),
+                                  (value) =>
+                                    onScoreChange(option.id, category.id, value),
+                                )
+                              }
+                              step="0.1"
+                              style={getRangeStyle(displayedScore)}
                               type="range"
-                              value={score}
+                              value={displayedScore}
                             />
                             <output className="hidden text-right text-sm font-semibold text-foreground sm:block">
-                              {score}/10
+                              {formatSliderValue(displayedScore)}
                             </output>
                           </div>
                         );
