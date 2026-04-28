@@ -6,6 +6,7 @@ import { ResultsPanel } from './components/ResultsPanel';
 import type { DecisionMatrix } from './types';
 import {
   clampScore,
+  clampWeight,
   createCategory,
   createOption,
   createStarterMatrix,
@@ -90,12 +91,12 @@ function App() {
                     ),
                   }))
                 }
-                onAddCategory={() =>
+                onAddCategory={(name) =>
                   applyChange((current) => ({
                     ...current,
                     categories: [
                       ...current.categories,
-                      createCategory(`Criterion ${current.categories.length + 1}`),
+                      createCategory(name ?? ''),
                     ],
                   }))
                 }
@@ -126,7 +127,7 @@ function App() {
                     ...current,
                     categories: current.categories.map((category) =>
                       category.id === categoryId
-                        ? { ...category, weight: clampScore(weight) }
+                        ? { ...category, weight: clampWeight(weight) }
                         : category,
                     ),
                   }))
