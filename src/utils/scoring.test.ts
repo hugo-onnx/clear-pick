@@ -46,6 +46,20 @@ describe('getDecisionSummary', () => {
     expect(summary.rankedOptions[0]?.name).toBe('Go');
     expect(summary.rankedOptions[0]?.total).toBeCloseTo(7.4);
     expect(summary.rankedOptions[1]?.total).toBeCloseTo(6.8);
+    expect(summary.topOption?.name).toBe('Go');
+    expect(summary.runnerUpOption?.name).toBe('Stay');
+    expect(summary.scoreGap).toBeCloseTo(0.6);
+    expect(summary.leaderContributions[0]).toMatchObject({
+      id: 'growth',
+      score: 9,
+    });
+    expect(summary.leaderContributions[0]?.contribution).toBeCloseTo(5.4);
+    expect(summary.leaderContributions[1]).toMatchObject({
+      id: 'balance',
+      score: 5,
+    });
+    expect(summary.leaderContributions[1]?.contribution).toBeCloseTo(2);
+    expect(summary.sortedLeaderContributions[0]?.id).toBe('growth');
   });
 
   it('excludes zero-weight criteria from normalized scoring', () => {
@@ -80,6 +94,7 @@ describe('getDecisionSummary', () => {
     expect(summary.hasScoringBasis).toBe(false);
     expect(summary.isTie).toBe(false);
     expect(summary.leadingOptionIds).toHaveLength(0);
+    expect(summary.scoreGap).toBe(0);
     expect(summary.rankedOptions.map((option) => option.total)).toEqual([0, 0]);
   });
 
@@ -102,6 +117,7 @@ describe('getDecisionSummary', () => {
     expect(summary.hasScoringBasis).toBe(true);
     expect(summary.isTie).toBe(true);
     expect(summary.leadingOptionIds).toHaveLength(2);
+    expect(summary.scoreGap).toBeCloseTo(0);
     expect(summary.rankedOptions[0]?.total).toBeCloseTo(summary.rankedOptions[1]?.total);
   });
 });
