@@ -388,7 +388,9 @@ describe('App', () => {
     ).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/yes = 10 \/ no = 0/i)).toBeInTheDocument();
     expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
-    expect(screen.getByText(/leading option: option 2/i)).toBeInTheDocument();
+    const ranking = screen.getByRole('region', { name: /weighted ranking/i });
+    expect(within(ranking).getByText('Option 2')).toBeInTheDocument();
+    expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
   });
 
   it('shows weighted results by default', () => {
@@ -402,7 +404,6 @@ describe('App', () => {
     expect(
       screen.getByRole('region', { name: /weighted ranking/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
     expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /reset matrix/i }),
@@ -421,11 +422,10 @@ describe('App', () => {
       screen.getByRole('button', { name: /show results/i }),
     ).toHaveAttribute('aria-expanded', 'false');
     expect(
-      screen.getByText(
-        /hide results while scoring to avoid anchoring on the current leader/i,
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/leading option: stay here/i)).not.toBeInTheDocument();
+      screen.getByRole('button', { name: /why this helps/i }),
+    ).toHaveAccessibleDescription(
+      /hide results while scoring to avoid anchoring on the current leader/i,
+    );
     expect(
       screen.queryByRole('region', { name: /weighted ranking/i }),
     ).not.toBeInTheDocument();
@@ -453,7 +453,6 @@ describe('App', () => {
     expect(
       screen.getByRole('region', { name: /weighted ranking/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
     expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
   });
 
@@ -599,7 +598,9 @@ describe('App', () => {
     fireEvent.pointerUp(scoreSlider);
 
     await waitFor(() => {
-      expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
+      const ranking = screen.getByRole('region', { name: /weighted ranking/i });
+      expect(within(ranking).getByText('Stay here')).toBeInTheDocument();
+      expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/live score for stay here/i)).toHaveTextContent(
         '10.0 pts',
       );
