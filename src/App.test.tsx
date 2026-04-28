@@ -388,12 +388,15 @@ describe('App', () => {
     ).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/yes = 10 \/ no = 0/i)).toBeInTheDocument();
     expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
+
+    await user.click(screen.getByRole('button', { name: /see full ranking/i }));
+
     const ranking = screen.getByRole('region', { name: /weighted ranking/i });
     expect(within(ranking).getByText('Option 2')).toBeInTheDocument();
     expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
   });
 
-  it('shows weighted results by default', () => {
+  it('shows the recommendation-first results by default', () => {
     saveScoredMatrix();
 
     render(<App />);
@@ -402,15 +405,82 @@ describe('App', () => {
       screen.getByRole('button', { name: /hide results/i }),
     ).toHaveAttribute('aria-expanded', 'true');
     expect(
-      screen.getByRole('region', { name: /weighted ranking/i }),
+      screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/stay here is the strongest option/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/ahead by 6\.0 pts/i)).toBeInTheDocument();
+    expect(screen.getByText('10.0/10')).toBeInTheDocument();
+    expect(screen.getByText(/closest alternative/i)).toBeInTheDocument();
+    expect(screen.getByText(/move abroad \(4\/10\)/i)).toBeInTheDocument();
+    expect(screen.queryByText(/runner-up/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^leader$/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/top contributors/i)).toBeInTheDocument();
+    expect(screen.getByText(/10\/10 score x 100% weight/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/10\.0\/10 score x 100\.0% weight/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /see full ranking/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.queryByRole('region', { name: /weighted ranking/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /reset matrix/i }),
     ).toBeInTheDocument();
   });
 
-  it('hides ranking details and explains the bias guard', async () => {
+  it('expands and collapses the secondary full ranking', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    expect(
+      screen.getByRole('region', { name: /recommendation preview/i }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /see full ranking/i }));
+
+    const ranking = screen.getByRole('region', { name: /weighted ranking/i });
+    expect(screen.getByRole('button', { name: /hide full ranking/i })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(within(ranking).getByText('Stay here')).toBeInTheDocument();
+    expect(within(ranking).getByText(/10\/10 weighted score/i)).toBeInTheDocument();
+    expect(
+      within(ranking).queryByText(/10\.0\/10 weighted score/i),
+    ).not.toBeInTheDocument();
+    expect(within(ranking).getByText(/6\.0 pts behind leader/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /recommendation preview/i }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /hide full ranking/i }));
+    expect(
+      screen.queryByRole('region', { name: /weighted ranking/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a neutral recommendation state when there are no positive weights', () => {
+    render(<App />);
+
+    expect(
+      screen.getByRole('region', { name: /recommendation preview/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no recommendation yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no positive criterion weights are available/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /see full ranking/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides result designs and explains the bias guard', async () => {
     const user = userEvent.setup();
     saveScoredMatrix();
 
@@ -427,9 +497,18 @@ describe('App', () => {
       /hide results while scoring to avoid anchoring on the current leader/i,
     );
     expect(
+      screen.queryByRole('region', { name: /recommendation preview/i }),
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByRole('region', { name: /weighted ranking/i }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: /leader contribution breakdown/i }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/10\.0\/10 weighted score/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /see full ranking/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /reset matrix/i }),
     ).not.toBeInTheDocument();
@@ -438,7 +517,7 @@ describe('App', () => {
     );
   });
 
-  it('restores the ranking when results are shown again', async () => {
+  it('restores the recommendation when results are shown again', async () => {
     const user = userEvent.setup();
     saveScoredMatrix();
 
@@ -451,9 +530,9 @@ describe('App', () => {
       screen.getByRole('button', { name: /hide results/i }),
     ).toHaveAttribute('aria-expanded', 'true');
     expect(
-      screen.getByRole('region', { name: /weighted ranking/i }),
+      screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
+    expect(screen.getByText(/stay here is the strongest option/i)).toBeInTheDocument();
   });
 
   it('suppresses matrix-side live score and leader cues while results are hidden', async () => {
@@ -568,6 +647,7 @@ describe('App', () => {
   });
 
   it('restores the saved matrix and updates results live', async () => {
+    const user = userEvent.setup();
     const savedMatrix = createStarterMatrix();
     savedMatrix.options[0].name = 'Stay here';
     savedMatrix.options[1].name = 'Move abroad';
@@ -585,6 +665,17 @@ describe('App', () => {
     expect(screen.getByDisplayValue('Stay here')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no score gap: stay here and move abroad are tied for first/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^tied for first$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/move abroad \(5\/10\)/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/runner-up/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ahead by/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /see full ranking/i }));
+
+    expect(within(screen.getByRole('region', { name: /weighted ranking/i })).getAllByText(/^tied$/i)).toHaveLength(2);
     expect(screen.getAllByText(/^tied$/i)).toHaveLength(4);
     expect(screen.queryByText(/^leading$/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/live score for move abroad/i)).toHaveTextContent(
