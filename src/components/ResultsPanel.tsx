@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { CircleHelp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
 import { MAX_SCORE } from '../utils/matrix';
-import type { DecisionSummary } from '../utils/scoring';
+import type { CriterionContribution, DecisionSummary } from '../utils/scoring';
 
 interface ResultsPanelProps {
   areResultsHidden: boolean;
@@ -19,8 +20,106 @@ function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+function formatWholePercent(value: number): string {
+  return `${Math.round(value)}%`;
+}
+
 function formatWeightedScore(value: number): string {
   return `${value.toFixed(1)}/10`;
+}
+
+function formatCompactWeightedScore(value: number): string {
+  const roundedValue = Math.round(value);
+
+  if (Math.abs(value - roundedValue) < 0.05) {
+    return `${roundedValue}/10`;
+  }
+
+  return formatWeightedScore(value);
+}
+
+function formatWholeWeightedScore(value: number): string {
+  return `${Math.round(value)}/10`;
+}
+
+function formatPoints(value: number): string {
+  return `${value.toFixed(1)} pts`;
+}
+
+function getBarWidth(value: number): number {
+  return Math.max(0, Math.min(100, (value / MAX_SCORE) * 100));
+}
+
+interface ContributionRowsProps {
+  contributions: CriterionContribution[];
+  copy: TranslationCopy['results'];
+  limit?: number;
+  optionName: string;
+}
+
+function ContributionRows({
+  contributions,
+  copy,
+  limit,
+  optionName,
+}: ContributionRowsProps) {
+  const visibleContributions = contributions
+    .filter((contribution) => contribution.contribution > 0)
+    .slice(0, limit ?? contributions.length);
+
+  if (visibleContributions.length === 0) {
+    return (
+      <p className="text-sm leading-6 text-muted-foreground">
+        {copy.noContributionDrivers}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {visibleContributions.map((contribution) => {
+        const contributionValue = formatPoints(contribution.contribution);
+        const weightShare = formatWholePercent(
+          contribution.normalizedWeight * 100,
+        );
+
+        return (
+          <div className="space-y-2" key={contribution.id}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {contribution.name}
+                </p>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  {copy.contributionDetail(
+                    formatWholeWeightedScore(contribution.score),
+                    weightShare,
+                  )}
+                </p>
+              </div>
+              <strong className="shrink-0 text-sm text-foreground">
+                {copy.contributionValue(contributionValue)}
+              </strong>
+            </div>
+            <div
+              aria-label={copy.contributionBarAria(
+                contribution.name,
+                optionName,
+                contributionValue,
+              )}
+              className="h-2 overflow-hidden rounded-full bg-slate-200/80"
+              role="img"
+            >
+              <div
+                className="h-full rounded-full bg-cyan-600 transition-[width] duration-300"
+                style={{ width: `${getBarWidth(contribution.contribution)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function ResultsPanel({
@@ -31,7 +130,9 @@ export function ResultsPanel({
   onResultsHiddenChange,
   onReset,
 }: ResultsPanelProps) {
+  const [isRankingExpanded, setIsRankingExpanded] = useState(false);
   const resultsDetailsId = 'weighted-results-details';
+  const rankingDetailsId = 'weighted-results-ranking';
   const visibilityHintId = 'weighted-results-visibility-hint';
   const leadingNames = summary.leadingOptionIds
     .map((optionId) =>
@@ -46,6 +147,184 @@ export function ResultsPanel({
   } else if (summary.hasScoringBasis && leadingNames.length > 0) {
     headline = null;
   }
+
+  const renderNeutralState = () => (
+    <div className="rounded-lg border border-dashed border-border bg-white/65 p-5">
+      <h3 className="text-base font-semibold text-foreground">
+        {copy.recommendationEmptyTitle}
+      </h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground" role="status">
+        {copy.noPositiveWeights}
+      </p>
+    </div>
+  );
+
+  const renderRecommendation = () => {
+    const topOption = summary.topOption;
+    const runnerUpOption = summary.runnerUpOption;
+    const shouldShowAlternative = runnerUpOption !== null && !summary.isTie;
+
+    return (
+      <section
+        aria-label={copy.recommendationAria}
+        className="space-y-5"
+        id={resultsDetailsId}
+      >
+        {!summary.hasScoringBasis || topOption === null ? (
+          renderNeutralState()
+        ) : (
+          <div
+            className={cn(
+              'rounded-lg border bg-white/75 p-5 shadow-sm',
+              summary.isTie ? 'border-amber-500/45' : 'border-cyan-600/35',
+            )}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              {copy.recommendationEyebrow}
+            </p>
+            <div className="mt-3 space-y-2">
+              <h3 className="font-display text-3xl font-semibold tracking-normal text-foreground">
+                {summary.isTie
+                  ? copy.recommendationTieTitle(leadingNames)
+                  : copy.recommendationTitle(topOption.name)}
+              </h3>
+              <p className="text-sm leading-6 text-muted-foreground">
+                {summary.isTie
+                  ? copy.tiedGap(leadingNames)
+                  : copy.aheadBy(formatPoints(summary.scoreGap))}
+              </p>
+            </div>
+
+            <div
+              className={cn(
+                'mt-5 grid gap-3',
+                shouldShowAlternative && 'sm:grid-cols-2',
+              )}
+            >
+              <div className="rounded-md border border-border bg-white/70 p-4">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">
+                  {copy.topScore}
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {formatWeightedScore(topOption.total)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {copy.weightedScore}
+                </p>
+              </div>
+
+              {shouldShowAlternative ? (
+                <div className="rounded-md border border-border bg-white/70 p-4">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    {copy.closestAlternative}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-foreground">
+                    {copy.optionScore(
+                      runnerUpOption.name,
+                      formatCompactWeightedScore(runnerUpOption.total),
+                    )}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">
+                {copy.topContributors}
+              </h4>
+              <ContributionRows
+                contributions={summary.sortedLeaderContributions}
+                copy={copy}
+                limit={3}
+                optionName={topOption.name}
+              />
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  const renderRanking = () => (
+    <section
+      aria-label={copy.rankingAria}
+      className="space-y-3 border-t border-border pt-5"
+      id={rankingDetailsId}
+    >
+      <h3 className="text-sm font-semibold text-foreground">
+        {copy.fullRankingTitle}
+      </h3>
+
+      {summary.rankedOptions.map((option, index) => {
+        const isTopOption = summary.leadingOptionIds.includes(option.id);
+        const statusLabel = summary.isTie ? copy.tied : copy.leading;
+        const badgeClassName = summary.isTie
+          ? 'bg-amber-100 text-amber-800'
+          : 'bg-cyan-100 text-cyan-800';
+        const gapFromLeader = Math.max(
+          0,
+          (summary.topOption?.total ?? 0) - option.total,
+        );
+
+        return (
+          <article
+            className={cn(
+              'rounded-md border bg-white/60 p-3 transition',
+              isTopOption ? 'border-primary/35' : 'border-border',
+            )}
+            key={option.id}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <p className="w-8 shrink-0 font-display text-2xl tracking-normal text-foreground/65">
+                  #{index + 1}
+                </p>
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm font-semibold text-foreground">
+                    {option.name}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {formatWholeWeightedScore(option.total)} {copy.weightedScore}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isTopOption
+                      ? summary.isTie
+                        ? copy.rankingTiedForLead
+                        : copy.rankingGapLeader
+                      : copy.rankingGapFromLeader(formatPoints(gapFromLeader))}
+                  </p>
+                </div>
+              </div>
+              {isTopOption ? (
+                <span
+                  className={cn(
+                    'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase',
+                    badgeClassName,
+                  )}
+                >
+                  {statusLabel}
+                </span>
+              ) : null}
+            </div>
+
+            <div
+              aria-label={copy.scoreBarAria(
+                option.name,
+                formatWholeWeightedScore(option.total),
+              )}
+              className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200/80"
+              role="img"
+            >
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 transition-[width] duration-300"
+                style={{ width: `${getBarWidth(option.total)}%` }}
+              />
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  );
 
   return (
     <aside className="min-w-0 xl:sticky xl:top-8 xl:pt-20">
@@ -108,118 +387,33 @@ export function ResultsPanel({
           </section>
         ) : (
           <>
-            <section
-              aria-label={copy.rankingAria}
-              className="space-y-4"
-              id={resultsDetailsId}
-            >
-              {summary.rankedOptions.map((option, index) => {
-                const isTopOption = summary.leadingOptionIds.includes(option.id);
-                const statusLabel = summary.isTie ? copy.tied : copy.leading;
-                const statusClassName = summary.isTie
-                  ? 'border-amber-500'
-                  : 'border-cyan-600';
-                const badgeClassName = summary.isTie
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-cyan-100 text-cyan-800';
-                const width = Math.max(
-                  0,
-                  Math.min(100, (option.total / MAX_SCORE) * 100),
-                );
+            {renderRecommendation()}
 
-                return (
-                  <article
-                    className={cn(
-                      'border-l-2 py-1 pl-4 transition',
-                      isTopOption ? statusClassName : 'border-border',
-                    )}
-                    key={option.id}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 items-center gap-4">
-                        <p className="font-display text-3xl tracking-normal text-foreground/70">
-                          #{index + 1}
-                        </p>
-                        <div className="min-w-0">
-                          <h3 className="truncate text-base font-semibold text-foreground">
-                            {option.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {formatWeightedScore(option.total)} {copy.weightedScore}
-                          </p>
-                        </div>
-                      </div>
-                      {isTopOption ? (
-                        <span
-                          className={cn(
-                            'shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase',
-                            badgeClassName,
-                          )}
-                        >
-                          {statusLabel}
-                        </span>
-                      ) : null}
-                    </div>
+            {summary.hasScoringBasis ? (
+              <section className="space-y-4">
+                <Button
+                  aria-controls={rankingDetailsId}
+                  aria-expanded={isRankingExpanded}
+                  className="w-full sm:w-auto"
+                  onClick={() => setIsRankingExpanded((current) => !current)}
+                  size="sm"
+                  variant="outline"
+                >
+                  {isRankingExpanded
+                    ? copy.hideFullRanking
+                    : copy.showFullRanking}
+                </Button>
 
-                    <div
-                      aria-label={copy.scoreBarAria(
-                        option.name,
-                        formatWeightedScore(option.total),
-                      )}
-                      className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/80"
-                    >
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 transition-[width] duration-300"
-                        style={{ width: `${width}%` }}
-                      />
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
-
-            <section className="space-y-5 border-t border-border pt-7">
-              <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground">
-                {copy.criterionShare}
-              </h3>
-
-              {summary.totalWeight > 0 ? (
-                <div className="space-y-4">
-                  {summary.categoryInfluence.map((category) => {
-                    const width = Math.max(
-                      0,
-                      Math.min(100, category.normalizedWeight * 100),
-                    );
-
-                    return (
-                      <div className="space-y-2" key={category.id}>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="min-w-0 truncate text-sm font-medium text-foreground/80">
-                            {category.name}
-                          </span>
-                          <strong className="text-sm text-foreground">
-                            {formatPercent(width)}
-                          </strong>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-200/80">
-                          <div
-                            className="h-full rounded-full bg-cyan-600 transition-[width] duration-300"
-                            style={{ width: `${width}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {copy.noPositiveWeights}
-                </p>
-              )}
-            </section>
+                {isRankingExpanded ? renderRanking() : null}
+              </section>
+            ) : null}
 
             <section className="flex flex-col gap-4 border-t border-border pt-7">
-              <Button className="w-full sm:w-auto" onClick={onReset}>
+              <Button
+                className="w-full text-muted-foreground sm:w-auto"
+                onClick={onReset}
+                variant="ghost"
+              >
                 {copy.reset}
               </Button>
               <p className="text-xs uppercase text-muted-foreground">
