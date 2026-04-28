@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DecisionMatrix } from '../types';
+import { SCORE_MODE_SCALE } from './matrix';
 import { getDecisionSummary } from './scoring';
 
 function createMatrix(overrides?: Partial<DecisionMatrix>): DecisionMatrix {
@@ -9,9 +10,19 @@ function createMatrix(overrides?: Partial<DecisionMatrix>): DecisionMatrix {
       { id: 'go', name: 'Go' },
     ],
     categories: [
-      { id: 'growth', name: 'Growth', weight: 6 },
-      { id: 'balance', name: 'Balance', weight: 4 },
+      { id: 'growth', name: 'Growth', weight: 6, scoreMode: SCORE_MODE_SCALE },
+      { id: 'balance', name: 'Balance', weight: 4, scoreMode: SCORE_MODE_SCALE },
     ],
+    scoreModes: {
+      stay: {
+        growth: SCORE_MODE_SCALE,
+        balance: SCORE_MODE_SCALE,
+      },
+      go: {
+        growth: SCORE_MODE_SCALE,
+        balance: SCORE_MODE_SCALE,
+      },
+    },
     scores: {
       stay: {
         growth: 6,
@@ -41,8 +52,8 @@ describe('getDecisionSummary', () => {
     const summary = getDecisionSummary(
       createMatrix({
         categories: [
-          { id: 'growth', name: 'Growth', weight: 0 },
-          { id: 'balance', name: 'Balance', weight: 10 },
+          { id: 'growth', name: 'Growth', weight: 0, scoreMode: SCORE_MODE_SCALE },
+          { id: 'balance', name: 'Balance', weight: 10, scoreMode: SCORE_MODE_SCALE },
         ],
       }),
     );
@@ -59,8 +70,8 @@ describe('getDecisionSummary', () => {
     const summary = getDecisionSummary(
       createMatrix({
         categories: [
-          { id: 'growth', name: 'Growth', weight: 0 },
-          { id: 'balance', name: 'Balance', weight: 0 },
+          { id: 'growth', name: 'Growth', weight: 0, scoreMode: SCORE_MODE_SCALE },
+          { id: 'balance', name: 'Balance', weight: 0, scoreMode: SCORE_MODE_SCALE },
         ],
       }),
     );
