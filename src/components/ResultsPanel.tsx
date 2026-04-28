@@ -1,3 +1,4 @@
+import { CircleHelp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { TranslationCopy } from '../i18n';
@@ -31,47 +32,62 @@ export function ResultsPanel({
   onReset,
 }: ResultsPanelProps) {
   const resultsDetailsId = 'weighted-results-details';
+  const visibilityHintId = 'weighted-results-visibility-hint';
   const leadingNames = summary.leadingOptionIds
     .map((optionId) =>
       summary.rankedOptions.find((option) => option.id === optionId)?.name,
     )
     .filter((name): name is string => Boolean(name));
 
-  let headline = copy.noWeightHeadline;
+  let headline: string | null = copy.noWeightHeadline;
 
   if (summary.hasScoringBasis && summary.isTie) {
     headline = copy.tieHeadline(leadingNames);
   } else if (summary.hasScoringBasis && leadingNames.length > 0) {
-    headline = copy.leadingHeadline(leadingNames[0]);
+    headline = null;
   }
 
   return (
-    <aside className="min-w-0 xl:sticky xl:top-8">
+    <aside className="min-w-0 xl:sticky xl:top-8 xl:pt-20">
       <div className="space-y-7 border-t border-border pt-7 xl:border-t-0 xl:pt-0">
         <section className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between xl:flex-col">
-            <div className="min-w-0 space-y-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                {copy.label}
-              </p>
-              <h2 className="font-display text-3xl font-semibold tracking-normal text-foreground">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
                 {copy.title}
               </h2>
             </div>
-            <Button
-              aria-controls={resultsDetailsId}
-              aria-expanded={!areResultsHidden}
-              className="w-full sm:w-auto xl:w-full"
-              onClick={() => onResultsHiddenChange(!areResultsHidden)}
-              variant={areResultsHidden ? 'default' : 'outline'}
-            >
-              {areResultsHidden ? copy.showResults : copy.hideResults}
-            </Button>
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+              <Button
+                aria-controls={resultsDetailsId}
+                aria-expanded={!areResultsHidden}
+                className="min-w-0 flex-1 sm:w-auto sm:flex-none"
+                onClick={() => onResultsHiddenChange(!areResultsHidden)}
+                size="sm"
+                variant={areResultsHidden ? 'default' : 'outline'}
+              >
+                {areResultsHidden ? copy.showResults : copy.hideResults}
+              </Button>
+              <div className="group relative shrink-0">
+                <button
+                  aria-describedby={visibilityHintId}
+                  aria-label={copy.visibilityHintLabel}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/70 text-muted-foreground shadow-sm transition hover:border-primary/35 hover:bg-white hover:text-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  type="button"
+                >
+                  <CircleHelp aria-hidden="true" className="h-4 w-4" />
+                </button>
+                <p
+                  className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-64 rounded-md border border-border bg-white px-3 py-2 text-sm leading-5 text-muted-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100"
+                  id={visibilityHintId}
+                  role="tooltip"
+                >
+                  {copy.visibilityHelper}
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-sm leading-6 text-muted-foreground">
-            {copy.visibilityHelper}
-          </p>
-          {!areResultsHidden ? (
+          {!areResultsHidden && headline ? (
             <p className="text-base leading-7 text-muted-foreground" role="status">
               {headline}
             </p>
@@ -163,14 +179,9 @@ export function ResultsPanel({
             </section>
 
             <section className="space-y-5 border-t border-border pt-7">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  {copy.influence}
-                </p>
-                <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground">
-                  {copy.categoryShare}
-                </h3>
-              </div>
+              <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground">
+                {copy.criterionShare}
+              </h3>
 
               {summary.totalWeight > 0 ? (
                 <div className="space-y-4">
@@ -208,9 +219,6 @@ export function ResultsPanel({
             </section>
 
             <section className="flex flex-col gap-4 border-t border-border pt-7">
-              <p className="text-sm leading-6 text-muted-foreground">
-                {copy.localSave}
-              </p>
               <Button className="w-full sm:w-auto" onClick={onReset}>
                 {copy.reset}
               </Button>
