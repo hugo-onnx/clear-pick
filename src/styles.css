@@ -140,10 +140,20 @@ select {
 .matrix-range {
   appearance: none;
   -webkit-appearance: none;
+  cursor: pointer;
   height: 0.65rem;
   width: 100%;
   border-radius: 999px;
   background-repeat: no-repeat;
+  transition: filter 160ms ease;
+}
+
+.matrix-range:hover {
+  filter: saturate(1.08);
+}
+
+.matrix-range:active {
+  cursor: grabbing;
 }
 
 .matrix-range:focus-visible {
@@ -166,6 +176,7 @@ select {
 .matrix-range::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
+  cursor: grab;
   margin-top: -4px;
   height: 1.15rem;
   width: 1.15rem;
@@ -173,15 +184,54 @@ select {
   border: 2px solid rgba(255, 255, 255, 0.96);
   background: linear-gradient(135deg, #ffffff, #cffafe);
   box-shadow: 0 8px 18px rgba(8, 145, 178, 0.22);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.matrix-range:hover::-webkit-slider-thumb,
+.matrix-range:focus-visible::-webkit-slider-thumb {
+  border-color: #ffffff;
+  background: linear-gradient(135deg, #f8ffff, #a5f3fc);
+  box-shadow: 0 10px 22px rgba(8, 145, 178, 0.28);
+  transform: scale(1.16);
+}
+
+.matrix-range:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  background: linear-gradient(135deg, #ecfeff, #67e8f9);
+  box-shadow: 0 12px 26px rgba(8, 145, 178, 0.36);
+  transform: scale(1.22);
 }
 
 .matrix-range::-moz-range-thumb {
+  cursor: grab;
   height: 1.15rem;
   width: 1.15rem;
   border-radius: 999px;
   border: 2px solid rgba(255, 255, 255, 0.96);
   background: linear-gradient(135deg, #ffffff, #cffafe);
   box-shadow: 0 8px 18px rgba(8, 145, 178, 0.22);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.matrix-range:hover::-moz-range-thumb,
+.matrix-range:focus-visible::-moz-range-thumb {
+  border-color: #ffffff;
+  background: linear-gradient(135deg, #f8ffff, #a5f3fc);
+  box-shadow: 0 10px 22px rgba(8, 145, 178, 0.28);
+  transform: scale(1.16);
+}
+
+.matrix-range:active::-moz-range-thumb {
+  cursor: grabbing;
+  background: linear-gradient(135deg, #ecfeff, #67e8f9);
+  box-shadow: 0 12px 26px rgba(8, 145, 178, 0.36);
+  transform: scale(1.22);
 }
 
 @media (prefers-reduced-motion: reduce) {
