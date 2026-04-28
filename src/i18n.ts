@@ -80,12 +80,36 @@ export interface TranslationCopy {
     visibilityHintLabel: string;
     visibilityHelper: string;
     hiddenStatus: string;
+    recommendationAria: string;
     rankingAria: string;
+    recommendationEyebrow: string;
+    recommendationTitle: (name: string) => string;
+    recommendationTieTitle: (names: string[]) => string;
+    recommendationEmptyTitle: string;
+    topScore: string;
+    closestAlternative: string;
+    aheadBy: (gap: string) => string;
+    optionScore: (name: string, score: string) => string;
+    topContributors: string;
+    tiedGap: (names: string[]) => string;
+    noContributionDrivers: string;
+    contributionValue: (value: string) => string;
+    contributionDetail: (score: string, weight: string) => string;
+    contributionBarAria: (
+      criterionName: string,
+      optionName: string,
+      contribution: string,
+    ) => string;
+    fullRankingTitle: string;
+    showFullRanking: string;
+    hideFullRanking: string;
+    rankingGapLeader: string;
+    rankingGapFromLeader: (gap: string) => string;
+    rankingTiedForLead: string;
     tied: string;
     leading: string;
     weightedScore: string;
     scoreBarAria: (name: string, score: string) => string;
-    criterionShare: string;
     noPositiveWeights: string;
     reset: string;
     matrixCount: (options: number, categories: number) => string;
@@ -209,14 +233,37 @@ export const translations: Record<Language, TranslationCopy> = {
       showResults: 'Show results',
       visibilityHintLabel: 'Why this helps',
       visibilityHelper:
-        'Hide results while scoring to avoid bias while scoring. You can reveal them anytime.',
+        'Hide results while scoring to avoid anchoring on the current leader. You can reveal them anytime.',
       hiddenStatus: 'Results hidden while you score.',
+      recommendationAria: 'Recommendation preview',
       rankingAria: 'Weighted ranking',
+      recommendationEyebrow: 'Recommendation',
+      recommendationTitle: (name) => `${name} is the strongest option`,
+      recommendationTieTitle: (names) => `${joinEnglishLabels(names)} are tied`,
+      recommendationEmptyTitle: 'No recommendation yet',
+      topScore: 'Top score',
+      closestAlternative: 'Closest alternative',
+      aheadBy: (gap) => `Ahead by ${gap}`,
+      optionScore: (name, score) => `${name} (${score})`,
+      topContributors: 'Top contributors',
+      tiedGap: (names) =>
+        `No score gap: ${joinEnglishLabels(names)} are tied for first.`,
+      noContributionDrivers:
+        'No criteria are adding points to this option yet.',
+      contributionValue: (value) => `${value} contribution`,
+      contributionDetail: (score, weight) => `${score} score x ${weight} weight`,
+      contributionBarAria: (criterionName, optionName, contribution) =>
+        `${criterionName} contributes ${contribution} to ${optionName}`,
+      fullRankingTitle: 'Full ranking',
+      showFullRanking: 'See full ranking',
+      hideFullRanking: 'Hide full ranking',
+      rankingGapLeader: 'Leader',
+      rankingGapFromLeader: (gap) => `${gap} behind leader`,
+      rankingTiedForLead: 'Tied for first',
       tied: 'Tied',
       leading: 'Leading',
       weightedScore: 'weighted score',
       scoreBarAria: (name, score) => `${name} has a weighted score of ${score}`,
-      criterionShare: 'Criterion share',
       noPositiveWeights:
         'No positive criterion weights are available, so every option is currently neutral.',
       reset: 'Reset matrix',
@@ -324,13 +371,36 @@ export const translations: Record<Language, TranslationCopy> = {
       visibilityHelper:
         'Oculta los resultados mientras puntúas para evitar anclarte en la opción líder actual. Puedes revelarlos cuando quieras.',
       hiddenStatus: 'Resultados ocultos mientras puntúas.',
+      recommendationAria: 'Vista de recomendación',
       rankingAria: 'Clasificación ponderada',
+      recommendationEyebrow: 'Recomendación',
+      recommendationTitle: (name) => `${name} es la opción más fuerte`,
+      recommendationTieTitle: (names) => `${joinSpanishLabels(names)} están empatadas`,
+      recommendationEmptyTitle: 'Aún no hay recomendación',
+      topScore: 'Puntuación principal',
+      closestAlternative: 'Alternativa más cercana',
+      aheadBy: (gap) => `Ventaja de ${gap}`,
+      optionScore: (name, score) => `${name} (${score})`,
+      topContributors: 'Principales contribuciones',
+      tiedGap: (names) =>
+        `Sin diferencia de puntuación: ${joinSpanishLabels(names)} comparten el primer lugar.`,
+      noContributionDrivers:
+        'Ningún criterio suma puntos a esta opción todavía.',
+      contributionValue: (value) => `${value} de contribución`,
+      contributionDetail: (score, weight) => `${score} puntuación x ${weight} peso`,
+      contributionBarAria: (criterionName, optionName, contribution) =>
+        `${criterionName} aporta ${contribution} a ${optionName}`,
+      fullRankingTitle: 'Clasificación completa',
+      showFullRanking: 'Ver clasificación completa',
+      hideFullRanking: 'Ocultar clasificación completa',
+      rankingGapLeader: 'Líder',
+      rankingGapFromLeader: (gap) => `${gap} por detrás del líder`,
+      rankingTiedForLead: 'Empate en primer lugar',
       tied: 'Empate',
       leading: 'Líder',
       weightedScore: 'puntuación ponderada',
       scoreBarAria: (name, score) =>
         `${name} tiene una puntuación ponderada de ${score}`,
-      criterionShare: 'Participación por criterio',
       noPositiveWeights:
         'No hay pesos positivos en los criterios, así que todas las opciones están neutrales ahora.',
       reset: 'Reiniciar matriz',
