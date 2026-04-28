@@ -111,7 +111,7 @@ describe('App', () => {
     expect(within(optionsRegion).getByText(/^leading$/i)).toBeInTheDocument();
     expect(
       within(optionsRegion).getByLabelText(/live score for remote role/i),
-    ).toHaveTextContent('50.0 pts');
+    ).toHaveTextContent('1.0 pts');
 
     firstOption.setSelectionRange(0, 0);
     await user.click(firstOption);
@@ -174,10 +174,71 @@ describe('App', () => {
     ).toHaveLength(3);
   });
 
+  it('renders criteria as a vertical list instead of a table', () => {
+    render(<App />);
+
+    const criteriaRegion = screen.getByRole('region', {
+      name: /weight and score/i,
+    });
+    const criteriaList = within(criteriaRegion).getByRole('list', {
+      name: /criteria list/i,
+    });
+    const scoreRows = within(criteriaRegion).getByRole('group', {
+      name: /criterion 1 option scores/i,
+    });
+
+    expect(within(criteriaRegion).getByText(/1 criterion/i)).toBeInTheDocument();
+    expect(within(criteriaList).getAllByRole('listitem')).toHaveLength(1);
+    expect(
+      within(criteriaRegion).getByRole('button', { name: /add criterion/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(criteriaRegion).getByLabelText(/importance for criterion 1/i),
+    ).toHaveValue('1');
+    expect(
+      within(criteriaRegion).getAllByLabelText(/score for option \d on criterion 1/i),
+    ).toHaveLength(2);
+    for (const scoreSlider of within(criteriaRegion).getAllByLabelText(
+      /score for option \d on criterion 1/i,
+    )) {
+      expect(scoreSlider).toHaveValue('1');
+    }
+    expect(scoreRows).toHaveClass('criteria-score-rows');
+    expect(Array.from(scoreRows.children)).toHaveLength(2);
+    expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
+    expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
+    expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
+  });
+
+  it('migrates a saved blank default card from old 50 sliders to one', () => {
+    const savedMatrix = createStarterMatrix();
+    const categoryId = savedMatrix.categories[0].id;
+
+    savedMatrix.categories[0].weight = 50;
+    for (const option of savedMatrix.options) {
+      savedMatrix.scores[option.id][categoryId] = 50;
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+
+    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('1');
+    expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
+  });
+
   it('restores the saved matrix and updates results live', async () => {
     const savedMatrix = createStarterMatrix();
     savedMatrix.options[0].name = 'Stay here';
     savedMatrix.options[1].name = 'Move abroad';
+    savedMatrix.categories[0].weight = 10;
+    savedMatrix.scores[savedMatrix.options[0].id][savedMatrix.categories[0].id] = 5;
+    savedMatrix.scores[savedMatrix.options[1].id][savedMatrix.categories[0].id] = 5;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
 
     render(<App />);
@@ -187,22 +248,22 @@ describe('App', () => {
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/live score for move abroad/i)).toHaveTextContent(
-      '50.0 pts',
+      '5.0 pts',
     );
 
-    const scoreSlider = screen.getByLabelText(/score for stay here on category 1/i);
+    const scoreSlider = screen.getByLabelText(/score for stay here on criterion 1/i);
 
-    fireEvent.change(scoreSlider, { target: { value: '100' } });
+    fireEvent.change(scoreSlider, { target: { value: '10' } });
 
     await waitFor(() => {
       expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/live score for stay here/i)).toHaveTextContent(
-        '100.0 pts',
+        '10.0 pts',
       );
     });
   });
 
-  it('lets users add, rename, and remove options and categories', async () => {
+  it('lets users add, rename, and remove options and criteria', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -229,8 +290,8 @@ describe('App', () => {
     expect(Array.from(optionCardsGrid.children)).toHaveLength(4);
     expect(optionCardsGrid.children[3]).toBe(addCard);
 
-    await user.click(screen.getByRole('button', { name: /add category/i }));
-    const categoryTwo = screen.getByDisplayValue('Category 2');
+    await user.click(screen.getByRole('button', { name: /add criterion/i }));
+    const categoryTwo = screen.getByDisplayValue('Criterion 2');
     await user.clear(categoryTwo);
     await user.type(categoryTwo, 'Meaning');
     expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
@@ -271,6 +332,12 @@ describe('App', () => {
     expect(screen.getByDisplayValue('Fifth path')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Sixth path')).toBeInTheDocument();
     expect(
+      Array.from(
+        screen.getByRole('group', { name: /criterion 1 option scores/i })
+          .children,
+      ),
+    ).toHaveLength(6);
+    expect(
       within(optionCardsGrid).queryByRole('form', { name: /add option/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
@@ -309,7 +376,7 @@ describe('App', () => {
       name: `Saved option ${index + 1}`,
     }));
     savedMatrix.scores = Object.fromEntries(
-      savedMatrix.options.map((option) => [option.id, { [categoryId]: 50 }]),
+      savedMatrix.options.map((option) => [option.id, { [categoryId]: 5 }]),
     );
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
 
@@ -327,6 +394,12 @@ describe('App', () => {
       within(optionsRegion).queryByRole('form', { name: /add option/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+    expect(
+      Array.from(
+        screen.getByRole('group', { name: /criterion 1 option scores/i })
+          .children,
+      ),
+    ).toHaveLength(7);
 
     await user.click(
       screen.getByRole('button', { name: /remove saved option 7/i }),
@@ -391,7 +464,9 @@ describe('App', () => {
 
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
-    expect(screen.getByLabelText(/^category 1$/i)).toHaveValue('');
-    expect(screen.getByLabelText(/importance for category 1/i)).toHaveValue('50');
+    expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
+    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('1');
+    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('1');
   });
 });
