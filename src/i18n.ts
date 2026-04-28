@@ -52,6 +52,11 @@ export interface TranslationCopy {
     criteriaHeading: string;
     criteriaDescription: string;
     criteriaCount: (count: number) => string;
+    blindScoring: string;
+    blindScoringOn: string;
+    blindScoringOff: string;
+    blindScoringHelpLabel: string;
+    blindScoringHelp: string;
     criteriaList: string;
     criterionLabel: (index: number) => string;
     newCriterion: string;
@@ -75,10 +80,7 @@ export interface TranslationCopy {
     title: string;
     noWeightHeadline: string;
     tieHeadline: (names: string[]) => string;
-    hideResults: string;
     showResults: string;
-    visibilityHintLabel: string;
-    visibilityHelper: string;
     hiddenStatus: string;
     recommendationAria: string;
     rankingAria: string;
@@ -117,6 +119,9 @@ export interface TranslationCopy {
   footer: {
     productLabel: string;
     note: string;
+    contactLabel: string;
+    contactEmail: string;
+    backToScoring: string;
   };
 }
 
@@ -198,6 +203,12 @@ export const translations: Record<Language, TranslationCopy> = {
       criteriaDescription:
         'Name the factors that matter, set how strongly each one should influence the decision from 0-10, then choose whether each option score is quantitative or a has/does-not-have condition. A weight of 0 excludes that criterion.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
+      blindScoring: 'Blind scoring',
+      blindScoringOn: 'On',
+      blindScoringOff: 'Off',
+      blindScoringHelpLabel: 'Why this helps',
+      blindScoringHelp:
+        'Hides live totals and recommendations while you score, so the current leader does not anchor your judgment.',
       criteriaList: 'Criteria list',
       criterionLabel: (index) => `Criterion ${index}`,
       newCriterion: 'New criterion',
@@ -225,11 +236,7 @@ export const translations: Record<Language, TranslationCopy> = {
         'Give at least one criterion some weight to surface a recommendation.',
       tieHeadline: (names) =>
         `Current tie: ${joinEnglishLabels(names)} are evenly matched right now.`,
-      hideResults: 'Hide results',
       showResults: 'Show results',
-      visibilityHintLabel: 'Why this helps',
-      visibilityHelper:
-        'Hide results while scoring to avoid anchoring on the current leader. You can reveal them anytime.',
       hiddenStatus: 'Results hidden while you score.',
       recommendationAria: 'Recommendation preview',
       rankingAria: 'Weighted ranking',
@@ -269,6 +276,9 @@ export const translations: Record<Language, TranslationCopy> = {
       productLabel: 'Weighted Scoring Model',
       note:
         'Your matrix stays stored locally in this browser, so you can return to it without creating an account.',
+      contactLabel: 'Contact',
+      contactEmail: 'hugonzalezhuerta@gmail.com',
+      backToScoring: 'Back to scoring',
     },
   },
   es: {
@@ -325,6 +335,12 @@ export const translations: Record<Language, TranslationCopy> = {
       criteriaDescription:
         'Nombra los factores importantes, define cuánto debe influir cada uno en la decisión de 0 a 10 y luego elige si cada puntuación de opción es cuantitativa o una condición de tiene/no tiene. Un peso de 0 excluye ese criterio.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterio' : 'criterios'}`,
+      blindScoring: 'Puntuación a ciegas',
+      blindScoringOn: 'Activada',
+      blindScoringOff: 'Desactivada',
+      blindScoringHelpLabel: 'Por qué ayuda',
+      blindScoringHelp:
+        'Oculta los totales en vivo y las recomendaciones mientras puntúas, para que la opción líder no influya en tu juicio.',
       criteriaList: 'Lista de criterios',
       criterionLabel: (index) => `Criterio ${index}`,
       newCriterion: 'Nuevo criterio',
@@ -352,11 +368,7 @@ export const translations: Record<Language, TranslationCopy> = {
         'Da peso al menos a un criterio para mostrar una recomendación.',
       tieHeadline: (names) =>
         `Empate actual: ${joinSpanishLabels(names)} están igualados ahora.`,
-      hideResults: 'Ocultar resultados',
       showResults: 'Mostrar resultados',
-      visibilityHintLabel: 'Por qué ayuda',
-      visibilityHelper:
-        'Oculta los resultados mientras puntúas para evitar anclarte en la opción líder actual. Puedes revelarlos cuando quieras.',
       hiddenStatus: 'Resultados ocultos mientras puntúas.',
       recommendationAria: 'Vista de recomendación',
       rankingAria: 'Clasificación ponderada',
@@ -398,6 +410,9 @@ export const translations: Record<Language, TranslationCopy> = {
       productLabel: 'Matriz ponderada',
       note:
         'Tu matriz queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
+      contactLabel: 'Contacto',
+      contactEmail: 'hugonzalezhuerta@gmail.com',
+      backToScoring: 'Volver a puntuar',
     },
   },
 };
