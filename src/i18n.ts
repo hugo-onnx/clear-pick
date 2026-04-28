@@ -72,13 +72,12 @@ export interface TranslationCopy {
     scoreAria: (optionName: string, criterionName: string) => string;
   };
   results: {
-    label: string;
     title: string;
     noWeightHeadline: string;
     tieHeadline: (names: string[]) => string;
-    leadingHeadline: (name: string) => string;
     hideResults: string;
     showResults: string;
+    visibilityHintLabel: string;
     visibilityHelper: string;
     hiddenStatus: string;
     rankingAria: string;
@@ -86,10 +85,8 @@ export interface TranslationCopy {
     leading: string;
     weightedScore: string;
     scoreBarAria: (name: string, score: string) => string;
-    influence: string;
-    categoryShare: string;
+    criterionShare: string;
     noPositiveWeights: string;
-    localSave: string;
     reset: string;
     matrixCount: (options: number, categories: number) => string;
   };
@@ -203,29 +200,25 @@ export const translations: Record<Language, TranslationCopy> = {
         `Score for ${optionName} on ${criterionName}`,
     },
     results: {
-      label: 'Results',
-      title: 'Your weighted view',
+      title: 'Results',
       noWeightHeadline:
         'Give at least one criterion some weight to surface a recommendation.',
       tieHeadline: (names) =>
         `Current tie: ${joinEnglishLabels(names)} are evenly matched right now.`,
-      leadingHeadline: (name) => `Leading option: ${name}.`,
       hideResults: 'Hide results',
       showResults: 'Show results',
+      visibilityHintLabel: 'Why this helps',
       visibilityHelper:
-        'Hide results while scoring to avoid anchoring on the current leader. You can reveal them anytime.',
+        'Hide results while scoring to avoid bias while scoring. You can reveal them anytime.',
       hiddenStatus: 'Results hidden while you score.',
       rankingAria: 'Weighted ranking',
       tied: 'Tied',
       leading: 'Leading',
       weightedScore: 'weighted score',
       scoreBarAria: (name, score) => `${name} has a weighted score of ${score}`,
-      influence: 'Influence',
-      categoryShare: 'Category share',
+      criterionShare: 'Criterion share',
       noPositiveWeights:
         'No positive criterion weights are available, so every option is currently neutral.',
-      localSave:
-        'This matrix is stored locally in this browser for quick return visits.',
       reset: 'Reset matrix',
       matrixCount: (options, categories) => `${options} options / ${categories} categories`,
     },
@@ -320,15 +313,14 @@ export const translations: Record<Language, TranslationCopy> = {
         `Puntuación de ${optionName} en ${criterionName}`,
     },
     results: {
-      label: 'Resultados',
-      title: 'Tu vista ponderada',
+      title: 'Resultados',
       noWeightHeadline:
         'Da peso al menos a un criterio para mostrar una recomendación.',
       tieHeadline: (names) =>
         `Empate actual: ${joinSpanishLabels(names)} están igualados ahora.`,
-      leadingHeadline: (name) => `Opción líder: ${name}.`,
       hideResults: 'Ocultar resultados',
       showResults: 'Mostrar resultados',
+      visibilityHintLabel: 'Por qué ayuda',
       visibilityHelper:
         'Oculta los resultados mientras puntúas para evitar anclarte en la opción líder actual. Puedes revelarlos cuando quieras.',
       hiddenStatus: 'Resultados ocultos mientras puntúas.',
@@ -338,12 +330,9 @@ export const translations: Record<Language, TranslationCopy> = {
       weightedScore: 'puntuación ponderada',
       scoreBarAria: (name, score) =>
         `${name} tiene una puntuación ponderada de ${score}`,
-      influence: 'Influencia',
-      categoryShare: 'Participación por categoría',
+      criterionShare: 'Participación por criterio',
       noPositiveWeights:
         'No hay pesos positivos en los criterios, así que todas las opciones están neutrales ahora.',
-      localSave:
-        'Esta matriz se guarda localmente en este navegador para volver rápido.',
       reset: 'Reiniciar matriz',
       matrixCount: (options, categories) =>
         `${options} opciones / ${categories} categorías`,
