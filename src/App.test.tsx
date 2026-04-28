@@ -178,7 +178,7 @@ describe('App', () => {
     render(<App />);
 
     const criteriaRegion = screen.getByRole('region', {
-      name: /weight and score/i,
+      name: /criteria, weights, and scores/i,
     });
     const criteriaList = within(criteriaRegion).getByRole('list', {
       name: /criteria list/i,
@@ -232,6 +232,25 @@ describe('App', () => {
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
   });
 
+  it('smooth snap moves in tenths and commits rounded integer scores on release', async () => {
+    render(<App />);
+
+    const scoreSlider = screen.getByLabelText(
+      /score for option 1 on criterion 1/i,
+    );
+
+    fireEvent.pointerDown(scoreSlider);
+    fireEvent.change(scoreSlider, { target: { value: '4.6' } });
+
+    expect(scoreSlider).toHaveValue('4.6');
+
+    fireEvent.pointerUp(scoreSlider);
+
+    await waitFor(() => {
+      expect(scoreSlider).toHaveValue('5');
+    });
+  });
+
   it('restores the saved matrix and updates results live', async () => {
     const savedMatrix = createStarterMatrix();
     savedMatrix.options[0].name = 'Stay here';
@@ -253,7 +272,9 @@ describe('App', () => {
 
     const scoreSlider = screen.getByLabelText(/score for stay here on criterion 1/i);
 
+    fireEvent.pointerDown(scoreSlider);
     fireEvent.change(scoreSlider, { target: { value: '10' } });
+    fireEvent.pointerUp(scoreSlider);
 
     await waitFor(() => {
       expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
@@ -439,6 +460,24 @@ describe('App', () => {
 
     expect(secondOption).toHaveValue('Office role');
     expect(screen.getByLabelText(/new option/i)).toHaveFocus();
+  });
+
+  it('sets criterion names when Enter is pressed', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /add criterion/i }));
+
+    const secondCriterion = screen.getByLabelText(/^criterion 2$/i);
+    await user.clear(secondCriterion);
+    await user.type(secondCriterion, 'Long-term fit');
+    await user.keyboard('{Enter}');
+
+    expect(secondCriterion).toHaveValue('Long-term fit');
+    expect(secondCriterion).not.toHaveFocus();
+    expect(
+      screen.getByRole('button', { name: /remove long-term fit/i }),
+    ).toBeInTheDocument();
   });
 
   it('persists edits and can reset back to the blank default matrix', async () => {
