@@ -9,13 +9,32 @@ import {
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import { createStarterMatrix } from './utils/matrix';
+import { LANGUAGE_STORAGE_KEY } from './i18n';
+import {
+  SCORE_MODE_BOOLEAN,
+  SCORE_MODE_SCALE,
+  createStarterMatrix,
+} from './utils/matrix';
 import { STORAGE_KEY } from './utils/storage';
 
 afterEach(() => {
   window.localStorage.clear();
   vi.restoreAllMocks();
 });
+
+function saveScoredMatrix() {
+  const savedMatrix = createStarterMatrix();
+  const categoryId = savedMatrix.categories[0].id;
+
+  savedMatrix.options[0].name = 'Stay here';
+  savedMatrix.options[1].name = 'Move abroad';
+  savedMatrix.categories[0].weight = 10;
+  savedMatrix.scores[savedMatrix.options[0].id][categoryId] = 10;
+  savedMatrix.scores[savedMatrix.options[1].id][categoryId] = 4;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+  return savedMatrix;
+}
 
 describe('App', () => {
   it('renders the hero and footer anchors', () => {
@@ -85,6 +104,43 @@ describe('App', () => {
       configurable: true,
       value: originalScrollIntoView,
     });
+  });
+
+  it('toggles the interface between English and Spanish', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(
+      screen.getByRole('button', { name: /switch to spanish/i }),
+    );
+
+    expect(document.documentElement).toHaveAttribute('lang', 'es');
+    expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('es');
+    expect(
+      screen.getByRole('heading', {
+        name: /toma tu decisión más difícil en 60 segundos/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /modelo de puntuación ponderada/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /opciones para comparar/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^empezar$/i }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: /cambiar a inglés/i }),
+    );
+
+    expect(document.documentElement).toHaveAttribute('lang', 'en');
+    expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
+    expect(
+      screen.getByRole('button', { name: /^start$/i }),
+    ).toBeInTheDocument();
   });
 
   it('keeps blank starter option cards visually unscored until the name is committed', async () => {
@@ -274,6 +330,244 @@ describe('App', () => {
     });
   });
 
+  it('converts an option score to yes/no scoring with weighted binary values', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
+    fireEvent.pointerDown(weightSlider);
+    fireEvent.change(weightSlider, { target: { value: '10' } });
+    fireEvent.pointerUp(weightSlider);
+
+    const firstScoreSlider = screen.getByLabelText(
+      /score for option 1 on criterion 1/i,
+    );
+    const secondScoreSlider = screen.getByLabelText(
+      /score for option 2 on criterion 1/i,
+    );
+
+    fireEvent.pointerDown(firstScoreSlider);
+    fireEvent.change(firstScoreSlider, { target: { value: '4' } });
+    fireEvent.pointerUp(firstScoreSlider);
+    fireEvent.pointerDown(secondScoreSlider);
+    fireEvent.change(secondScoreSlider, { target: { value: '5' } });
+    fireEvent.pointerUp(secondScoreSlider);
+
+    await waitFor(() => {
+      expect(firstScoreSlider).toHaveValue('4');
+      expect(secondScoreSlider).toHaveValue('5');
+    });
+
+    const firstScoreModeSelect = screen.getByRole('combobox', {
+      name: /scoring mode for option 1 on criterion 1/i,
+    });
+    const secondScoreModeSelect = screen.getByRole('combobox', {
+      name: /scoring mode for option 2 on criterion 1/i,
+    });
+
+    await user.selectOptions(firstScoreModeSelect, SCORE_MODE_BOOLEAN);
+
+    expect(
+      screen.queryByRole('slider', {
+        name: /score for option 1 on criterion 1/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('slider', {
+        name: /score for option 2 on criterion 1/i,
+      }),
+    ).toHaveValue('5');
+    expect(secondScoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
+
+    const firstBooleanScore = screen.getByRole('group', {
+      name: /score for option 1 on criterion 1/i,
+    });
+
+    expect(
+      within(firstBooleanScore).getByRole('button', { name: /^no$/i }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/yes = 10 \/ no = 0/i)).toBeInTheDocument();
+    expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
+    expect(screen.getByText(/leading option: option 2/i)).toBeInTheDocument();
+  });
+
+  it('shows weighted results by default', () => {
+    saveScoredMatrix();
+
+    render(<App />);
+
+    expect(
+      screen.getByRole('button', { name: /hide results/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByRole('region', { name: /weighted ranking/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
+    expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /reset matrix/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides ranking details and explains the bias guard', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /hide results/i }));
+
+    expect(
+      screen.getByRole('button', { name: /show results/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.getByText(
+        /hide results while scoring to avoid anchoring on the current leader/i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/leading option: stay here/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: /weighted ranking/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/10\.0\/10 weighted score/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /reset matrix/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText(/results hidden while you score/i).length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it('restores the ranking when results are shown again', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /hide results/i }));
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+
+    expect(
+      screen.getByRole('button', { name: /hide results/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByRole('region', { name: /weighted ranking/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/leading option: stay here/i)).toBeInTheDocument();
+    expect(screen.getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
+  });
+
+  it('suppresses matrix-side live score and leader cues while results are hidden', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+
+    expect(within(optionsRegion).getByText(/^leading$/i)).toBeInTheDocument();
+    expect(
+      within(optionsRegion).getByLabelText(/live score for stay here/i),
+    ).toHaveTextContent('10.0 pts');
+
+    await user.click(screen.getByRole('button', { name: /hide results/i }));
+
+    expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
+    expect(
+      within(optionsRegion).queryByLabelText(/live score for stay here/i),
+    ).not.toBeInTheDocument();
+    expect(
+      within(optionsRegion).getAllByText(/results hidden while you score/i),
+    ).toHaveLength(2);
+  });
+
+  it('allows each option score in each criterion to keep an independent scoring type', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/new criterion/i), 'Eligibility');
+    await user.click(screen.getByRole('button', { name: /add criterion/i }));
+
+    const firstCriterionFirstOptionMode = screen.getByRole('combobox', {
+      name: /scoring mode for option 1 on criterion 1/i,
+    });
+    const secondCriterionFirstOptionMode = screen.getByRole('combobox', {
+      name: /scoring mode for option 1 on eligibility/i,
+    });
+    const secondCriterionSecondOptionMode = screen.getByRole('combobox', {
+      name: /scoring mode for option 2 on eligibility/i,
+    });
+
+    await user.selectOptions(
+      secondCriterionFirstOptionMode,
+      SCORE_MODE_BOOLEAN,
+    );
+
+    expect(firstCriterionFirstOptionMode).toHaveValue(SCORE_MODE_SCALE);
+    expect(secondCriterionFirstOptionMode).toHaveValue(SCORE_MODE_BOOLEAN);
+    expect(secondCriterionSecondOptionMode).toHaveValue(SCORE_MODE_SCALE);
+    expect(
+      screen.getByRole('slider', {
+        name: /score for option 1 on criterion 1/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', {
+        name: /score for option 1 on eligibility/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('slider', {
+        name: /score for option 2 on eligibility/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('restores and resets saved yes/no option scores', async () => {
+    const user = userEvent.setup();
+    const savedMatrix = createStarterMatrix();
+    const categoryId = savedMatrix.categories[0].id;
+    const firstOptionId = savedMatrix.options[0].id;
+    const secondOptionId = savedMatrix.options[1].id;
+
+    savedMatrix.categories[0].weight = 10;
+    savedMatrix.scoreModes[firstOptionId][categoryId] = SCORE_MODE_BOOLEAN;
+    savedMatrix.scores[firstOptionId][categoryId] = 10;
+    savedMatrix.scores[secondOptionId][categoryId] = 0;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+    render(<App />);
+
+    const scoreModeSelect = screen.getByRole('combobox', {
+      name: /scoring mode for option 1 on criterion 1/i,
+    });
+    expect(scoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
+    expect(
+      screen.queryByRole('slider', {
+        name: /score for option 1 on criterion 1/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('slider', {
+        name: /score for option 2 on criterion 1/i,
+      }),
+    ).toHaveValue('0');
+
+    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+
+    const resetScoreModeSelect = screen.getByRole('combobox', {
+      name: /scoring mode for option 1 on criterion 1/i,
+    });
+    expect(resetScoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
+    expect(
+      screen.getByRole('slider', {
+        name: /score for option 1 on criterion 1/i,
+      }),
+    ).toHaveValue('0');
+  });
+
   it('restores the saved matrix and updates results live', async () => {
     const savedMatrix = createStarterMatrix();
     savedMatrix.options[0].name = 'Stay here';
@@ -286,6 +580,9 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByRole('button', { name: /^start$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /hide results/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByDisplayValue('Stay here')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();
