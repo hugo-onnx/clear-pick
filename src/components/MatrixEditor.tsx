@@ -13,9 +13,12 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { DecisionMatrix } from '../types';
 import {
+  DEFAULT_SCORE,
+  MAX_SCORE,
   MAX_OPTIONS,
   MIN_CATEGORIES,
   MIN_OPTIONS,
+  MIN_SCORE,
   getDisplayName,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
@@ -34,18 +37,20 @@ interface MatrixEditorProps {
 }
 
 function getRangeStyle(value: number): CSSProperties {
-  const clampedValue = Math.max(0, Math.min(100, value));
-  const fadeStart = Math.max(0, clampedValue - 8);
-  const fadeEnd = Math.min(100, clampedValue + 14);
+  const clampedValue = Math.max(MIN_SCORE, Math.min(MAX_SCORE, value));
+  const progress =
+    ((clampedValue - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)) * 100;
+  const fadeStart = Math.max(0, progress - 8);
+  const fadeEnd = Math.min(100, progress + 14);
 
-  if (clampedValue <= 0) {
+  if (progress <= 0) {
     return {
       background: 'var(--range-empty, rgba(255, 255, 255, 0.12))',
       transition: 'background 180ms ease',
     };
   }
 
-  if (clampedValue >= 100) {
+  if (progress >= 100) {
     return {
       background: 'linear-gradient(90deg, var(--range-start, #06b6d4) 0%, var(--range-end, #f97316) 100%)',
       transition: 'background 180ms ease',
@@ -56,7 +61,7 @@ function getRangeStyle(value: number): CSSProperties {
     background: `linear-gradient(90deg,
       var(--range-start, #06b6d4) 0%,
       var(--range-end, #f97316) ${fadeStart}%,
-      rgba(249, 115, 22, 0.76) ${clampedValue}%,
+      rgba(249, 115, 22, 0.76) ${progress}%,
       var(--range-empty, rgba(255, 255, 255, 0.12)) ${fadeEnd}%,
       var(--range-empty, rgba(255, 255, 255, 0.12)) 100%)`,
     transition: 'background 180ms ease',
@@ -105,9 +110,6 @@ export function MatrixEditor({
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
   const canAddOptions = matrix.options.length < MAX_OPTIONS;
   const canRemoveCategories = matrix.categories.length > MIN_CATEGORIES;
-  const gridStyle: CSSProperties = {
-    gridTemplateColumns: `minmax(260px, 1.15fr) repeat(${matrix.options.length}, minmax(220px, 1fr))`,
-  };
   const totalsByOptionId = new Map(
     summary.rankedOptions.map((option) => [option.id, option.total]),
   );
@@ -330,13 +332,15 @@ export function MatrixEditor({
               className="flex min-h-[12.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
               onSubmit={handleAddOptionSubmit}
             >
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <label className={labelClass} htmlFor="new-option-name">
-                    New option
-                  </label>
+              <div>
+                <div className="flex h-8 items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
+                    <label className={labelClass} htmlFor="new-option-name">
+                      New option
+                    </label>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="mt-3 flex gap-2">
                   <Input
                     className="h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
                     id="new-option-name"
@@ -359,187 +363,179 @@ export function MatrixEditor({
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section aria-labelledby="criteria-heading" className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase text-muted-foreground">
               Criteria
             </p>
-            <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground">
+            <h3
+              className="font-display text-2xl font-semibold tracking-normal text-foreground"
+              id="criteria-heading"
+            >
               Weight and score
             </h3>
+            <p className="mt-3 max-w-3xl text-base text-muted-foreground">
+              Set each criterion&apos;s importance, then score every option in
+              the same row.
+            </p>
           </div>
-          <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
-            {matrix.categories.length} categories
-          </p>
-          <Button onClick={onAddCategory} size="sm" variant="secondary">
-            Add category
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
+              {matrix.categories.length}{' '}
+              {matrix.categories.length === 1 ? 'criterion' : 'criteria'}
+            </p>
+            <Button onClick={onAddCategory} size="sm" variant="secondary">
+              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+              Add criterion
+            </Button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-border bg-white/75 shadow-sm">
-          <div className="min-w-fit">
-            <div
-              aria-label="Decision matrix comparison"
-              className="divide-y divide-border"
-              role="table"
-            >
-              <div className="grid" role="row" style={gridStyle}>
-                <div
-                  className="sticky left-0 z-20 border-r border-border bg-white/95 p-5"
-                  role="columnheader"
-                >
-                  <p className="font-display text-2xl font-semibold tracking-normal text-foreground">
-                    Criteria
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    Adjust importance on the left, then compare how each option
-                    scores across the row.
-                  </p>
-                </div>
+        <div aria-label="Criteria list" className="space-y-4" role="list">
+          {matrix.categories.map((category, categoryIndex) => {
+            const criterionFallback = `Criterion ${categoryIndex + 1}`;
+            const criterionDisplayName = getDisplayName(
+              category.name,
+              criterionFallback,
+            );
 
-                {matrix.options.map((option, index) => {
-                  const displayName = getDisplayName(
-                    option.name,
-                    `Option ${index + 1}`,
-                  );
-                  const isLeading = summary.leadingOptionIds.includes(option.id);
-
-                  return (
-                    <div
-                      className={cn(
-                        'border-r border-border p-5 last:border-r-0',
-                        isLeading ? 'bg-cyan-50/70' : 'bg-white/30',
-                      )}
-                      key={option.id}
-                      role="columnheader"
-                    >
-                      <p className={labelClass}>Option {index + 1}</p>
-                      <h3 className="mt-3 text-lg font-semibold text-foreground">
-                        {displayName}
-                      </h3>
-                      <div className="mt-4 flex items-baseline justify-between gap-3">
-                        <span className="text-xs font-semibold uppercase text-muted-foreground">
-                          Live total
-                        </span>
-                        <output
-                          aria-label={`Column total for ${displayName}`}
-                          className="text-sm font-semibold text-foreground"
+            return (
+              <article
+                aria-label={`${criterionDisplayName} criterion row`}
+                className="rounded-lg border border-border bg-white/75 p-5 shadow-sm"
+                key={category.id}
+                role="listitem"
+              >
+                <div className="space-y-5">
+                  <div className="grid gap-5 lg:grid-cols-[minmax(220px,0.85fr)_minmax(0,1.75fr)]">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <label className={labelClass} htmlFor={`category-${category.id}`}>
+                          {criterionFallback}
+                        </label>
+                        <Button
+                          aria-label={`Remove ${criterionDisplayName}`}
+                          className={minorButtonClass}
+                          disabled={!canRemoveCategories}
+                          onClick={() => onRemoveCategory(category.id)}
+                          size="icon"
+                          variant="ghost"
                         >
-                          {formatPoints(totalsByOptionId.get(option.id) ?? 0)}
-                        </output>
+                          <X aria-hidden="true" className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
 
-              {matrix.categories.map((category, categoryIndex) => (
-                <div
-                  className="grid"
-                  key={category.id}
-                  role="row"
-                  style={gridStyle}
-                >
-                  <div
-                    className="sticky left-0 z-10 border-r border-border bg-white/95 p-5"
-                    role="rowheader"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <label className={labelClass} htmlFor={`category-${category.id}`}>
-                        Category {categoryIndex + 1}
-                      </label>
-                      <Button
-                        aria-label={`Remove ${getDisplayName(category.name, `Category ${categoryIndex + 1}`)}`}
-                        className={minorButtonClass}
-                        disabled={!canRemoveCategories}
-                        onClick={() => onRemoveCategory(category.id)}
-                        size="icon"
-                        variant="ghost"
-                      >
-                        <X aria-hidden="true" className="h-4 w-4" />
-                      </Button>
+                      <Input
+                        className="h-11 rounded-lg bg-white/90 font-semibold shadow-sm placeholder:text-foreground/45"
+                        id={`category-${category.id}`}
+                        onChange={(event) =>
+                          onCategoryNameChange(category.id, event.target.value)
+                        }
+                        placeholder={criterionFallback}
+                        value={category.name}
+                      />
                     </div>
 
-                    <Input
-                      className="mt-3 h-11"
-                      id={`category-${category.id}`}
-                      onChange={(event) =>
-                        onCategoryNameChange(category.id, event.target.value)
-                      }
-                      placeholder={`Category ${categoryIndex + 1}`}
-                      value={category.name}
-                    />
-
-                    <div className="mt-5 space-y-3">
-                      <label className={labelClass} htmlFor={`weight-${category.id}`}>
-                        Importance
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          aria-label={`Importance for ${getDisplayName(category.name, `Category ${categoryIndex + 1}`)}`}
-                          className="matrix-range"
-                          id={`weight-${category.id}`}
-                          max="100"
-                          min="0"
-                          onChange={(event) =>
-                            onCategoryWeightChange(
-                              category.id,
-                              Number(event.target.value),
-                            )
-                          }
-                          style={getRangeStyle(category.weight)}
-                          type="range"
-                          value={category.weight}
-                        />
+                    <div className="space-y-3 rounded-md bg-slate-950/[0.035] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <label className={labelClass} htmlFor={`weight-${category.id}`}>
+                          Importance
+                        </label>
                         <output className="min-w-12 text-right text-sm font-semibold text-foreground">
-                          {category.weight}%
+                          {category.weight}/10
                         </output>
                       </div>
+                      <input
+                        aria-label={`Importance for ${criterionDisplayName}`}
+                        className="matrix-range"
+                        id={`weight-${category.id}`}
+                        max={MAX_SCORE}
+                        min={MIN_SCORE}
+                        onChange={(event) =>
+                          onCategoryWeightChange(
+                            category.id,
+                            Number(event.target.value),
+                          )
+                        }
+                        step="1"
+                        style={getRangeStyle(category.weight)}
+                        type="range"
+                        value={category.weight}
+                      />
                     </div>
                   </div>
 
-                  {matrix.options.map((option, optionIndex) => {
-                    const score = matrix.scores[option.id]?.[category.id] ?? 0;
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className={labelClass}>Option scores</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {matrix.options.length}{' '}
+                        {matrix.options.length === 1 ? 'option' : 'options'}
+                      </p>
+                    </div>
 
-                    return (
-                      <div
-                        className="border-r border-border bg-white/30 p-5 last:border-r-0"
-                        key={`${option.id}-${category.id}`}
-                        role="cell"
-                      >
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-foreground/80">
-                            {getDisplayName(option.name, `Option ${optionIndex + 1}`)}
-                          </span>
-                          <output className="min-w-10 text-right text-sm font-semibold text-foreground">
-                            {score}%
-                          </output>
-                        </div>
-                        <input
-                          aria-label={`Score for ${getDisplayName(option.name, `Option ${optionIndex + 1}`)} on ${getDisplayName(category.name, `Category ${categoryIndex + 1}`)}`}
-                          className="matrix-range"
-                          id={`score-${option.id}-${category.id}`}
-                          max="100"
-                          min="0"
-                          onChange={(event) =>
-                            onScoreChange(
-                              option.id,
-                              category.id,
-                              Number(event.target.value),
-                            )
-                          }
-                          style={getRangeStyle(score)}
-                          type="range"
-                          value={score}
-                        />
-                      </div>
-                    );
-                  })}
+                    <div
+                      aria-label={`${criterionDisplayName} option scores`}
+                      className="criteria-score-rows space-y-2"
+                      role="group"
+                    >
+                      {matrix.options.map((option, optionIndex) => {
+                        const optionDisplayName = getDisplayName(
+                          option.name,
+                          `Option ${optionIndex + 1}`,
+                        );
+                        const score =
+                          matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
+
+                        return (
+                          <div
+                            className={cn(
+                              'grid gap-3 rounded-md border border-border bg-white/65 p-3 sm:grid-cols-[minmax(10rem,0.9fr)_minmax(12rem,1.6fr)_3.75rem] sm:items-center',
+                              summary.leadingOptionIds.includes(option.id)
+                                ? 'border-cyan-400/50 bg-cyan-50/70'
+                                : null,
+                            )}
+                            key={`${option.id}-${category.id}`}
+                          >
+                            <div className="flex min-w-0 items-center justify-between gap-3 sm:block">
+                              <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
+                                {optionDisplayName}
+                              </span>
+                              <output className="text-sm font-semibold text-foreground sm:hidden">
+                                {score}/10
+                              </output>
+                            </div>
+                            <input
+                              aria-label={`Score for ${optionDisplayName} on ${criterionDisplayName}`}
+                              className="matrix-range"
+                              id={`score-${option.id}-${category.id}`}
+                              max={MAX_SCORE}
+                              min={MIN_SCORE}
+                              onChange={(event) =>
+                                onScoreChange(
+                                  option.id,
+                                  category.id,
+                                  Number(event.target.value),
+                                )
+                              }
+                              step="1"
+                              style={getRangeStyle(score)}
+                              type="range"
+                              value={score}
+                            />
+                            <output className="hidden text-right text-sm font-semibold text-foreground sm:block">
+                              {score}/10
+                            </output>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </section>
