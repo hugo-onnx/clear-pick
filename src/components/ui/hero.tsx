@@ -179,7 +179,7 @@ export default function ShaderShowcase({
             transition={{ delay: 1, duration: 0.6 }}
           >
             <motion.button
-              className="min-h-12 cursor-pointer rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 px-8 py-3 text-sm font-extrabold text-white shadow-lg transition-all duration-300 hover:from-cyan-400 hover:to-orange-400 hover:shadow-xl sm:px-10 sm:py-4"
+              className="min-h-12 cursor-pointer rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 px-8 py-3 text-base font-black tracking-wide text-white shadow-lg transition-all duration-300 [font-weight:900] hover:from-cyan-400 hover:to-orange-400 hover:shadow-xl sm:px-10 sm:py-4"
               onClick={onPrimaryCtaClick}
               type="button"
               whileHover={{ scale: 1.05 }}
