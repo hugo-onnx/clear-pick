@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { MeshGradient } from '@paper-design/shaders-react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import type { TranslationCopy } from '@/i18n';
 
 interface ShaderShowcaseProps {
+  copy: TranslationCopy['hero'];
   headingId?: string;
   onPrimaryCtaClick?: () => void;
 }
@@ -20,6 +22,7 @@ const SHADER_CONTEXT = {
 } satisfies WebGLContextAttributes;
 
 export default function ShaderShowcase({
+  copy,
   headingId = 'landing-title',
   onPrimaryCtaClick,
 }: ShaderShowcaseProps) {
@@ -113,19 +116,19 @@ export default function ShaderShowcase({
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
               href="#decision-matrix"
             >
-              Workflow
+              {copy.navWorkflow}
             </a>
             <a
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
               href="#decision-matrix"
             >
-              Scoring
+              {copy.navScoring}
             </a>
             <a
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
               href="#site-footer-note"
             >
-              Local save
+              {copy.navLocalSave}
             </a>
           </nav>
         </header>
@@ -141,25 +144,27 @@ export default function ShaderShowcase({
             <div className="absolute left-1 right-1 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
             <Sparkles aria-hidden="true" className="relative z-10 size-4 text-cyan-100" />
             <span className="relative z-10 text-sm font-medium tracking-wide text-white/90">
-              Interactive weighted decisions
+              {copy.eyebrow}
             </span>
           </motion.div>
 
           <motion.h1
             animate={{ opacity: 1, y: 0 }}
-            aria-label="Make your hardest decision in 60 seconds"
+            aria-label={copy.headingAria}
             className="mb-5 text-5xl font-bold leading-none tracking-normal text-white sm:text-6xl md:text-7xl lg:text-8xl"
             id={headingId}
             initial={{ opacity: 0, y: 30 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
             <span className="mb-2 block pb-1 text-5xl font-normal leading-[1.16] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              Make your hardest
+              {copy.headingFirst}
             </span>
             <span className="block font-black text-white drop-shadow-2xl">
-              decision
+              {copy.headingEmphasis}
             </span>
-            <span className="block font-light italic text-white/80">in 60 seconds</span>
+            <span className="block font-light italic text-white/80">
+              {copy.headingLast}
+            </span>
           </motion.h1>
 
           <motion.p
@@ -168,8 +173,7 @@ export default function ShaderShowcase({
             initial={{ opacity: 0, y: 20 }}
             transition={{ delay: 0.8, duration: 0.6 }}
           >
-            Weight your priorities, score your options, and get an instant
-            recommendation grounded in logic.
+            {copy.description}
           </motion.p>
 
           <motion.div
@@ -185,7 +189,7 @@ export default function ShaderShowcase({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Start
+              {copy.start}
             </motion.button>
           </motion.div>
         </main>
