@@ -14,9 +14,19 @@ export interface CategoryInfluence {
   normalizedWeight: number;
 }
 
+export interface CriterionContribution extends CategoryInfluence {
+  score: number;
+  contribution: number;
+}
+
 export interface DecisionSummary {
   rankedOptions: RankedOption[];
   categoryInfluence: CategoryInfluence[];
+  topOption: RankedOption | null;
+  runnerUpOption: RankedOption | null;
+  scoreGap: number;
+  leaderContributions: CriterionContribution[];
+  sortedLeaderContributions: CriterionContribution[];
   totalWeight: number;
   hasScoringBasis: boolean;
   isTie: boolean;
@@ -51,9 +61,9 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
 
   const rankedOptions = matrix.options
     .map((option, optionIndex) => {
-      const total = matrix.categories.reduce((sum, category) => {
+      const total = matrix.categories.reduce((sum, category, categoryIndex) => {
         const normalizedWeight =
-          totalWeight > 0 ? getPositiveWeight(category.weight) / totalWeight : 0;
+          categoryInfluence[categoryIndex]?.normalizedWeight ?? 0;
         const score = matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
         return sum + normalizedWeight * score;
       }, 0);
@@ -66,16 +76,41 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
     })
     .sort((left, right) => right.total - left.total);
 
-  const topTotal = rankedOptions[0]?.total ?? 0;
+  const topOption = rankedOptions[0] ?? null;
+  const runnerUpOption = rankedOptions[1] ?? null;
+  const topTotal = topOption?.total ?? 0;
   const leadingOptionIds = hasScoringBasis
     ? rankedOptions
         .filter((option) => Math.abs(option.total - topTotal) < EPSILON)
         .map((option) => option.id)
     : [];
+  const leaderContributions = topOption
+    ? categoryInfluence.map((category) => {
+        const score =
+          matrix.scores[topOption.id]?.[category.id] ?? DEFAULT_SCORE;
+
+        return {
+          ...category,
+          score,
+          contribution: category.normalizedWeight * score,
+        };
+      })
+    : [];
+  const sortedLeaderContributions = [...leaderContributions].sort(
+    (left, right) => right.contribution - left.contribution,
+  );
 
   return {
     rankedOptions,
     categoryInfluence,
+    topOption,
+    runnerUpOption,
+    scoreGap:
+      topOption && runnerUpOption
+        ? Math.max(0, topOption.total - runnerUpOption.total)
+        : 0,
+    leaderContributions,
+    sortedLeaderContributions,
     totalWeight,
     hasScoringBasis,
     isTie: hasScoringBasis && leadingOptionIds.length > 1,
