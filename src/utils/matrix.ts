@@ -1,15 +1,19 @@
 import type { Category, DecisionMatrix, Option, ScoresByOption } from '../types';
 
-export const MIN_SCORE = 1;
+export const MIN_SCORE = 0;
 export const MAX_SCORE = 10;
 export const DEFAULT_SCORE = MIN_SCORE;
+export const MIN_WEIGHT = 0;
+export const MAX_WEIGHT = 10;
+export const DEFAULT_WEIGHT = MIN_WEIGHT;
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 6;
 export const MIN_CATEGORIES = 1;
 
 const STARTER_OPTIONS = ['', ''];
-const STARTER_CATEGORIES = [{ name: '', weight: DEFAULT_SCORE }];
-const LEGACY_BLANK_DEFAULT_SCORES = [0, 50];
+const STARTER_CATEGORIES = [{ name: '', weight: DEFAULT_WEIGHT }];
+const BLANK_STARTER_WEIGHT_VALUES = [0, 1, 50];
+const BLANK_STARTER_SCORE_VALUES = [0, 1, 50];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -21,6 +25,14 @@ export function clampScore(value: number): number {
   }
 
   return Math.min(MAX_SCORE, Math.max(MIN_SCORE, Math.round(value)));
+}
+
+export function clampWeight(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_WEIGHT;
+  }
+
+  return Math.min(MAX_WEIGHT, Math.max(MIN_WEIGHT, Math.round(value)));
 }
 
 export function createId(): string {
@@ -38,11 +50,11 @@ export function createOption(name: string): Option {
   };
 }
 
-export function createCategory(name: string, weight = DEFAULT_SCORE): Category {
+export function createCategory(name: string, weight = DEFAULT_WEIGHT): Category {
   return {
     id: createId(),
     name,
-    weight: clampScore(weight),
+    weight: clampWeight(weight),
   };
 }
 
@@ -72,10 +84,17 @@ function buildScores(
   return nextScores;
 }
 
-function isLegacyBlankDefaultScore(value: unknown): boolean {
+function isBlankStarterWeightValue(value: unknown): value is number {
   return (
     typeof value === 'number' &&
-    LEGACY_BLANK_DEFAULT_SCORES.includes(Math.round(value))
+    BLANK_STARTER_WEIGHT_VALUES.includes(Math.round(value))
+  );
+}
+
+function isBlankStarterScoreValue(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    BLANK_STARTER_SCORE_VALUES.includes(Math.round(value))
   );
 }
 
@@ -97,29 +116,33 @@ function isLegacyBlankStarterMatrix(value: Record<string, unknown>): boolean {
 
     return item.id;
   });
-  const categoryIds = rawCategories.map((item) => {
+  const categoryEntries = rawCategories.map((item) => {
     if (
       !isRecord(item) ||
       typeof item.id !== 'string' ||
       item.name !== '' ||
-      !isLegacyBlankDefaultScore(item.weight)
+      !isBlankStarterWeightValue(item.weight)
     ) {
       return null;
     }
 
-    return item.id;
+    return {
+      id: item.id,
+      weight: Math.round(item.weight),
+    };
   });
 
   if (
     optionIds.some((id) => id === null) ||
-    categoryIds.some((id) => id === null)
+    categoryEntries.some((entry) => entry === null)
   ) {
     return false;
   }
 
   const rawScores = isRecord(value.scores) ? value.scores : {};
+  const scoreValues: number[] = [];
 
-  return optionIds.every((optionId) => {
+  const hasOnlyBlankScores = optionIds.every((optionId) => {
     if (optionId === null) {
       return false;
     }
@@ -130,15 +153,32 @@ function isLegacyBlankStarterMatrix(value: Record<string, unknown>): boolean {
       return false;
     }
 
-    return categoryIds.every((categoryId) => {
-      if (categoryId === null) {
+    return categoryEntries.every((categoryEntry) => {
+      if (categoryEntry === null) {
         return false;
       }
 
-      const score = optionScores[categoryId];
-      return isLegacyBlankDefaultScore(score);
+      const score = optionScores[categoryEntry.id];
+
+      if (!isBlankStarterScoreValue(score)) {
+        return false;
+      }
+
+      scoreValues.push(Math.round(score));
+      return true;
     });
   });
+
+  if (!hasOnlyBlankScores) {
+    return false;
+  }
+
+  const usesCurrentStarterDefaults =
+    categoryEntries.every(
+      (categoryEntry) => categoryEntry?.weight === DEFAULT_WEIGHT,
+    ) && scoreValues.every((score) => score === DEFAULT_SCORE);
+
+  return !usesCurrentStarterDefaults;
 }
 
 function hasLegacyPercentageScale(value: Record<string, unknown>): boolean {
@@ -180,12 +220,24 @@ function normalizeStoredScore(value: number, usesLegacyPercentageScale: boolean)
   return clampScore(value);
 }
 
+function normalizeStoredWeight(value: number, usesLegacyPercentageScale: boolean): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_WEIGHT;
+  }
+
+  if (usesLegacyPercentageScale) {
+    return clampWeight(value / 10);
+  }
+
+  return clampWeight(value);
+}
+
 export function synchronizeScores(matrix: DecisionMatrix): DecisionMatrix {
   return {
     ...matrix,
     categories: matrix.categories.map((category) => ({
       ...category,
-      weight: clampScore(category.weight),
+      weight: clampWeight(category.weight),
     })),
     scores: buildScores(matrix.options, matrix.categories, matrix.scores),
   };
@@ -249,8 +301,8 @@ export function normalizeDecisionMatrix(value: unknown): DecisionMatrix {
         typeof item.name === 'string' ? item.name : `Criterion ${index + 1}`;
       const weight =
         typeof item.weight === 'number'
-          ? normalizeStoredScore(item.weight, usesLegacyPercentageScale)
-          : DEFAULT_SCORE;
+          ? normalizeStoredWeight(item.weight, usesLegacyPercentageScale)
+          : DEFAULT_WEIGHT;
       return { id, name, weight };
     })
     .filter((item): item is Category => item !== null);
