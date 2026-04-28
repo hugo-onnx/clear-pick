@@ -1,12 +1,11 @@
 import { Plus, X } from 'lucide-react';
 import {
   useEffect,
+  useRef,
   useState,
   type CSSProperties,
-  type FocusEvent,
   type FormEvent,
   type KeyboardEvent,
-  type MouseEvent,
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +13,16 @@ import { cn } from '@/lib/utils';
 import type { DecisionMatrix } from '../types';
 import {
   DEFAULT_SCORE,
-  MAX_SCORE,
+  DEFAULT_WEIGHT,
   MAX_OPTIONS,
+  MAX_SCORE,
+  MAX_WEIGHT,
   MIN_CATEGORIES,
   MIN_OPTIONS,
   MIN_SCORE,
+  MIN_WEIGHT,
   clampScore,
+  clampWeight,
   getDisplayName,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
@@ -30,25 +33,52 @@ interface MatrixEditorProps {
   onAddOption: (name?: string) => void;
   onRemoveOption: (optionId: string) => void;
   onOptionNameChange: (optionId: string, name: string) => void;
-  onAddCategory: () => void;
+  onAddCategory: (name?: string) => void;
   onRemoveCategory: (categoryId: string) => void;
   onCategoryNameChange: (categoryId: string, name: string) => void;
   onCategoryWeightChange: (categoryId: string, weight: number) => void;
   onScoreChange: (optionId: string, categoryId: string, score: number) => void;
 }
 
-function clampVisualScore(value: number): number {
+type SliderConfig = {
+  min: number;
+  max: number;
+  fallback: number;
+  clamp: (value: number) => number;
+};
+
+const scoreSliderConfig: SliderConfig = {
+  min: MIN_SCORE,
+  max: MAX_SCORE,
+  fallback: DEFAULT_SCORE,
+  clamp: clampScore,
+};
+
+const weightSliderConfig: SliderConfig = {
+  min: MIN_WEIGHT,
+  max: MAX_WEIGHT,
+  fallback: DEFAULT_WEIGHT,
+  clamp: clampWeight,
+};
+
+function clampVisualValue(
+  value: number,
+  config: SliderConfig = scoreSliderConfig,
+): number {
   if (!Number.isFinite(value)) {
-    return DEFAULT_SCORE;
+    return config.fallback;
   }
 
-  return Math.min(MAX_SCORE, Math.max(MIN_SCORE, value));
+  return Math.min(config.max, Math.max(config.min, value));
 }
 
-function getRangeStyle(value: number): CSSProperties {
-  const clampedValue = Math.max(MIN_SCORE, Math.min(MAX_SCORE, value));
-  const progress =
-    ((clampedValue - MIN_SCORE) / (MAX_SCORE - MIN_SCORE)) * 100;
+function getRangeStyle(
+  value: number,
+  config: SliderConfig = scoreSliderConfig,
+): CSSProperties {
+  const clampedValue = Math.max(config.min, Math.min(config.max, value));
+  const range = config.max - config.min;
+  const progress = range > 0 ? ((clampedValue - config.min) / range) * 100 : 0;
 
   if (progress <= 0) {
     return {
@@ -74,22 +104,26 @@ function getRangeStyle(value: number): CSSProperties {
   };
 }
 
-function formatSliderValue(value: number): string {
-  return `${clampScore(value)}/10`;
+function formatSliderValue(
+  value: number,
+  config: SliderConfig = scoreSliderConfig,
+): string {
+  return `${config.clamp(value)}/10`;
 }
 
 function formatPoints(value: number): string {
   return `${value.toFixed(1)} pts`;
 }
 
-function moveCaretToEnd(input: HTMLInputElement) {
-  const end = input.value.length;
-  input.setSelectionRange(end, end);
-}
-
 function selectInputText(input: HTMLInputElement) {
   input.focus();
   input.setSelectionRange(0, input.value.length);
+}
+
+function focusInputText(input: HTMLInputElement) {
+  input.focus();
+  const end = input.value.length;
+  input.setSelectionRange(end, end);
 }
 
 const minorButtonClass =
@@ -111,6 +145,7 @@ export function MatrixEditor({
   onScoreChange,
 }: MatrixEditorProps) {
   const [pendingOptionName, setPendingOptionName] = useState('');
+  const [pendingCategoryName, setPendingCategoryName] = useState('');
   const [draftOptionNames, setDraftOptionNames] = useState<Record<string, string>>(
     () =>
       Object.fromEntries(
@@ -120,6 +155,9 @@ export function MatrixEditor({
   const [draftSliderValues, setDraftSliderValues] = useState<
     Record<string, number>
   >({});
+  const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
+  const shouldFocusNewCategoryRef = useRef(false);
+  const previousCategoryCountRef = useRef(matrix.categories.length);
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
   const canAddOptions = matrix.options.length < MAX_OPTIONS;
   const canRemoveCategories = matrix.categories.length > MIN_CATEGORIES;
@@ -134,6 +172,15 @@ export function MatrixEditor({
 
     onAddOption(pendingOptionName.trim());
     setPendingOptionName('');
+  };
+  const handleAddCategorySubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextCategoryName = pendingCategoryName.trim();
+    shouldFocusNewCategoryRef.current = nextCategoryName.length === 0;
+    onAddCategory(nextCategoryName);
+    setPendingCategoryName('');
+    pendingCategoryInputRef.current?.focus();
   };
   const handleOptionNameKeyDown = (
     event: KeyboardEvent<HTMLInputElement>,
@@ -165,21 +212,10 @@ export function MatrixEditor({
       selectInputText(nextInput);
     }
   };
-  const handleOptionNameFocus = (event: FocusEvent<HTMLInputElement>) => {
-    moveCaretToEnd(event.currentTarget);
-  };
-  const handleOptionNameMouseDown = (event: MouseEvent<HTMLInputElement>) => {
-    if (document.activeElement === event.currentTarget) {
-      return;
-    }
-
-    event.preventDefault();
-    event.currentTarget.focus();
-    moveCaretToEnd(event.currentTarget);
-  };
   const handleCategoryNameKeyDown = (
     event: KeyboardEvent<HTMLInputElement>,
     categoryId: string,
+    categoryIndex: number,
   ) => {
     if (event.key !== 'Enter') {
       return;
@@ -187,15 +223,33 @@ export function MatrixEditor({
 
     event.preventDefault();
     onCategoryNameChange(categoryId, event.currentTarget.value);
-    event.currentTarget.blur();
+
+    const nextCategory = matrix.categories[categoryIndex + 1];
+
+    if (nextCategory) {
+      const nextInput = document.getElementById(`category-${nextCategory.id}`);
+
+      if (nextInput instanceof HTMLInputElement) {
+        focusInputText(nextInput);
+      }
+
+      return;
+    }
+
+    shouldFocusNewCategoryRef.current = true;
+    onAddCategory();
   };
   const getSliderDisplayValue = (sliderId: string, value: number) => {
     return draftSliderValues[sliderId] ?? value;
   };
-  const setDraftSliderValue = (sliderId: string, value: number) => {
+  const setDraftSliderValue = (
+    sliderId: string,
+    value: number,
+    config: SliderConfig = scoreSliderConfig,
+  ) => {
     setDraftSliderValues((current) => ({
       ...current,
-      [sliderId]: clampVisualScore(value),
+      [sliderId]: clampVisualValue(value, config),
     }));
   };
   const clearDraftSliderValue = (sliderId: string) => {
@@ -208,21 +262,27 @@ export function MatrixEditor({
       return nextDraftValues;
     });
   };
-  const handleSliderStart = (sliderId: string, value: number) => {
-    setDraftSliderValue(sliderId, value);
+  const handleSliderStart = (
+    sliderId: string,
+    value: number,
+    config: SliderConfig = scoreSliderConfig,
+  ) => {
+    setDraftSliderValue(sliderId, value, config);
   };
   const handleSliderChange = (
     sliderId: string,
     value: number,
+    config: SliderConfig = scoreSliderConfig,
   ) => {
-    setDraftSliderValue(sliderId, value);
+    setDraftSliderValue(sliderId, value, config);
   };
   const handleSliderEnd = (
     sliderId: string,
     value: number,
     commit: (value: number) => void,
+    config: SliderConfig = scoreSliderConfig,
   ) => {
-    commit(clampScore(value));
+    commit(config.clamp(value));
     clearDraftSliderValue(sliderId);
   };
 
@@ -237,6 +297,29 @@ export function MatrixEditor({
       return nextDrafts;
     });
   }, [matrix.options]);
+
+  useEffect(() => {
+    const previousCategoryCount = previousCategoryCountRef.current;
+    previousCategoryCountRef.current = matrix.categories.length;
+
+    if (
+      !shouldFocusNewCategoryRef.current ||
+      matrix.categories.length <= previousCategoryCount
+    ) {
+      return;
+    }
+
+    shouldFocusNewCategoryRef.current = false;
+
+    const newCategory = matrix.categories[matrix.categories.length - 1];
+    const newCategoryInput = document.getElementById(
+      `category-${newCategory.id}`,
+    );
+
+    if (newCategoryInput instanceof HTMLInputElement) {
+      focusInputText(newCategoryInput);
+    }
+  }, [matrix.categories]);
 
   return (
     <section aria-label="Decision matrix editor" className="min-w-0 space-y-10">
@@ -288,8 +371,18 @@ export function MatrixEditor({
               `Option ${index + 1}`,
             );
             const hasOptionName = option.name.trim().length > 0;
-            const isLeading =
+            const isTopOption =
               hasOptionName && summary.leadingOptionIds.includes(option.id);
+            const optionStatusLabel = summary.isTie ? 'Tied' : 'Leading';
+            const optionHighlightClassName = summary.isTie
+              ? 'border-amber-400/70 bg-[linear-gradient(180deg,rgba(254,243,199,0.9),rgba(255,255,255,0.86))]'
+              : 'border-cyan-400/60 bg-[linear-gradient(180deg,rgba(236,254,255,0.9),rgba(255,255,255,0.86))]';
+            const optionAccentClassName = summary.isTie
+              ? 'bg-amber-500'
+              : 'bg-cyan-500';
+            const optionBadgeClassName = summary.isTie
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-cyan-100 text-cyan-800';
             const optionTotal = totalsByOptionId.get(option.id) ?? 0;
             const draftOptionName = draftOptionNames[option.id] ?? option.name;
 
@@ -297,14 +390,14 @@ export function MatrixEditor({
               <article
                 className={cn(
                   'relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-lg border bg-white/85 p-4 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55',
-                  isLeading
-                    ? 'border-cyan-400/60 bg-[linear-gradient(180deg,rgba(236,254,255,0.9),rgba(255,255,255,0.86))]'
-                    : 'border-border',
+                  isTopOption ? optionHighlightClassName : 'border-border',
                 )}
                 key={option.id}
               >
-                {isLeading ? (
-                  <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+                {isTopOption ? (
+                  <div
+                    className={cn('absolute inset-x-0 top-0 h-1', optionAccentClassName)}
+                  />
                 ) : null}
 
                 <div className="flex items-start justify-between gap-3">
@@ -312,9 +405,14 @@ export function MatrixEditor({
                     <label className={labelClass} htmlFor={`option-${option.id}`}>
                       Option {index + 1}
                     </label>
-                    {isLeading ? (
-                      <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-semibold uppercase text-cyan-800">
-                        Leading
+                    {isTopOption ? (
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase',
+                          optionBadgeClassName,
+                        )}
+                      >
+                        {optionStatusLabel}
                       </span>
                     ) : null}
                   </div>
@@ -336,8 +434,6 @@ export function MatrixEditor({
                   onKeyDown={(event) =>
                     handleOptionNameKeyDown(event, option.id, index)
                   }
-                  onFocus={handleOptionNameFocus}
-                  onMouseDown={handleOptionNameMouseDown}
                   onBlur={(event) =>
                     onOptionNameChange(option.id, event.currentTarget.value)
                   }
@@ -426,7 +522,7 @@ export function MatrixEditor({
 
       <section aria-labelledby="criteria-heading" className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+          <div className="min-w-0 sm:flex-1">
             <h3
               className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl"
               id="criteria-heading"
@@ -435,19 +531,13 @@ export function MatrixEditor({
             </h3>
             <p className="mt-4 max-w-3xl text-base text-muted-foreground">
               Name the factors that matter, set how strongly each one should
-              influence the decision, then score every option against each
-              factor on a 1-10 scale.
+              influence the decision from 0-10, then score every option against
+              each factor on a 0-10 scale. A weight of 0 excludes that criterion.
             </p>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
+            <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
               {matrix.categories.length}{' '}
               {matrix.categories.length === 1 ? 'criterion' : 'criteria'}
             </p>
-            <Button onClick={onAddCategory} size="sm" variant="secondary">
-              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-              Add criterion
-            </Button>
           </div>
         </div>
 
@@ -497,7 +587,7 @@ export function MatrixEditor({
                           onCategoryNameChange(category.id, event.target.value)
                         }
                         onKeyDown={(event) =>
-                          handleCategoryNameKeyDown(event, category.id)
+                          handleCategoryNameKeyDown(event, category.id, categoryIndex)
                         }
                         placeholder={criterionFallback}
                         value={category.name}
@@ -510,36 +600,43 @@ export function MatrixEditor({
                           Importance
                         </label>
                         <output className="min-w-12 text-right text-sm font-semibold text-foreground">
-                          {formatSliderValue(displayedWeight)}
+                          {formatSliderValue(displayedWeight, weightSliderConfig)}
                         </output>
                       </div>
                       <input
                         aria-label={`Importance for ${criterionDisplayName}`}
                         className="matrix-range"
                         id={`weight-${category.id}`}
-                        max={MAX_SCORE}
-                        min={MIN_SCORE}
+                        max={MAX_WEIGHT}
+                        min={MIN_WEIGHT}
                         onBlur={(event) =>
                           handleSliderEnd(
                             weightSliderId,
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
+                            weightSliderConfig,
                           )
                         }
                         onChange={(event) =>
                           handleSliderChange(
                             weightSliderId,
                             Number(event.currentTarget.value),
+                            weightSliderConfig,
                           )
                         }
                         onFocus={() =>
-                          handleSliderStart(weightSliderId, displayedWeight)
+                          handleSliderStart(
+                            weightSliderId,
+                            displayedWeight,
+                            weightSliderConfig,
+                          )
                         }
                         onKeyUp={(event) =>
                           handleSliderEnd(
                             weightSliderId,
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
+                            weightSliderConfig,
                           )
                         }
                         onPointerCancel={(event) =>
@@ -547,20 +644,26 @@ export function MatrixEditor({
                             weightSliderId,
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
+                            weightSliderConfig,
                           )
                         }
                         onPointerDown={() =>
-                          handleSliderStart(weightSliderId, displayedWeight)
+                          handleSliderStart(
+                            weightSliderId,
+                            displayedWeight,
+                            weightSliderConfig,
+                          )
                         }
                         onPointerUp={(event) =>
                           handleSliderEnd(
                             weightSliderId,
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
+                            weightSliderConfig,
                           )
                         }
                         step="0.1"
-                        style={getRangeStyle(displayedWeight)}
+                        style={getRangeStyle(displayedWeight, weightSliderConfig)}
                         type="range"
                         value={displayedWeight}
                       />
@@ -593,13 +696,16 @@ export function MatrixEditor({
                           scoreSliderId,
                           score,
                         );
+                        const scoreRowHighlightClassName = summary.isTie
+                          ? 'border-amber-400/50 bg-amber-50/75'
+                          : 'border-cyan-400/50 bg-cyan-50/70';
 
                         return (
                           <div
                             className={cn(
                               'grid gap-3 rounded-md border border-border bg-white/65 p-3 sm:grid-cols-[minmax(10rem,0.9fr)_minmax(12rem,1.6fr)_3.75rem] sm:items-center',
                               summary.leadingOptionIds.includes(option.id)
-                                ? 'border-cyan-400/50 bg-cyan-50/70'
+                                ? scoreRowHighlightClassName
                                 : null,
                             )}
                             key={`${option.id}-${category.id}`}
@@ -680,6 +786,36 @@ export function MatrixEditor({
             );
           })}
         </div>
+
+        <form
+          aria-label="Add criterion"
+          className="rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 shadow-sm backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80 sm:p-5"
+          onSubmit={handleAddCategorySubmit}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <label className={labelClass} htmlFor="new-criterion-name">
+                New criterion
+              </label>
+              <Input
+                className="mt-3 h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
+                id="new-criterion-name"
+                onChange={(event) => setPendingCategoryName(event.target.value)}
+                placeholder={`Criterion ${matrix.categories.length + 1}`}
+                ref={pendingCategoryInputRef}
+                value={pendingCategoryName}
+              />
+            </div>
+            <Button
+              aria-label="Add criterion"
+              className="h-11 w-full shrink-0 sm:w-11"
+              size="icon"
+              type="submit"
+            >
+              <Plus aria-hidden="true" className="h-5 w-5" />
+            </Button>
+          </div>
+        </form>
       </section>
     </section>
   );
