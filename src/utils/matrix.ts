@@ -1,8 +1,18 @@
-import type { Category, DecisionMatrix, Option, ScoresByOption } from '../types';
+import type {
+  Category,
+  DecisionMatrix,
+  Option,
+  ScoreMode,
+  ScoreModesByOption,
+  ScoresByOption,
+} from '../types';
 
 export const MIN_SCORE = 0;
 export const MAX_SCORE = 10;
 export const DEFAULT_SCORE = MIN_SCORE;
+export const SCORE_MODE_SCALE: ScoreMode = 'scale';
+export const SCORE_MODE_BOOLEAN: ScoreMode = 'boolean';
+export const DEFAULT_SCORE_MODE = SCORE_MODE_SCALE;
 export const MIN_WEIGHT = 0;
 export const MAX_WEIGHT = 10;
 export const DEFAULT_WEIGHT = MIN_WEIGHT;
@@ -25,6 +35,21 @@ export function clampScore(value: number): number {
   }
 
   return Math.min(MAX_SCORE, Math.max(MIN_SCORE, Math.round(value)));
+}
+
+export function normalizeScoreMode(value: unknown): ScoreMode {
+  return value === SCORE_MODE_BOOLEAN ? SCORE_MODE_BOOLEAN : SCORE_MODE_SCALE;
+}
+
+export function clampScoreForMode(
+  value: number,
+  scoreMode: ScoreMode = DEFAULT_SCORE_MODE,
+): number {
+  if (scoreMode === SCORE_MODE_BOOLEAN) {
+    return clampScore(value) >= 5 ? MAX_SCORE : MIN_SCORE;
+  }
+
+  return clampScore(value);
 }
 
 export function clampWeight(value: number): number {
@@ -50,11 +75,16 @@ export function createOption(name: string): Option {
   };
 }
 
-export function createCategory(name: string, weight = DEFAULT_WEIGHT): Category {
+export function createCategory(
+  name: string,
+  weight = DEFAULT_WEIGHT,
+  scoreMode: ScoreMode = DEFAULT_SCORE_MODE,
+): Category {
   return {
     id: createId(),
     name,
     weight: clampWeight(weight),
+    scoreMode,
   };
 }
 
@@ -62,11 +92,51 @@ export function getDisplayName(name: string, fallback: string): string {
   return name.trim() || fallback;
 }
 
+export function getScoreModeForCell(
+  matrix: DecisionMatrix,
+  optionId: string,
+  categoryId: string,
+): ScoreMode {
+  const categoryScoreMode = matrix.categories.find(
+    (category) => category.id === categoryId,
+  )?.scoreMode;
+
+  return normalizeScoreMode(
+    matrix.scoreModes?.[optionId]?.[categoryId] ?? categoryScoreMode,
+  );
+}
+
+function buildScoreModes(
+  options: Option[],
+  categories: Category[],
+  seed: ScoreModesByOption = {},
+): ScoreModesByOption {
+  const nextScoreModes: ScoreModesByOption = {};
+
+  for (const option of options) {
+    const optionSeed = isRecord(seed[option.id]) ? seed[option.id] : {};
+    nextScoreModes[option.id] = {};
+
+    for (const category of categories) {
+      nextScoreModes[option.id][category.id] = normalizeScoreMode(
+        optionSeed[category.id] ?? category.scoreMode,
+      );
+    }
+  }
+
+  return nextScoreModes;
+}
+
 function buildScores(
   options: Option[],
   categories: Category[],
   seed: ScoresByOption = {},
-  normalizeScore = clampScore,
+  scoreModes: ScoreModesByOption = {},
+  normalizeScore = (
+    value: number,
+    category: Category,
+    scoreMode: ScoreMode,
+  ) => clampScoreForMode(value, scoreMode),
 ): ScoresByOption {
   const nextScores: ScoresByOption = {};
 
@@ -76,8 +146,12 @@ function buildScores(
 
     for (const category of categories) {
       const seededValue = optionSeed[category.id];
+      const scoreMode =
+        scoreModes[option.id]?.[category.id] ?? category.scoreMode;
       nextScores[option.id][category.id] =
-        typeof seededValue === 'number' ? normalizeScore(seededValue) : DEFAULT_SCORE;
+        typeof seededValue === 'number'
+          ? normalizeScore(seededValue, category, scoreMode)
+          : DEFAULT_SCORE;
     }
   }
 
@@ -233,13 +307,22 @@ function normalizeStoredWeight(value: number, usesLegacyPercentageScale: boolean
 }
 
 export function synchronizeScores(matrix: DecisionMatrix): DecisionMatrix {
+  const categories = matrix.categories.map((category) => ({
+    ...category,
+    weight: clampWeight(category.weight),
+    scoreMode: normalizeScoreMode(category.scoreMode),
+  }));
+  const scoreModes = buildScoreModes(
+    matrix.options,
+    categories,
+    matrix.scoreModes,
+  );
+
   return {
     ...matrix,
-    categories: matrix.categories.map((category) => ({
-      ...category,
-      weight: clampWeight(category.weight),
-    })),
-    scores: buildScores(matrix.options, matrix.categories, matrix.scores),
+    categories,
+    scoreModes,
+    scores: buildScores(matrix.options, categories, matrix.scores, scoreModes),
   };
 }
 
@@ -257,11 +340,13 @@ export function createStarterMatrix(): DecisionMatrix {
       scores[option.id][category.id] = DEFAULT_SCORE;
     });
   });
+  const scoreModes = buildScoreModes(options, categories);
 
   return {
     options,
     categories,
     scores,
+    scoreModes,
   };
 }
 
@@ -303,7 +388,8 @@ export function normalizeDecisionMatrix(value: unknown): DecisionMatrix {
         typeof item.weight === 'number'
           ? normalizeStoredWeight(item.weight, usesLegacyPercentageScale)
           : DEFAULT_WEIGHT;
-      return { id, name, weight };
+      const scoreMode = normalizeScoreMode(item.scoreMode);
+      return { id, name, weight, scoreMode };
     })
     .filter((item): item is Category => item !== null);
 
@@ -312,12 +398,25 @@ export function normalizeDecisionMatrix(value: unknown): DecisionMatrix {
   }
 
   const rawScores = isRecord(value.scores) ? (value.scores as ScoresByOption) : {};
+  const rawScoreModes = isRecord(value.scoreModes)
+    ? (value.scoreModes as ScoreModesByOption)
+    : {};
+  const scoreModes = buildScoreModes(options, categories, rawScoreModes);
 
   return {
     options,
     categories,
-    scores: buildScores(options, categories, rawScores, (score) =>
-      normalizeStoredScore(score, usesLegacyPercentageScale),
+    scoreModes,
+    scores: buildScores(
+      options,
+      categories,
+      rawScores,
+      scoreModes,
+      (score, category, scoreMode) =>
+        clampScoreForMode(
+          normalizeStoredScore(score, usesLegacyPercentageScale),
+          scoreMode,
+        ),
     ),
   };
 }
