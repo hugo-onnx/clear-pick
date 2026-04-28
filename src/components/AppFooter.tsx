@@ -1,10 +1,10 @@
-const FOOTER_LINKS = [
-  { label: 'About', href: '#landing-title' },
-  { label: 'Templates', href: '#decision-matrix' },
-  { label: 'Support', href: '#site-footer-note' },
-];
+import type { TranslationCopy } from '../i18n';
 
-export function AppFooter() {
+interface AppFooterProps {
+  copy: TranslationCopy['footer'];
+}
+
+export function AppFooter({ copy }: AppFooterProps) {
   return (
     <footer
       aria-labelledby="site-footer-title"
@@ -13,25 +13,24 @@ export function AppFooter() {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Weighted Matrix
+            {copy.productLabel}
           </p>
           <h2
             className="font-display text-3xl font-semibold tracking-normal text-foreground"
             id="site-footer-title"
           >
-            A calmer way to compare the choices in front of you.
+            {copy.title}
           </h2>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-            Use the landing space for reflection, then move into the matrix when
-            you want a clearer weighted view.
+            {copy.description}
           </p>
         </div>
 
         <nav
-          aria-label="Footer links"
+          aria-label={copy.linksAria}
           className="flex flex-wrap items-center gap-3 lg:justify-end"
         >
-          {FOOTER_LINKS.map((link) => (
+          {copy.links.map((link) => (
             <a
               className="inline-flex items-center justify-center rounded-full border border-border bg-white/70 px-4 py-2.5 text-sm font-medium text-foreground/80 shadow-sm transition hover:border-primary/35 hover:bg-white hover:text-cyan-800"
               href={link.href}
@@ -44,8 +43,7 @@ export function AppFooter() {
       </div>
 
       <p className="mt-8 text-sm leading-7 text-muted-foreground" id="site-footer-note">
-        Your matrix stays stored locally in this browser, so you can return to
-        it without creating an account.
+        {copy.note}
       </p>
     </footer>
   );
