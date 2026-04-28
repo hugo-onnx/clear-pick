@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-react';
+import { ChevronDown, Plus, X } from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -10,7 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { DecisionMatrix } from '../types';
+import type { TranslationCopy } from '../i18n';
+import type { DecisionMatrix, ScoreMode } from '../types';
 import {
   DEFAULT_SCORE,
   DEFAULT_WEIGHT,
@@ -21,6 +22,8 @@ import {
   MIN_OPTIONS,
   MIN_SCORE,
   MIN_WEIGHT,
+  SCORE_MODE_BOOLEAN,
+  SCORE_MODE_SCALE,
   clampScore,
   clampWeight,
   getDisplayName,
@@ -28,6 +31,8 @@ import {
 import type { DecisionSummary } from '../utils/scoring';
 
 interface MatrixEditorProps {
+  areResultsHidden: boolean;
+  copy: TranslationCopy['matrix'];
   matrix: DecisionMatrix;
   summary: DecisionSummary;
   onAddOption: (name?: string) => void;
@@ -37,6 +42,11 @@ interface MatrixEditorProps {
   onRemoveCategory: (categoryId: string) => void;
   onCategoryNameChange: (categoryId: string, name: string) => void;
   onCategoryWeightChange: (categoryId: string, weight: number) => void;
+  onScoreModeChange: (
+    optionId: string,
+    categoryId: string,
+    scoreMode: ScoreMode,
+  ) => void;
   onScoreChange: (optionId: string, categoryId: string, score: number) => void;
 }
 
@@ -115,6 +125,18 @@ function formatPoints(value: number): string {
   return `${value.toFixed(1)} pts`;
 }
 
+function formatScoreValue(
+  value: number,
+  scoreMode: ScoreMode,
+  copy: TranslationCopy['matrix'],
+): string {
+  if (scoreMode === SCORE_MODE_BOOLEAN) {
+    return value >= 5 ? copy.yes : copy.no;
+  }
+
+  return formatSliderValue(value);
+}
+
 function selectInputText(input: HTMLInputElement) {
   input.focus();
   input.setSelectionRange(0, input.value.length);
@@ -132,7 +154,24 @@ const minorButtonClass =
 const labelClass =
   'text-[11px] font-semibold uppercase text-muted-foreground';
 
+const segmentedControlClass =
+  'inline-flex rounded-md border border-border bg-white/75 p-0.5 shadow-sm';
+
+const segmentedButtonClass =
+  'min-h-7 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition';
+
+function getSegmentedButtonClass(isSelected: boolean): string {
+  return cn(
+    segmentedButtonClass,
+    isSelected
+      ? 'bg-primary text-primary-foreground shadow-sm'
+      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+  );
+}
+
 export function MatrixEditor({
+  areResultsHidden,
+  copy,
   matrix,
   summary,
   onAddOption,
@@ -142,6 +181,7 @@ export function MatrixEditor({
   onRemoveCategory,
   onCategoryNameChange,
   onCategoryWeightChange,
+  onScoreModeChange,
   onScoreChange,
 }: MatrixEditorProps) {
   const [pendingOptionName, setPendingOptionName] = useState('');
@@ -322,58 +362,58 @@ export function MatrixEditor({
   }, [matrix.categories]);
 
   return (
-    <section aria-label="Decision matrix editor" className="min-w-0 space-y-10">
+    <section aria-label={copy.editorAria} className="min-w-0 space-y-10">
       <header className="border-b border-border pb-8">
         <div className="max-w-3xl">
           <h2 className="font-display text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
-            Weighted Scoring Model
+            {copy.title}
           </h2>
-          <p className="mt-3 text-base leading-7 text-muted-foreground lg:whitespace-nowrap">
-            Build a weighted comparison by naming your options, setting what
-            matters, and scoring each choice.
+          <p className="mt-3 text-base leading-7 text-muted-foreground">
+            {copy.intro}
           </p>
         </div>
       </header>
 
       <section
-        aria-label="Options to compare"
+        aria-label={copy.optionsRegionAria}
         className="space-y-4"
         role="region"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 sm:flex-1">
             <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
-              Options to compare
+              {copy.optionsHeading}
             </h3>
-            <p className="mt-4 max-w-3xl text-base text-muted-foreground lg:whitespace-nowrap">
-              Name the choices you&apos;re deciding between. You&apos;ll score
-              each option against the weighted criteria below.
+            <p className="mt-4 max-w-3xl text-base text-muted-foreground">
+              {copy.optionsDescription}
             </p>
             <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
-              {matrix.options.length} options
+              {copy.optionsCount(matrix.options.length)}
             </p>
           </div>
           {!canAddOptions ? (
             <p className="whitespace-nowrap text-sm font-medium text-muted-foreground">
-              Limit reached: remove an option to add another.
+              {copy.limitReached}
             </p>
           ) : null}
         </div>
 
         <div
-          aria-label="Option cards"
+          aria-label={copy.optionCards}
           className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3"
           role="group"
         >
           {matrix.options.map((option, index) => {
             const displayName = getDisplayName(
               option.name,
-              `Option ${index + 1}`,
+              copy.optionLabel(index + 1),
             );
             const hasOptionName = option.name.trim().length > 0;
             const isTopOption =
-              hasOptionName && summary.leadingOptionIds.includes(option.id);
-            const optionStatusLabel = summary.isTie ? 'Tied' : 'Leading';
+              !areResultsHidden &&
+              hasOptionName &&
+              summary.leadingOptionIds.includes(option.id);
+            const optionStatusLabel = summary.isTie ? copy.tied : copy.leading;
             const optionHighlightClassName = summary.isTie
               ? 'border-amber-400/70 bg-[linear-gradient(180deg,rgba(254,243,199,0.9),rgba(255,255,255,0.86))]'
               : 'border-cyan-400/60 bg-[linear-gradient(180deg,rgba(236,254,255,0.9),rgba(255,255,255,0.86))]';
@@ -403,7 +443,7 @@ export function MatrixEditor({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
                     <label className={labelClass} htmlFor={`option-${option.id}`}>
-                      Option {index + 1}
+                      {copy.optionLabel(index + 1)}
                     </label>
                     {isTopOption ? (
                       <span
@@ -417,7 +457,7 @@ export function MatrixEditor({
                     ) : null}
                   </div>
                   <Button
-                    aria-label={`Remove ${displayName}`}
+                    aria-label={copy.removeOption(displayName)}
                     className={minorButtonClass}
                     disabled={!canRemoveOptions}
                     onClick={() => onRemoveOption(option.id)}
@@ -444,7 +484,7 @@ export function MatrixEditor({
                       [option.id]: value,
                     }));
                   }}
-                  placeholder={`Option ${index + 1}`}
+                  placeholder={copy.optionPlaceholder(index + 1)}
                   value={draftOptionName}
                 />
 
@@ -454,14 +494,14 @@ export function MatrixEditor({
                     hasOptionName ? 'min-h-[4.5rem] space-y-3' : 'py-2',
                   )}
                 >
-                  {hasOptionName ? (
+                  {hasOptionName && !areResultsHidden ? (
                     <>
                       <div className="flex items-end justify-between gap-3">
                         <span className="text-xs font-semibold uppercase text-muted-foreground">
-                          Live total
+                          {copy.liveTotal}
                         </span>
                         <output
-                          aria-label={`Live score for ${displayName}`}
+                          aria-label={copy.liveScoreAria(displayName)}
                           className="text-xl font-semibold leading-none text-foreground"
                         >
                           {formatPoints(optionTotal)}
@@ -473,9 +513,13 @@ export function MatrixEditor({
                         style={getRangeStyle(optionTotal)}
                       />
                     </>
+                  ) : hasOptionName ? (
+                    <p className="text-sm font-medium leading-5 text-muted-foreground">
+                      {copy.resultsHiddenWhileScoring}
+                    </p>
                   ) : (
                     <p className="text-sm font-medium leading-5 text-muted-foreground">
-                      Add an option to score
+                      {copy.addOptionToScore}
                     </p>
                   )}
                 </div>
@@ -485,7 +529,7 @@ export function MatrixEditor({
 
           {canAddOptions ? (
             <form
-              aria-label="Add option"
+              aria-label={copy.addOption}
               className="flex min-h-[12.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
               onSubmit={handleAddOptionSubmit}
             >
@@ -493,7 +537,7 @@ export function MatrixEditor({
                 <div className="flex h-8 items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
                     <label className={labelClass} htmlFor="new-option-name">
-                      New option
+                      {copy.newOption}
                     </label>
                   </div>
                 </div>
@@ -502,11 +546,11 @@ export function MatrixEditor({
                     className="h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
                     id="new-option-name"
                     onChange={(event) => setPendingOptionName(event.target.value)}
-                    placeholder={`Option ${matrix.options.length + 1}`}
+                    placeholder={copy.optionPlaceholder(matrix.options.length + 1)}
                     value={pendingOptionName}
                   />
                   <Button
-                    aria-label="Add option"
+                    aria-label={copy.addOption}
                     className="h-11 w-11 shrink-0"
                     size="icon"
                     type="submit"
@@ -527,23 +571,20 @@ export function MatrixEditor({
               className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl"
               id="criteria-heading"
             >
-              Criteria, weights, and scores
+              {copy.criteriaHeading}
             </h3>
             <p className="mt-4 max-w-3xl text-base text-muted-foreground">
-              Name the factors that matter, set how strongly each one should
-              influence the decision from 0-10, then score every option against
-              each factor on a 0-10 scale. A weight of 0 excludes that criterion.
+              {copy.criteriaDescription}
             </p>
             <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
-              {matrix.categories.length}{' '}
-              {matrix.categories.length === 1 ? 'criterion' : 'criteria'}
+              {copy.criteriaCount(matrix.categories.length)}
             </p>
           </div>
         </div>
 
-        <div aria-label="Criteria list" className="space-y-4" role="list">
+        <div aria-label={copy.criteriaList} className="space-y-4" role="list">
           {matrix.categories.map((category, categoryIndex) => {
-            const criterionFallback = `Criterion ${categoryIndex + 1}`;
+            const criterionFallback = copy.criterionLabel(categoryIndex + 1);
             const criterionDisplayName = getDisplayName(
               category.name,
               criterionFallback,
@@ -556,8 +597,8 @@ export function MatrixEditor({
 
             return (
               <article
-                aria-label={`${criterionDisplayName} criterion row`}
-                className="rounded-lg border border-border bg-white/75 p-5 shadow-sm"
+                aria-label={copy.criterionRowAria(criterionDisplayName)}
+                className="rounded-lg border border-border bg-white/75 p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55"
                 key={category.id}
                 role="listitem"
               >
@@ -569,7 +610,7 @@ export function MatrixEditor({
                           {criterionFallback}
                         </label>
                         <Button
-                          aria-label={`Remove ${criterionDisplayName}`}
+                          aria-label={copy.removeCriterion(criterionDisplayName)}
                           className={minorButtonClass}
                           disabled={!canRemoveCategories}
                           onClick={() => onRemoveCategory(category.id)}
@@ -592,19 +633,20 @@ export function MatrixEditor({
                         placeholder={criterionFallback}
                         value={category.name}
                       />
+
                     </div>
 
                     <div className="space-y-3 rounded-md bg-slate-950/[0.035] p-3">
                       <div className="flex items-center justify-between gap-3">
                         <label className={labelClass} htmlFor={`weight-${category.id}`}>
-                          Importance
+                          {copy.importance}
                         </label>
                         <output className="min-w-12 text-right text-sm font-semibold text-foreground">
                           {formatSliderValue(displayedWeight, weightSliderConfig)}
                         </output>
                       </div>
                       <input
-                        aria-label={`Importance for ${criterionDisplayName}`}
+                        aria-label={copy.importanceAria(criterionDisplayName)}
                         className="matrix-range"
                         id={`weight-${category.id}`}
                         max={MAX_WEIGHT}
@@ -672,29 +714,36 @@ export function MatrixEditor({
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className={labelClass}>Option scores</p>
+                      <p className={labelClass}>{copy.optionScores}</p>
                       <p className="text-sm font-medium text-muted-foreground">
-                        {matrix.options.length}{' '}
-                        {matrix.options.length === 1 ? 'option' : 'options'}
+                        {copy.optionsCount(matrix.options.length)}
                       </p>
                     </div>
 
                     <div
-                      aria-label={`${criterionDisplayName} option scores`}
+                      aria-label={copy.optionScoresAria(criterionDisplayName)}
                       className="criteria-score-rows space-y-2"
                       role="group"
                     >
                       {matrix.options.map((option, optionIndex) => {
                         const optionDisplayName = getDisplayName(
                           option.name,
-                          `Option ${optionIndex + 1}`,
+                          copy.optionLabel(optionIndex + 1),
                         );
                         const score =
                           matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
+                        const scoreMode =
+                          matrix.scoreModes?.[option.id]?.[category.id] ??
+                          category.scoreMode;
+                        const isBooleanScore = scoreMode === SCORE_MODE_BOOLEAN;
                         const scoreSliderId = `score:${option.id}:${category.id}`;
-                        const displayedScore = getSliderDisplayValue(
-                          scoreSliderId,
-                          score,
+                        const displayedScore = isBooleanScore
+                          ? score
+                          : getSliderDisplayValue(scoreSliderId, score);
+                        const displayedScoreLabel = formatScoreValue(
+                          displayedScore,
+                          scoreMode,
+                          copy,
                         );
                         const scoreRowHighlightClassName = summary.isTie
                           ? 'border-amber-400/50 bg-amber-50/75'
@@ -703,8 +752,9 @@ export function MatrixEditor({
                         return (
                           <div
                             className={cn(
-                              'grid gap-3 rounded-md border border-border bg-white/65 p-3 sm:grid-cols-[minmax(10rem,0.9fr)_minmax(12rem,1.6fr)_3.75rem] sm:items-center',
-                              summary.leadingOptionIds.includes(option.id)
+                              'grid gap-3 rounded-md border border-border bg-white/65 p-3 sm:grid-cols-[minmax(9rem,0.9fr)_minmax(8.75rem,auto)_minmax(12rem,1.4fr)_minmax(6.75rem,auto)] sm:items-center',
+                              !areResultsHidden &&
+                                summary.leadingOptionIds.includes(option.id)
                                 ? scoreRowHighlightClassName
                                 : null,
                             )}
@@ -715,66 +765,149 @@ export function MatrixEditor({
                                 {optionDisplayName}
                               </span>
                               <output className="text-sm font-semibold text-foreground sm:hidden">
-                                {formatSliderValue(displayedScore)}
+                                {displayedScoreLabel}
                               </output>
                             </div>
-                            <input
-                              aria-label={`Score for ${optionDisplayName} on ${criterionDisplayName}`}
-                              className="matrix-range"
-                              id={`score-${option.id}-${category.id}`}
-                              max={MAX_SCORE}
-                              min={MIN_SCORE}
-                              onBlur={(event) =>
-                                handleSliderEnd(
-                                  scoreSliderId,
-                                  Number(event.currentTarget.value),
-                                  (value) =>
-                                    onScoreChange(option.id, category.id, value),
-                                )
-                              }
-                              onChange={(event) =>
-                                handleSliderChange(
-                                  scoreSliderId,
-                                  Number(event.currentTarget.value),
-                                )
-                              }
-                              onFocus={() =>
-                                handleSliderStart(scoreSliderId, displayedScore)
-                              }
-                              onKeyUp={(event) =>
-                                handleSliderEnd(
-                                  scoreSliderId,
-                                  Number(event.currentTarget.value),
-                                  (value) =>
-                                    onScoreChange(option.id, category.id, value),
-                                )
-                              }
-                              onPointerCancel={(event) =>
-                                handleSliderEnd(
-                                  scoreSliderId,
-                                  Number(event.currentTarget.value),
-                                  (value) =>
-                                    onScoreChange(option.id, category.id, value),
-                                )
-                              }
-                              onPointerDown={() =>
-                                handleSliderStart(scoreSliderId, displayedScore)
-                              }
-                              onPointerUp={(event) =>
-                                handleSliderEnd(
-                                  scoreSliderId,
-                                  Number(event.currentTarget.value),
-                                  (value) =>
-                                    onScoreChange(option.id, category.id, value),
-                                )
-                              }
-                              step="0.1"
-                              style={getRangeStyle(displayedScore)}
-                              type="range"
-                              value={displayedScore}
-                            />
+                            <div className="relative w-32 max-w-full">
+                              <select
+                                aria-label={copy.scoreModeAria(
+                                  optionDisplayName,
+                                  criterionDisplayName,
+                                )}
+                                className="h-7 w-full appearance-none rounded-md border border-border bg-white/80 py-0.5 pl-2 pr-6 text-[11px] font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15"
+                                onChange={(event) =>
+                                  onScoreModeChange(
+                                    option.id,
+                                    category.id,
+                                    event.currentTarget.value as ScoreMode,
+                                  )
+                                }
+                                value={scoreMode}
+                              >
+                                <option value={SCORE_MODE_SCALE}>
+                                  {copy.scoreModeScale}
+                                </option>
+                                <option value={SCORE_MODE_BOOLEAN}>
+                                  {copy.scoreModeBoolean}
+                                </option>
+                              </select>
+                              <ChevronDown
+                                aria-hidden="true"
+                                className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+                              />
+                            </div>
+                            {isBooleanScore ? (
+                              <div className="flex flex-wrap items-center gap-2 justify-self-start">
+                                <div
+                                  aria-label={copy.scoreAria(
+                                    optionDisplayName,
+                                    criterionDisplayName,
+                                  )}
+                                  className={cn(segmentedControlClass, 'w-fit')}
+                                  role="group"
+                                >
+                                  <button
+                                    aria-pressed={displayedScore >= 5}
+                                    className={getSegmentedButtonClass(
+                                      displayedScore >= 5,
+                                    )}
+                                    onClick={() =>
+                                      onScoreChange(
+                                        option.id,
+                                        category.id,
+                                        MAX_SCORE,
+                                      )
+                                    }
+                                    type="button"
+                                  >
+                                    {copy.yes}
+                                  </button>
+                                  <button
+                                    aria-pressed={displayedScore < 5}
+                                    className={getSegmentedButtonClass(
+                                      displayedScore < 5,
+                                    )}
+                                    onClick={() =>
+                                      onScoreChange(
+                                        option.id,
+                                        category.id,
+                                        MIN_SCORE,
+                                      )
+                                    }
+                                    type="button"
+                                  >
+                                    {copy.no}
+                                  </button>
+                                </div>
+                                <span
+                                  aria-hidden="true"
+                                  className="whitespace-nowrap text-[11px] font-medium text-muted-foreground"
+                                >
+                                  {copy.booleanScoreScale}
+                                </span>
+                              </div>
+                            ) : (
+                              <input
+                                aria-label={copy.scoreAria(
+                                  optionDisplayName,
+                                  criterionDisplayName,
+                                )}
+                                className="matrix-range"
+                                id={`score-${option.id}-${category.id}`}
+                                max={MAX_SCORE}
+                                min={MIN_SCORE}
+                                onBlur={(event) =>
+                                  handleSliderEnd(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                    (value) =>
+                                      onScoreChange(option.id, category.id, value),
+                                  )
+                                }
+                                onChange={(event) =>
+                                  handleSliderChange(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                  )
+                                }
+                                onFocus={() =>
+                                  handleSliderStart(scoreSliderId, displayedScore)
+                                }
+                                onKeyUp={(event) =>
+                                  handleSliderEnd(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                    (value) =>
+                                      onScoreChange(option.id, category.id, value),
+                                  )
+                                }
+                                onPointerCancel={(event) =>
+                                  handleSliderEnd(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                    (value) =>
+                                      onScoreChange(option.id, category.id, value),
+                                  )
+                                }
+                                onPointerDown={() =>
+                                  handleSliderStart(scoreSliderId, displayedScore)
+                                }
+                                onPointerUp={(event) =>
+                                  handleSliderEnd(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                    (value) =>
+                                      onScoreChange(option.id, category.id, value),
+                                  )
+                                }
+                                step="0.1"
+                                style={getRangeStyle(displayedScore)}
+                                type="range"
+                                value={displayedScore}
+                              />
+                            )}
                             <output className="hidden text-right text-sm font-semibold text-foreground sm:block">
-                              {formatSliderValue(displayedScore)}
+                              {displayedScoreLabel}
                             </output>
                           </div>
                         );
@@ -788,26 +921,26 @@ export function MatrixEditor({
         </div>
 
         <form
-          aria-label="Add criterion"
+          aria-label={copy.addCriterion}
           className="rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 shadow-sm backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80 sm:p-5"
           onSubmit={handleAddCategorySubmit}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-0 flex-1">
               <label className={labelClass} htmlFor="new-criterion-name">
-                New criterion
+                {copy.newCriterion}
               </label>
               <Input
                 className="mt-3 h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
                 id="new-criterion-name"
                 onChange={(event) => setPendingCategoryName(event.target.value)}
-                placeholder={`Criterion ${matrix.categories.length + 1}`}
+                placeholder={copy.criterionLabel(matrix.categories.length + 1)}
                 ref={pendingCategoryInputRef}
                 value={pendingCategoryName}
               />
             </div>
             <Button
-              aria-label="Add criterion"
+              aria-label={copy.addCriterion}
               className="h-11 w-full shrink-0 sm:w-11"
               size="icon"
               type="submit"
