@@ -9,17 +9,17 @@ function createMatrix(overrides?: Partial<DecisionMatrix>): DecisionMatrix {
       { id: 'go', name: 'Go' },
     ],
     categories: [
-      { id: 'growth', name: 'Growth', weight: 60 },
-      { id: 'balance', name: 'Balance', weight: 40 },
+      { id: 'growth', name: 'Growth', weight: 6 },
+      { id: 'balance', name: 'Balance', weight: 4 },
     ],
     scores: {
       stay: {
-        growth: 60,
-        balance: 80,
+        growth: 6,
+        balance: 8,
       },
       go: {
-        growth: 90,
-        balance: 50,
+        growth: 9,
+        balance: 5,
       },
     },
     ...overrides,
@@ -30,11 +30,11 @@ describe('getDecisionSummary', () => {
   it('normalizes category weights and ranks options', () => {
     const summary = getDecisionSummary(createMatrix());
 
-    expect(summary.totalWeight).toBe(100);
+    expect(summary.totalWeight).toBe(10);
     expect(summary.categoryInfluence[0]?.normalizedWeight).toBeCloseTo(0.6);
     expect(summary.rankedOptions[0]?.name).toBe('Go');
-    expect(summary.rankedOptions[0]?.total).toBeCloseTo(74);
-    expect(summary.rankedOptions[1]?.total).toBeCloseTo(68);
+    expect(summary.rankedOptions[0]?.total).toBeCloseTo(7.4);
+    expect(summary.rankedOptions[1]?.total).toBeCloseTo(6.8);
   });
 
   it('returns zero totals and no active recommendation when all weights are zero', () => {
@@ -50,6 +50,7 @@ describe('getDecisionSummary', () => {
     expect(summary.totalWeight).toBe(0);
     expect(summary.hasScoringBasis).toBe(false);
     expect(summary.isTie).toBe(false);
+    expect(summary.leadingOptionIds).toHaveLength(0);
     expect(summary.rankedOptions.map((option) => option.total)).toEqual([0, 0]);
   });
 
@@ -58,12 +59,12 @@ describe('getDecisionSummary', () => {
       createMatrix({
         scores: {
           stay: {
-            growth: 80,
-            balance: 60,
+            growth: 8,
+            balance: 6,
           },
           go: {
-            growth: 60,
-            balance: 90,
+            growth: 6,
+            balance: 9,
           },
         },
       }),
