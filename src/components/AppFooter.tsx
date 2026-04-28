@@ -1,24 +1,61 @@
+import { ArrowUp } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
+import { Button } from './ui/button';
 
 interface AppFooterProps {
   copy: TranslationCopy['footer'];
 }
 
 export function AppFooter({ copy }: AppFooterProps) {
+  const handleBackToMatrix = () => {
+    document.getElementById('decision-matrix')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
-    <footer className="border-t border-border py-5">
-      <div className="flex items-center gap-3">
-        <img
-          alt=""
-          aria-hidden="true"
-          className="size-8 shrink-0 rounded-md"
-          src="/favicon.svg"
-        />
-        <p className="text-sm font-semibold text-foreground">{copy.productLabel}</p>
+    <footer className="border-t border-border py-7 sm:py-8">
+      <div className="sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <img
+              alt=""
+              aria-hidden="true"
+              className="size-8 shrink-0 rounded-md"
+              src="/favicon.svg"
+            />
+            <p className="text-sm font-semibold text-foreground">{copy.productLabel}</p>
+          </div>
+          <p
+            className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground"
+            id="site-footer-note"
+          >
+            {copy.note}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {copy.contactLabel}:{' '}
+            <a
+              className="font-medium text-cyan-800 underline-offset-4 transition hover:text-orange-700 hover:underline"
+              href={`mailto:${copy.contactEmail}`}
+            >
+              {copy.contactEmail}
+            </a>
+          </p>
+        </div>
+
+        <div className="mt-5 sm:mt-0 sm:shrink-0">
+          <Button
+            className="gap-2"
+            onClick={handleBackToMatrix}
+            size="sm"
+            variant="outline"
+          >
+            <ArrowUp aria-hidden="true" className="size-4" />
+            {copy.backToScoring}
+          </Button>
+        </div>
       </div>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground" id="site-footer-note">
-        {copy.note}
-      </p>
     </footer>
   );
 }
