@@ -66,7 +66,14 @@ export function ResultsPanel({
 
         <section aria-label="Weighted ranking" className="space-y-4">
           {summary.rankedOptions.map((option, index) => {
-            const isLeading = summary.leadingOptionIds.includes(option.id);
+            const isTopOption = summary.leadingOptionIds.includes(option.id);
+            const statusLabel = summary.isTie ? 'Tied' : 'Leading';
+            const statusClassName = summary.isTie
+              ? 'border-amber-500'
+              : 'border-cyan-600';
+            const badgeClassName = summary.isTie
+              ? 'bg-amber-100 text-amber-800'
+              : 'bg-cyan-100 text-cyan-800';
             const width = Math.max(
               0,
               Math.min(100, (option.total / MAX_SCORE) * 100),
@@ -76,7 +83,7 @@ export function ResultsPanel({
               <article
                 className={cn(
                   'border-l-2 py-1 pl-4 transition',
-                  isLeading ? 'border-cyan-600' : 'border-border',
+                  isTopOption ? statusClassName : 'border-border',
                 )}
                 key={option.id}
               >
@@ -94,9 +101,14 @@ export function ResultsPanel({
                       </p>
                     </div>
                   </div>
-                  {isLeading ? (
-                    <span className="shrink-0 rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold uppercase text-cyan-800">
-                      Leading
+                  {isTopOption ? (
+                    <span
+                      className={cn(
+                        'shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase',
+                        badgeClassName,
+                      )}
+                    >
+                      {statusLabel}
                     </span>
                   ) : null}
                 </div>
@@ -155,8 +167,8 @@ export function ResultsPanel({
             </div>
           ) : (
             <p className="text-sm leading-6 text-muted-foreground">
-              No criterion weights are available, so every option is currently
-              neutral.
+              No positive criterion weights are available, so every option is
+              currently neutral.
             </p>
           )}
         </section>
