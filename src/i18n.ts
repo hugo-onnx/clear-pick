@@ -116,10 +116,6 @@ export interface TranslationCopy {
   };
   footer: {
     productLabel: string;
-    title: string;
-    description: string;
-    linksAria: string;
-    links: Array<{ label: string; href: string }>;
     note: string;
   };
 }
@@ -270,16 +266,7 @@ export const translations: Record<Language, TranslationCopy> = {
       matrixCount: (options, categories) => `${options} options / ${categories} categories`,
     },
     footer: {
-      productLabel: 'Weighted Matrix',
-      title: 'A calmer way to compare the choices in front of you.',
-      description:
-        'Use the landing space for reflection, then move into the matrix when you want a clearer weighted view.',
-      linksAria: 'Footer links',
-      links: [
-        { label: 'About', href: '#landing-title' },
-        { label: 'Templates', href: '#decision-matrix' },
-        { label: 'Support', href: '#site-footer-note' },
-      ],
+      productLabel: 'Weighted Scoring Model',
       note:
         'Your matrix stays stored locally in this browser, so you can return to it without creating an account.',
     },
@@ -409,15 +396,6 @@ export const translations: Record<Language, TranslationCopy> = {
     },
     footer: {
       productLabel: 'Matriz ponderada',
-      title: 'Una forma más serena de comparar las opciones que tienes delante.',
-      description:
-        'Usa el espacio inicial para reflexionar y luego pasa a la matriz cuando quieras una vista ponderada más clara.',
-      linksAria: 'Enlaces del pie',
-      links: [
-        { label: 'Acerca de', href: '#landing-title' },
-        { label: 'Plantillas', href: '#decision-matrix' },
-        { label: 'Ayuda', href: '#site-footer-note' },
-      ],
       note:
         'Tu matriz queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
     },
