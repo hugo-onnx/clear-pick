@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { LandingHero } from './components/LandingHero';
+import { LanguageToggle } from './components/LanguageToggle';
 import { MatrixEditor } from './components/MatrixEditor';
 import { ResultsPanel } from './components/ResultsPanel';
-import type { DecisionMatrix } from './types';
+import { loadLanguage, saveLanguage, translations } from './i18n';
+import type { DecisionMatrix, ScoreMode } from './types';
 import {
-  clampScore,
+  clampScoreForMode,
   clampWeight,
   createCategory,
   createOption,
   createStarterMatrix,
+  DEFAULT_SCORE,
   MAX_OPTIONS,
   MIN_CATEGORIES,
   MIN_OPTIONS,
+  getScoreModeForCell,
   synchronizeScores,
 } from './utils/matrix';
 import { getDecisionSummary } from './utils/scoring';
@@ -20,10 +24,26 @@ import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
 function App() {
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
+  const [language, setLanguage] = useState(() => loadLanguage());
+  const [areResultsHidden, setAreResultsHidden] = useState(false);
+  const copy = translations[language];
 
   useEffect(() => {
     saveActiveDecision(matrix);
   }, [matrix]);
+
+  useEffect(() => {
+    saveLanguage(language);
+    document.documentElement.lang = language;
+    document.title = copy.document.title;
+
+    const description = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    );
+    if (description) {
+      description.content = copy.document.description;
+    }
+  }, [copy.document.description, copy.document.title, language]);
 
   const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
     setMatrix((current) => synchronizeScores(transform(current)));
@@ -37,10 +57,15 @@ function App() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
-      <LandingHero />
+      <LanguageToggle
+        copy={copy.languageToggle}
+        language={language}
+        onLanguageChange={setLanguage}
+      />
+      <LandingHero copy={copy.hero} />
 
       <section
-        aria-label="Decision workspace"
+        aria-label={copy.workspaceLabel}
         className="matrix-theme relative isolate z-10 overflow-hidden bg-background text-foreground"
       >
         <div
@@ -52,6 +77,8 @@ function App() {
           <main className="scroll-mt-10 space-y-10" id="decision-matrix">
             <div className="grid gap-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.72fr)] xl:items-start">
               <MatrixEditor
+                areResultsHidden={areResultsHidden}
+                copy={copy.matrix}
                 matrix={matrix}
                 summary={summary}
                 onAddOption={(name) =>
@@ -132,25 +159,64 @@ function App() {
                     ),
                   }))
                 }
-                onScoreChange={(optionId, categoryId, score) =>
-                  applyChange((current) => ({
-                    ...current,
-                    scores: {
-                      ...current.scores,
-                      [optionId]: {
-                        ...current.scores[optionId],
-                        [categoryId]: clampScore(score),
+                onScoreModeChange={(optionId, categoryId, scoreMode: ScoreMode) =>
+                  applyChange((current) => {
+                    const optionScores = current.scores[optionId] ?? {};
+                    const score = optionScores[categoryId] ?? DEFAULT_SCORE;
+
+                    return {
+                      ...current,
+                      scoreModes: {
+                        ...(current.scoreModes ?? {}),
+                        [optionId]: {
+                          ...(current.scoreModes?.[optionId] ?? {}),
+                          [categoryId]: scoreMode,
+                        },
                       },
-                    },
-                  }))
+                      scores: {
+                        ...current.scores,
+                        [optionId]: {
+                          ...optionScores,
+                          [categoryId]: clampScoreForMode(score, scoreMode),
+                        },
+                      },
+                    };
+                  })
+                }
+                onScoreChange={(optionId, categoryId, score) =>
+                  applyChange((current) => {
+                    const scoreMode = getScoreModeForCell(
+                      current,
+                      optionId,
+                      categoryId,
+                    );
+
+                    return {
+                      ...current,
+                      scores: {
+                        ...current.scores,
+                        [optionId]: {
+                          ...current.scores[optionId],
+                          [categoryId]: clampScoreForMode(score, scoreMode),
+                        },
+                      },
+                    };
+                  })
                 }
               />
 
-              <ResultsPanel matrix={matrix} summary={summary} onReset={handleReset} />
+              <ResultsPanel
+                areResultsHidden={areResultsHidden}
+                copy={copy.results}
+                matrix={matrix}
+                onResultsHiddenChange={setAreResultsHidden}
+                summary={summary}
+                onReset={handleReset}
+              />
             </div>
           </main>
 
-          <AppFooter />
+          <AppFooter copy={copy.footer} />
         </div>
       </section>
     </div>
