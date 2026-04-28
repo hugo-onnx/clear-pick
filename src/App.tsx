@@ -203,6 +203,7 @@ function App() {
                     };
                   })
                 }
+                onResultsHiddenChange={setAreResultsHidden}
               />
 
               <ResultsPanel

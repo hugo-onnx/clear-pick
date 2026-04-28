@@ -63,6 +63,8 @@ describe('App', () => {
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
 
+    expect(screen.getAllByRole('contentinfo')).toHaveLength(1);
+
     const footer = screen.getByRole('contentinfo');
     const footerLogo = footer.querySelector('img');
 
@@ -79,6 +81,11 @@ describe('App', () => {
       'href',
       '#site-footer-note',
     );
+    expect(
+      within(footer).getByRole('link', {
+        name: /hugonzalezhuerta@gmail\.com/i,
+      }),
+    ).toHaveAttribute('href', 'mailto:hugonzalezhuerta@gmail.com');
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /templates/i }),
@@ -86,11 +93,17 @@ describe('App', () => {
     expect(
       screen.queryByRole('link', { name: /support/i }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/trust strip/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/minimal premium/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/action footer/i)).not.toBeInTheDocument();
     expect(
       document.getElementById('site-footer-note'),
     ).toHaveTextContent(
       /your matrix stays stored locally in this browser/i,
     );
+    expect(
+      within(footer).getByRole('button', { name: /back to scoring/i }),
+    ).toBeInTheDocument();
   });
 
   it('scrolls to the decision matrix when Start is clicked', async () => {
@@ -108,6 +121,31 @@ describe('App', () => {
     expect(document.getElementById('decision-matrix')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^start$/i }));
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({
+      behavior: 'smooth',
+      block: 'start',
+    });
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: originalScrollIntoView,
+    });
+  });
+
+  it('scrolls to the decision matrix when the footer scoring action is clicked', async () => {
+    const user = userEvent.setup();
+    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /back to scoring/i }));
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
@@ -144,6 +182,9 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /^empezar$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('switch', { name: /puntuación a ciegas/i }),
     ).toBeInTheDocument();
 
     await user.click(
@@ -416,8 +457,11 @@ describe('App', () => {
     render(<App />);
 
     expect(
-      screen.getByRole('button', { name: /hide results/i }),
-    ).toHaveAttribute('aria-expanded', 'true');
+      screen.getByRole('switch', { name: /blind scoring/i }),
+    ).not.toBeChecked();
+    expect(
+      screen.queryByRole('button', { name: /hide results/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
@@ -500,15 +544,19 @@ describe('App', () => {
 
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: /hide results/i }));
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
 
+    expect(
+      screen.getByRole('switch', { name: /blind scoring/i }),
+    ).toBeChecked();
+    expect(screen.getByText(/^on$/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /show results/i }),
     ).toHaveAttribute('aria-expanded', 'false');
     expect(
       screen.getByRole('button', { name: /why this helps/i }),
     ).toHaveAccessibleDescription(
-      /hide results while scoring to avoid anchoring on the current leader/i,
+      /hides live totals and recommendations while you score/i,
     );
     expect(
       screen.queryByRole('region', { name: /recommendation preview/i }),
@@ -526,6 +574,9 @@ describe('App', () => {
     expect(
       screen.queryByRole('button', { name: /reset matrix/i }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /hide results/i }),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText(/results hidden while you score/i).length).toBeGreaterThan(
       0,
     );
@@ -537,12 +588,13 @@ describe('App', () => {
 
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: /hide results/i }));
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /show results/i }));
 
     expect(
-      screen.getByRole('button', { name: /hide results/i }),
-    ).toHaveAttribute('aria-expanded', 'true');
+      screen.getByRole('switch', { name: /blind scoring/i }),
+    ).not.toBeChecked();
+    expect(screen.getByText(/^off$/i)).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
@@ -564,7 +616,7 @@ describe('App', () => {
       within(optionsRegion).getByLabelText(/live score for stay here/i),
     ).toHaveTextContent('10.0 pts');
 
-    await user.click(screen.getByRole('button', { name: /hide results/i }));
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
 
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
     expect(
@@ -674,8 +726,8 @@ describe('App', () => {
 
     expect(screen.getByRole('button', { name: /^start$/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /hide results/i }),
-    ).toHaveAttribute('aria-expanded', 'true');
+      screen.getByRole('switch', { name: /blind scoring/i }),
+    ).not.toBeChecked();
     expect(screen.getByDisplayValue('Stay here')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();

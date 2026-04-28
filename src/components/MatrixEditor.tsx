@@ -1,4 +1,4 @@
-import { ChevronDown, Plus, X } from 'lucide-react';
+import { ChevronDown, CircleHelp, Plus, X } from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -48,6 +48,7 @@ interface MatrixEditorProps {
     scoreMode: ScoreMode,
   ) => void;
   onScoreChange: (optionId: string, categoryId: string, score: number) => void;
+  onResultsHiddenChange: (areResultsHidden: boolean) => void;
 }
 
 type SliderConfig = {
@@ -183,6 +184,7 @@ export function MatrixEditor({
   onCategoryWeightChange,
   onScoreModeChange,
   onScoreChange,
+  onResultsHiddenChange,
 }: MatrixEditorProps) {
   const [pendingOptionName, setPendingOptionName] = useState('');
   const [pendingCategoryName, setPendingCategoryName] = useState('');
@@ -198,6 +200,8 @@ export function MatrixEditor({
   const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
   const shouldFocusNewCategoryRef = useRef(false);
   const previousCategoryCountRef = useRef(matrix.categories.length);
+  const blindScoringHelpId = 'blind-scoring-help';
+  const blindScoringToggleId = 'blind-scoring-toggle';
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
   const canAddOptions = matrix.options.length < MAX_OPTIONS;
   const canRemoveCategories = matrix.categories.length > MIN_CATEGORIES;
@@ -579,6 +583,61 @@ export function MatrixEditor({
             <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
               {copy.criteriaCount(matrix.categories.length)}
             </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-full border border-border bg-white/70 px-3 py-2 shadow-sm transition hover:border-primary/35 hover:bg-white">
+              <input
+                aria-describedby={blindScoringHelpId}
+                aria-label={copy.blindScoring}
+                checked={areResultsHidden}
+                className="peer sr-only"
+                id={blindScoringToggleId}
+                onChange={(event) =>
+                  onResultsHiddenChange(event.currentTarget.checked)
+                }
+                role="switch"
+                type="checkbox"
+              />
+              <span
+                aria-hidden="true"
+                className="relative inline-flex h-5 w-9 shrink-0 rounded-full bg-slate-300 transition peer-checked:bg-cyan-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2"
+              >
+                <span
+                  className={cn(
+                    'absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
+                    areResultsHidden ? 'translate-x-4' : 'translate-x-0',
+                  )}
+                />
+              </span>
+              <span className="whitespace-nowrap text-sm font-semibold text-foreground">
+                {copy.blindScoring}
+              </span>
+              <span
+                aria-hidden="true"
+                className="min-w-16 rounded-full bg-slate-950/[0.045] px-2.5 py-1 text-center text-xs font-semibold text-muted-foreground"
+              >
+                {areResultsHidden
+                  ? copy.blindScoringOn
+                  : copy.blindScoringOff}
+              </span>
+            </label>
+            <div className="group relative shrink-0">
+              <button
+                aria-describedby={blindScoringHelpId}
+                aria-label={copy.blindScoringHelpLabel}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/70 text-muted-foreground shadow-sm transition hover:border-primary/35 hover:bg-white hover:text-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                type="button"
+              >
+                <CircleHelp aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <p
+                className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-72 rounded-md border border-border bg-white px-3 py-2 text-sm leading-5 text-muted-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100"
+                id={blindScoringHelpId}
+                role="tooltip"
+              >
+                {copy.blindScoringHelp}
+              </p>
+            </div>
           </div>
         </div>
 
