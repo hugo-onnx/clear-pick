@@ -50,9 +50,6 @@ describe('App', () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole('heading', { name: /a calmer way to compare/i }),
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole('region', { name: /options to compare/i }),
     ).toBeInTheDocument();
     expect(
@@ -65,17 +62,34 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /about/i })).toHaveAttribute(
-      'href',
-      '#landing-title',
-    );
-    expect(screen.getByRole('link', { name: /templates/i })).toHaveAttribute(
-      'href',
-      '#decision-matrix',
-    );
-    expect(screen.getByRole('link', { name: /support/i })).toHaveAttribute(
+
+    const footer = screen.getByRole('contentinfo');
+    const footerLogo = footer.querySelector('img');
+
+    expect(footerLogo).toHaveAttribute('src', '/favicon.svg');
+    expect(footerLogo).toHaveAttribute('alt', '');
+    expect(footerLogo).toHaveAttribute('aria-hidden', 'true');
+    expect(within(footer).getByText('Weighted Scoring Model')).toBeInTheDocument();
+    expect(
+      within(footer).getByText(
+        /your matrix stays stored locally in this browser/i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /local save/i })).toHaveAttribute(
       'href',
       '#site-footer-note',
+    );
+    expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /templates/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /support/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      document.getElementById('site-footer-note'),
+    ).toHaveTextContent(
+      /your matrix stays stored locally in this browser/i,
     );
   });
 
