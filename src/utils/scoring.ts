@@ -25,8 +25,15 @@ export interface DecisionSummary {
 
 const EPSILON = 0.000001;
 
+function getPositiveWeight(weight: number): number {
+  return Number.isFinite(weight) && weight > 0 ? weight : 0;
+}
+
 export function getTotalWeight(matrix: DecisionMatrix): number {
-  return matrix.categories.reduce((sum, category) => sum + category.weight, 0);
+  return matrix.categories.reduce(
+    (sum, category) => sum + getPositiveWeight(category.weight),
+    0,
+  );
 }
 
 export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
@@ -38,13 +45,15 @@ export function getDecisionSummary(matrix: DecisionMatrix): DecisionSummary {
     id: category.id,
     name: getDisplayName(category.name, `Criterion ${index + 1}`),
     rawWeight: category.weight,
-    normalizedWeight: totalWeight > 0 ? category.weight / totalWeight : 0,
+    normalizedWeight:
+      totalWeight > 0 ? getPositiveWeight(category.weight) / totalWeight : 0,
   }));
 
   const rankedOptions = matrix.options
     .map((option, optionIndex) => {
       const total = matrix.categories.reduce((sum, category) => {
-        const normalizedWeight = totalWeight > 0 ? category.weight / totalWeight : 0;
+        const normalizedWeight =
+          totalWeight > 0 ? getPositiveWeight(category.weight) / totalWeight : 0;
         const score = matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
         return sum + normalizedWeight * score;
       }, 0);
