@@ -143,8 +143,58 @@ function selectInputText(input: HTMLInputElement) {
   input.setSelectionRange(0, input.value.length);
 }
 
-function focusInputText(input: HTMLInputElement) {
+function isElementInViewport(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const viewportHeight =
+    window.innerHeight || document.documentElement.clientHeight;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= viewportHeight &&
+    rect.right <= viewportWidth
+  );
+}
+
+function revealInputIfNeeded(input: HTMLInputElement) {
+  const revealInput = () => {
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+
+    document.documentElement.style.scrollBehavior = 'auto';
+    input.scrollIntoView({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
+    });
+    document.documentElement.style.scrollBehavior = previousScrollBehavior;
+  };
+
+  if (!isElementInViewport(input)) {
+    revealInput();
+  }
+
+  const scheduleAfterPaint =
+    window.requestAnimationFrame?.bind(window) ??
+    ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+
+  scheduleAfterPaint(() => {
+    if (!isElementInViewport(input)) {
+      revealInput();
+    }
+  });
+}
+
+function focusInputText(
+  input: HTMLInputElement,
+  options: { reveal?: boolean } = {},
+) {
+  if (options.reveal) {
+    revealInputIfNeeded(input);
+  }
+
   input.focus();
+
   const end = input.value.length;
   input.setSelectionRange(end, end);
 }
@@ -199,6 +249,7 @@ export function MatrixEditor({
   >({});
   const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
   const shouldFocusNewCategoryRef = useRef(false);
+  const shouldRevealPendingCategoryRef = useRef(false);
   const previousCategoryCountRef = useRef(matrix.categories.length);
   const blindScoringHelpId = 'blind-scoring-help';
   const blindScoringToggleId = 'blind-scoring-toggle';
@@ -221,7 +272,9 @@ export function MatrixEditor({
     event.preventDefault();
 
     const nextCategoryName = pendingCategoryName.trim();
-    shouldFocusNewCategoryRef.current = nextCategoryName.length === 0;
+    const shouldFocusNewCategory = nextCategoryName.length === 0;
+    shouldFocusNewCategoryRef.current = shouldFocusNewCategory;
+    shouldRevealPendingCategoryRef.current = !shouldFocusNewCategory;
     onAddCategory(nextCategoryName);
     setPendingCategoryName('');
     pendingCategoryInputRef.current?.focus();
@@ -280,8 +333,14 @@ export function MatrixEditor({
       return;
     }
 
-    shouldFocusNewCategoryRef.current = true;
-    onAddCategory();
+    const nextInput = pendingCategoryInputRef.current;
+
+    if (nextInput instanceof HTMLInputElement) {
+      focusInputText(nextInput, { reveal: true });
+      return;
+    }
+
+    event.currentTarget.blur();
   };
   const getSliderDisplayValue = (sliderId: string, value: number) => {
     return draftSliderValues[sliderId] ?? value;
@@ -346,10 +405,22 @@ export function MatrixEditor({
     const previousCategoryCount = previousCategoryCountRef.current;
     previousCategoryCountRef.current = matrix.categories.length;
 
-    if (
-      !shouldFocusNewCategoryRef.current ||
-      matrix.categories.length <= previousCategoryCount
-    ) {
+    if (matrix.categories.length <= previousCategoryCount) {
+      return;
+    }
+
+    if (shouldRevealPendingCategoryRef.current) {
+      shouldRevealPendingCategoryRef.current = false;
+      const pendingCategoryInput = pendingCategoryInputRef.current;
+
+      if (pendingCategoryInput instanceof HTMLInputElement) {
+        focusInputText(pendingCategoryInput, { reveal: true });
+      }
+
+      return;
+    }
+
+    if (!shouldFocusNewCategoryRef.current) {
       return;
     }
 
