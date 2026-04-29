@@ -9,7 +9,7 @@ interface LanguageToggleProps {
 }
 
 const toggleButtonClass =
-  'rounded-full px-2 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200';
+  'rounded-full px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200';
 
 export function LanguageToggle({
   copy,
@@ -19,7 +19,7 @@ export function LanguageToggle({
   return (
     <div
       aria-label={copy.label}
-      className="fixed right-2 top-2 z-50 inline-flex items-center gap-0.5 rounded-full border border-white/15 bg-black/55 p-0.5 text-white shadow-[0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-md sm:right-4 sm:top-4"
+      className="fixed right-2 top-[max(0.5rem,env(safe-area-inset-top))] z-50 inline-flex items-center gap-0.5 rounded-full border border-white/20 bg-black/70 p-0.5 text-white shadow-[0_12px_30px_rgba(0,0,0,0.24)] backdrop-blur-md sm:right-4 sm:top-4"
       role="group"
     >
       <Languages aria-hidden="true" className="ml-1.5 size-3.5 text-white/70" />
