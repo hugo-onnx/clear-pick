@@ -84,10 +84,11 @@ describe('App', () => {
         /your matrix stays stored locally in this browser/i,
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /local save/i })).toHaveAttribute(
-      'href',
-      '#local-save-notice',
-    );
+    expect(screen.queryByRole('link', { name: /workflow/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /scoring/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /local save/i }),
+    ).not.toBeInTheDocument();
     expect(
       within(footer).getByRole('link', {
         name: /hugonzalezhuerta@gmail\.com/i,
