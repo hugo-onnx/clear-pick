@@ -56,15 +56,15 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /build a weighted comparison by naming your options, setting what matters, and scoring each choice/i,
+        /name options, weight criteria, and score each choice in one focused comparison/i,
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/data stored only on your device/i),
+      screen.getByText(/stored only on this device/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /your information is saved locally in this browser\. we do not upload, store, or access your decision data\./i,
+        /your decision stays in this browser\. we do not upload, store, or access it\./i,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('App', () => {
       /your matrix stays stored locally in this browser/i,
     );
     expect(document.getElementById('local-save-notice')).toHaveTextContent(
-      /your information is saved locally in this browser/i,
+      /your decision stays in this browser/i,
     );
     expect(
       within(footer).getByRole('button', { name: /back to top/i }),
@@ -198,11 +198,11 @@ describe('App', () => {
       screen.getByRole('switch', { name: /puntuación a ciegas/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/guardado solo en este dispositivo/i),
+      screen.getByText(/guardado en este dispositivo/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /tu matriz se guarda localmente en este navegador\. no subimos, almacenamos ni accedemos a los datos de tu decisión\./i,
+        /tu decisión queda en este navegador\. no subimos, almacenamos ni accedemos a esos datos\./i,
       ),
     ).toBeInTheDocument();
 
@@ -278,7 +278,7 @@ describe('App', () => {
     expect(within(optionsRegion).getByText(/2 options/i)).toBeInTheDocument();
     expect(
       within(optionsRegion).getByText(
-        "Name the choices you're deciding between. You'll score each option against the weighted criteria below.",
+        'Name the choices in play. Each option is scored against the weighted criteria below.',
       ),
     ).toBeInTheDocument();
     expect(Array.from(optionCardsGrid.children)).toHaveLength(3);
@@ -1116,18 +1116,30 @@ describe('App', () => {
     await user.type(firstOption, 'Choosing a city');
     await user.tab();
 
-    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    const resetButton = screen.getByRole('button', { name: /reset matrix/i });
+    await user.click(resetButton);
     const resetDialog = screen.getByRole('alertdialog', {
       name: /reset this matrix/i,
     });
+    const cancelResetButton = within(resetDialog).getByRole('button', {
+      name: /keep editing/i,
+    });
+    const confirmResetButton = within(resetDialog).getByRole('button', {
+      name: /reset matrix/i,
+    });
 
-    await user.click(
-      within(resetDialog).getByRole('button', { name: /keep editing/i }),
-    );
+    await waitFor(() => expect(cancelResetButton).toHaveFocus());
+    await user.tab();
+    expect(confirmResetButton).toHaveFocus();
+    await user.tab();
+    expect(cancelResetButton).toHaveFocus();
+
+    await user.click(cancelResetButton);
 
     expect(
       screen.queryByRole('alertdialog', { name: /reset this matrix/i }),
     ).not.toBeInTheDocument();
+    expect(resetButton).toHaveFocus();
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('Choosing a city');
   });
 });
