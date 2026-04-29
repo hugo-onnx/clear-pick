@@ -73,8 +73,8 @@ function App() {
           className="h-1 w-full bg-gradient-to-r from-cyan-600/80 via-white/60 to-orange-500/80"
         />
 
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-16 lg:pt-14">
-          <main className="scroll-mt-10 space-y-10" id="decision-matrix">
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-14 sm:pt-10 lg:px-8 lg:pb-16 lg:pt-12">
+          <main className="scroll-mt-14 space-y-9 sm:scroll-mt-16" id="decision-matrix">
             <div className="grid gap-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.72fr)] xl:items-start">
               <MatrixEditor
                 areResultsHidden={areResultsHidden}
