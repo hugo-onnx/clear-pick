@@ -17,6 +17,7 @@ import {
 import { STORAGE_KEY } from './utils/storage';
 
 afterEach(() => {
+  vi.useRealTimers();
   window.localStorage.clear();
   vi.restoreAllMocks();
 });
@@ -1105,6 +1106,26 @@ describe('App', () => {
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
     expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
     expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
+  });
+
+  it('flushes pending matrix persistence on pagehide', () => {
+    vi.useFakeTimers();
+
+    render(<App />);
+
+    const firstOption = screen.getByLabelText(/^option 1$/i);
+    fireEvent.change(firstOption, { target: { value: 'Choosing a city' } });
+    fireEvent.blur(firstOption);
+
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+
+    window.dispatchEvent(new Event('pagehide'));
+
+    const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    expect(storedValue).not.toBeNull();
+    expect(JSON.parse(storedValue ?? '{}').options[0].name).toBe(
+      'Choosing a city',
+    );
   });
 
   it('keeps matrix edits when the reset warning is cancelled', async () => {
