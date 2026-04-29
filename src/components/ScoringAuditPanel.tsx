@@ -101,44 +101,25 @@ export function ScoringAuditPanel({
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
-        <section className="rounded-lg border border-border bg-white/75 p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-foreground">
-            {copy.formulaTitle}
-          </h3>
-          <div className="mt-4 grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-2">
-            <p>{copy.formulaWeight}</p>
-            <p>{copy.formulaContribution}</p>
-            <p>{copy.formulaTotal}</p>
-            <p>{copy.zeroWeightRule}</p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-cyan-600/20 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-900">
-              {copy.scaleRule}
-            </span>
-            <span className="rounded-full border border-orange-600/20 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-900">
-              {copy.booleanRule}
-            </span>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-border bg-white/75 p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-foreground">
-            {copy.checklistTitle}
-          </h3>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-            {copy.checklistItems.map((item) => (
-              <li className="flex gap-3" key={item}>
-                <span
-                  aria-hidden="true"
-                  className="mt-2 h-2 w-2 shrink-0 rounded-full bg-cyan-700"
-                />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      <section className="rounded-lg border border-border bg-white/75 p-5 shadow-sm">
+        <h3 className="text-base font-semibold text-foreground">
+          {copy.formulaTitle}
+        </h3>
+        <div className="mt-4 grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-2">
+          <p>{copy.formulaWeight}</p>
+          <p>{copy.formulaContribution}</p>
+          <p>{copy.formulaTotal}</p>
+          <p>{copy.zeroWeightRule}</p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className="rounded-full border border-cyan-600/20 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-900">
+            {copy.scaleRule}
+          </span>
+          <span className="rounded-full border border-orange-600/20 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-900">
+            {copy.booleanRule}
+          </span>
+        </div>
+      </section>
 
       {areResultsHidden ? (
         <section className="rounded-lg border border-dashed border-border bg-white/70 p-5">
