@@ -173,25 +173,25 @@ export const translations: Record<Language, TranslationCopy> = {
       headingEmphasis: 'decision',
       headingLast: 'in 60 seconds',
       description:
-        'Weight your priorities, score your options, and get an instant recommendation grounded in logic.',
+        'Weight priorities, score options, and see the strongest choice without sending data anywhere.',
       start: 'Start',
-      localStorageNoticeTitle: 'Data stored only on your device',
+      localStorageNoticeTitle: 'Stored only on this device',
       localStorageNoticeBody:
-        'Your information is saved locally in this browser. We do not upload, store, or access your decision data.',
+        'Your decision stays in this browser. We do not upload, store, or access it.',
     },
     workspaceLabel: 'Decision workspace',
     matrix: {
       editorAria: 'Decision matrix editor',
       title: 'Weighted Scoring Model',
       intro:
-        'Build a weighted comparison by naming your options, setting what matters, and scoring each choice.',
-      localStorageNoticeTitle: 'Data stored only on your device',
+        'Name options, weight criteria, and score each choice in one focused comparison.',
+      localStorageNoticeTitle: 'Stored only on this device',
       localStorageNoticeBody:
-        'Your matrix is saved locally in this browser. We do not upload, store, or access your decision data.',
+        'Your matrix stays in this browser. We do not upload, store, or access it.',
       optionsRegionAria: 'Options to compare',
       optionsHeading: 'Options to compare',
       optionsDescription:
-        "Name the choices you're deciding between. You'll score each option against the weighted criteria below.",
+        'Name the choices in play. Each option is scored against the weighted criteria below.',
       optionsCount: (count) => `${count} ${count === 1 ? 'option' : 'options'}`,
       optionCards: 'Option cards',
       optionLabel: (index) => `Option ${index}`,
@@ -208,13 +208,13 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Tied',
       criteriaHeading: 'Criteria, weights, and scores',
       criteriaDescription:
-        'Name the factors that matter, set how strongly each one should influence the decision from 0-10, then choose whether each option score is quantitative or a has/does-not-have condition. A weight of 0 excludes that criterion.',
+        'Name what matters, set each weight from 0-10, then score every option by scale or yes/no. A weight of 0 excludes that criterion.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
       scoringControls: 'Scoring controls',
       blindScoring: 'Blind scoring',
       blindScoringHelpLabel: 'Why this helps',
       blindScoringHelp:
-        'Hides live totals and recommendations while you score, helping reduce bias as you compare options.',
+        'Hides live totals and recommendations while you score, reducing bias as you compare options.',
       criteriaList: 'Criteria list',
       criterionLabel: (index) => `Criterion ${index}`,
       newCriterion: 'New criterion',
@@ -281,7 +281,7 @@ export const translations: Record<Language, TranslationCopy> = {
         'This will clear your options, criteria, weights, and scores stored in this browser.',
       resetDialogCancel: 'Keep editing',
       resetDialogConfirm: 'Reset matrix',
-      matrixCount: (options, categories) => `${options} options / ${categories} categories`,
+      matrixCount: (options, categories) => `${options} options / ${categories} criteria`,
     },
     footer: {
       productLabel: 'Weighted Scoring Model',
@@ -312,25 +312,25 @@ export const translations: Record<Language, TranslationCopy> = {
       headingEmphasis: 'más difícil',
       headingLast: 'en 60 segundos',
       description:
-        'Pondera tus prioridades, evalúa tus opciones y obtén una recomendación instantánea basada en la lógica.',
+        'Pondera prioridades, puntúa opciones y ve la alternativa más sólida sin enviar datos.',
       start: 'Empezar',
-      localStorageNoticeTitle: 'Guardado solo en este dispositivo',
+      localStorageNoticeTitle: 'Guardado en este dispositivo',
       localStorageNoticeBody:
-        'Tu matriz se guarda localmente en este navegador. No subimos, almacenamos ni accedemos a los datos de tu decisión.',
+        'Tu decisión queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
     },
     workspaceLabel: 'Espacio de decisión',
     matrix: {
       editorAria: 'Editor de matriz de decisión',
       title: 'Modelo de puntuación ponderada',
       intro:
-        'Construye una comparación ponderada nombrando tus opciones, definiendo qué importa y puntuando cada alternativa.',
-      localStorageNoticeTitle: 'Guardado solo en este dispositivo',
+        'Nombra opciones, pondera criterios y puntúa cada alternativa en una comparación clara.',
+      localStorageNoticeTitle: 'Guardado en este dispositivo',
       localStorageNoticeBody:
-        'Tu matriz se guarda localmente en este navegador. No subimos, almacenamos ni accedemos a los datos de tu decisión.',
+        'Tu matriz queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
       optionsRegionAria: 'Opciones para comparar',
       optionsHeading: 'Opciones para comparar',
       optionsDescription:
-        'Nombra las alternativas entre las que estás decidiendo. Puntuarás cada opción según los criterios ponderados de abajo.',
+        'Nombra las alternativas en juego. Cada opción se puntúa con los criterios ponderados de abajo.',
       optionsCount: (count) => `${count} ${count === 1 ? 'opción' : 'opciones'}`,
       optionCards: 'Tarjetas de opciones',
       optionLabel: (index) => `Opción ${index}`,
@@ -347,13 +347,13 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Empate',
       criteriaHeading: 'Criterios, pesos y puntuaciones',
       criteriaDescription:
-        'Nombra los factores que importan, define de 0 a 10 cuánto debe influir cada uno en la decisión y elige si cada opción se puntuará con una escala cuantitativa o con una condición de cumple/no cumple. Un peso de 0 excluye ese criterio.',
+        'Nombra lo que importa, define cada peso de 0 a 10 y puntúa cada opción con escala o sí/no. Un peso de 0 excluye ese criterio.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterio' : 'criterios'}`,
       scoringControls: 'Controles de puntuación',
       blindScoring: 'Puntuación a ciegas',
       blindScoringHelpLabel: 'Por qué ayuda',
       blindScoringHelp:
-        'Oculta los totales en tiempo real y las recomendaciones mientras puntúas, para ayudar a reducir sesgos al comparar opciones.',
+        'Oculta totales y recomendaciones mientras puntúas, reduciendo sesgos al comparar opciones.',
       criteriaList: 'Lista de criterios',
       criterionLabel: (index) => `Criterio ${index}`,
       newCriterion: 'Nuevo criterio',
@@ -422,7 +422,7 @@ export const translations: Record<Language, TranslationCopy> = {
       resetDialogCancel: 'Seguir editando',
       resetDialogConfirm: 'Reiniciar matriz',
       matrixCount: (options, categories) =>
-        `${options} opciones / ${categories} categorías`,
+        `${options} opciones / ${categories} criterios`,
     },
     footer: {
       productLabel: 'Modelo de puntuación ponderada',
