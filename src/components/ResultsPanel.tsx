@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RotateCcw } from 'lucide-react';
@@ -132,6 +132,7 @@ export function ResultsPanel({
 }: ResultsPanelProps) {
   const [isRankingExpanded, setIsRankingExpanded] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const rankingDetailsRef = useRef<HTMLElement | null>(null);
   const resultsDetailsId = 'weighted-results-details';
   const rankingDetailsId = 'weighted-results-ranking';
   const resetDialogTitleId = 'reset-matrix-dialog-title';
@@ -165,6 +166,20 @@ export function ResultsPanel({
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isResetDialogOpen]);
+
+  useEffect(() => {
+    if (!isRankingExpanded) {
+      return;
+    }
+
+    const prefersReducedMotion =
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+    rankingDetailsRef.current?.scrollIntoView?.({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [isRankingExpanded]);
 
   const handleConfirmReset = () => {
     setIsResetDialogOpen(false);
@@ -273,6 +288,7 @@ export function ResultsPanel({
       aria-label={copy.rankingAria}
       className="space-y-3 border-t border-border pt-5"
       id={rankingDetailsId}
+      ref={rankingDetailsRef}
     >
       <h3 className="text-sm font-semibold text-foreground">
         {copy.fullRankingTitle}
