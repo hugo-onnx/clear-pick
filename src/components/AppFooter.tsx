@@ -7,7 +7,7 @@ interface AppFooterProps {
 }
 
 export function AppFooter({ copy }: AppFooterProps) {
-  const handleBackToMatrix = () => {
+  const handleBackToTop = () => {
     document.getElementById('decision-matrix')?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
@@ -47,12 +47,12 @@ export function AppFooter({ copy }: AppFooterProps) {
         <div className="mt-5 sm:mt-0 sm:shrink-0">
           <Button
             className="gap-2"
-            onClick={handleBackToMatrix}
+            onClick={handleBackToTop}
             size="sm"
             variant="outline"
           >
             <ArrowUp aria-hidden="true" className="size-4" />
-            {copy.backToScoring}
+            {copy.backToTop}
           </Button>
         </div>
       </div>
