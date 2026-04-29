@@ -6,8 +6,30 @@ vi.mock('@paper-design/shaders-react', async () => {
   const React = await import('react');
   const createShaderMock =
     (testId: string) =>
-    ({ className, style }: { className?: string; style?: object }) =>
-      React.createElement('div', { className, 'data-testid': testId, style });
+    ({
+      className,
+      maxPixelCount,
+      minPixelRatio,
+      speed,
+      style,
+      webGlContextAttributes,
+    }: {
+      className?: string;
+      maxPixelCount?: number;
+      minPixelRatio?: number;
+      speed?: number;
+      style?: object;
+      webGlContextAttributes?: WebGLContextAttributes;
+    }) =>
+      React.createElement('div', {
+        className,
+        'data-max-pixel-count': maxPixelCount,
+        'data-min-pixel-ratio': minPixelRatio,
+        'data-speed': speed,
+        'data-testid': testId,
+        'data-webgl-context': JSON.stringify(webGlContextAttributes),
+        style,
+      });
 
   return {
     MeshGradient: createShaderMock('mesh-gradient'),
