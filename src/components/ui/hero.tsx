@@ -142,7 +142,6 @@ export default function ShaderShowcase({
             style={{ filter: 'url(#glass-effect)' }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <div className="absolute left-1 right-1 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
             <Sparkles aria-hidden="true" className="relative z-10 size-4 text-cyan-100" />
             <span className="relative z-10 text-sm font-medium tracking-wide text-white/90">
               {copy.eyebrow}
