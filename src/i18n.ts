@@ -31,15 +31,6 @@ export interface TranslationCopy {
     localStorageNoticeBody: string;
   };
   workspaceLabel: string;
-  workspaceTabs: {
-    label: string;
-    scoreMatrix: string;
-    scoringPanel: string;
-    scoringPanelAria: string;
-    audit: string;
-    auditPanel: string;
-    auditPanelAria: string;
-  };
   matrix: {
     editorAria: string;
     title: string;
@@ -88,53 +79,6 @@ export interface TranslationCopy {
     optionScores: string;
     optionScoresAria: (name: string) => string;
     scoreAria: (optionName: string, criterionName: string) => string;
-  };
-  audit: {
-    title: string;
-    intro: string;
-    formulaTitle: string;
-    formulaWeight: string;
-    formulaContribution: string;
-    formulaTotal: string;
-    scaleRule: string;
-    booleanRule: string;
-    zeroWeightRule: string;
-    hiddenTitle: string;
-    hiddenDescription: string;
-    weightsTitle: string;
-    weightsDescription: string;
-    contributionTitle: string;
-    contributionDescription: string;
-    contributionBreakdownAria: string;
-    optionContributionAria: (name: string) => string;
-    rankingTitle: string;
-    rankingDescription: string;
-    rankingAria: string;
-    neutralTitle: string;
-    noPositiveWeights: string;
-    criterionColumn: string;
-    rawWeightColumn: string;
-    influenceColumn: string;
-    scoringColumn: string;
-    behaviorColumn: string;
-    optionColumn: string;
-    scoreColumn: string;
-    contributionColumn: string;
-    totalColumn: string;
-    rankColumn: string;
-    noteColumn: string;
-    included: string;
-    excluded: string;
-    scaleScore: string;
-    booleanScore: string;
-    optionTotal: (name: string, score: string) => string;
-    contributionFormula: (score: string, weight: string) => string;
-    contributionValue: (value: string) => string;
-    rankingLeader: string;
-    rankingTiedForLead: string;
-    rankingBehindLeader: (gap: string) => string;
-    tieHandlingNote: string;
-    showResults: string;
   };
   results: {
     title: string;
@@ -185,7 +129,7 @@ export interface TranslationCopy {
     note: string;
     contactLabel: string;
     contactEmail: string;
-    backToScoring: string;
+    backToTop: string;
   };
 }
 
@@ -244,15 +188,6 @@ export const translations: Record<Language, TranslationCopy> = {
         'Your information is saved locally in this browser. We do not upload, store, or access your decision data.',
     },
     workspaceLabel: 'Decision workspace',
-    workspaceTabs: {
-      label: 'Decision workspace views',
-      scoreMatrix: 'Score matrix',
-      scoringPanel: 'Score matrix workspace',
-      scoringPanelAria: 'Score matrix workspace',
-      audit: 'How scoring works',
-      auditPanel: 'Scoring audit',
-      auditPanelAria: 'How scoring works',
-    },
     matrix: {
       editorAria: 'Decision matrix editor',
       title: 'Weighted Scoring Model',
@@ -309,61 +244,6 @@ export const translations: Record<Language, TranslationCopy> = {
       scoreAria: (optionName, criterionName) =>
         `Score for ${optionName} on ${criterionName}`,
     },
-    audit: {
-      title: 'How scoring works',
-      intro:
-        'Audit the current recommendation by checking how each criterion weight is normalized and how every option contributes to its final score.',
-      formulaTitle: 'Formula',
-      formulaWeight:
-        'Normalized weight = positive criterion weight / total positive weight.',
-      formulaContribution: 'Contribution = normalized weight x option score.',
-      formulaTotal: 'Total score = sum of contributions.',
-      scaleRule: 'Scale scoring uses 0-10.',
-      booleanRule: 'Boolean scoring uses Yes = 10 / No = 0.',
-      zeroWeightRule: 'A weight of 0 is excluded from totals.',
-      hiddenTitle: 'Blind scoring is on',
-      hiddenDescription:
-        'The methodology and normalized weights stay visible, but live totals, contribution rows, and ranking are hidden until results are shown.',
-      weightsTitle: 'Normalized weights',
-      weightsDescription:
-        'Only positive weights are included in the denominator used for influence percentages.',
-      contributionTitle: 'Contribution breakdown',
-      contributionDescription:
-        'Each row multiplies an option score by the criterion influence shown above.',
-      contributionBreakdownAria: 'Contribution breakdown',
-      optionContributionAria: (name) => `${name} contribution breakdown`,
-      rankingTitle: 'Ranking notes',
-      rankingDescription:
-        'Options are sorted by total score. Equal top totals are marked as tied.',
-      rankingAria: 'Scoring audit ranking',
-      neutralTitle: 'No ranking yet',
-      noPositiveWeights:
-        'No positive criterion weights are available, so every option is currently neutral.',
-      criterionColumn: 'Criterion',
-      rawWeightColumn: 'Raw weight',
-      influenceColumn: 'Influence',
-      scoringColumn: 'Scoring',
-      behaviorColumn: 'Behavior',
-      optionColumn: 'Option',
-      scoreColumn: 'Score',
-      contributionColumn: 'Contribution',
-      totalColumn: 'Total',
-      rankColumn: 'Rank',
-      noteColumn: 'Note',
-      included: 'Included',
-      excluded: 'Excluded',
-      scaleScore: 'Scale 0-10',
-      booleanScore: 'Yes = 10 / No = 0',
-      optionTotal: (name, score) => `${name} total: ${score}`,
-      contributionFormula: (score, weight) => `${score} score x ${weight} weight`,
-      contributionValue: (value) => `${value} contribution`,
-      rankingLeader: 'Leading',
-      rankingTiedForLead: 'Tied for first',
-      rankingBehindLeader: (gap) => `${gap} behind leader`,
-      tieHandlingNote:
-        'If top totals are equal after calculation, the decision is treated as a tie instead of forcing a winner.',
-      showResults: 'Show results to audit live totals.',
-    },
     results: {
       title: 'Results',
       noWeightHeadline:
@@ -417,7 +297,7 @@ export const translations: Record<Language, TranslationCopy> = {
         'Your matrix stays stored locally in this browser, so you can return to it without creating an account.',
       contactLabel: 'Contact',
       contactEmail: 'hugonzalezhuerta@gmail.com',
-      backToScoring: 'Back to scoring',
+      backToTop: 'Back to top',
     },
   },
   es: {
@@ -451,15 +331,6 @@ export const translations: Record<Language, TranslationCopy> = {
         'Tu matriz se guarda localmente en este navegador. No subimos, almacenamos ni accedemos a los datos de tu decisión.',
     },
     workspaceLabel: 'Espacio de decisión',
-    workspaceTabs: {
-      label: 'Vistas del espacio de decisión',
-      scoreMatrix: 'Puntuar matriz',
-      scoringPanel: 'Espacio para puntuar la matriz',
-      scoringPanelAria: 'Espacio para puntuar la matriz',
-      audit: 'Cómo funciona la puntuación',
-      auditPanel: 'Auditoría de puntuación',
-      auditPanelAria: 'Cómo funciona la puntuación',
-    },
     matrix: {
       editorAria: 'Editor de matriz de decisión',
       title: 'Modelo de puntuación ponderada',
@@ -516,63 +387,6 @@ export const translations: Record<Language, TranslationCopy> = {
       scoreAria: (optionName, criterionName) =>
         `Puntuación para ${optionName} en ${criterionName}`,
     },
-    audit: {
-      title: 'Cómo funciona la puntuación',
-      intro:
-        'Audita la recomendación actual revisando cómo se normaliza cada peso y cómo contribuye cada opción a su puntuación final.',
-      formulaTitle: 'Fórmula',
-      formulaWeight:
-        'Peso normalizado = peso positivo del criterio / suma de pesos positivos.',
-      formulaContribution:
-        'Contribución = peso normalizado x puntuación de la opción.',
-      formulaTotal: 'Puntuación total = suma de contribuciones.',
-      scaleRule: 'La puntuación de escala usa 0-10.',
-      booleanRule: 'La puntuación booleana usa Sí = 10 / No = 0.',
-      zeroWeightRule: 'Un peso de 0 se excluye de los totales.',
-      hiddenTitle: 'La puntuación a ciegas está activa',
-      hiddenDescription:
-        'La metodología y los pesos normalizados siguen visibles, pero los totales en tiempo real, las contribuciones y la clasificación se ocultan hasta que muestres los resultados.',
-      weightsTitle: 'Pesos normalizados',
-      weightsDescription:
-        'Solo los pesos positivos se incluyen en el denominador usado para calcular los porcentajes de influencia.',
-      contributionTitle: 'Desglose de contribuciones',
-      contributionDescription:
-        'Cada fila multiplica la puntuación de una opción por la influencia del criterio mostrada arriba.',
-      contributionBreakdownAria: 'Desglose de contribuciones',
-      optionContributionAria: (name) => `Desglose de contribuciones de ${name}`,
-      rankingTitle: 'Notas de clasificación',
-      rankingDescription:
-        'Las opciones se ordenan por puntuación total. Los totales más altos iguales se marcan como empate.',
-      rankingAria: 'Clasificación de auditoría de puntuación',
-      neutralTitle: 'Aún no hay clasificación',
-      noPositiveWeights:
-        'No hay criterios con pesos positivos, así que todas las opciones quedan neutras por ahora.',
-      criterionColumn: 'Criterio',
-      rawWeightColumn: 'Peso bruto',
-      influenceColumn: 'Influencia',
-      scoringColumn: 'Puntuación',
-      behaviorColumn: 'Comportamiento',
-      optionColumn: 'Opción',
-      scoreColumn: 'Puntuación',
-      contributionColumn: 'Contribución',
-      totalColumn: 'Total',
-      rankColumn: 'Puesto',
-      noteColumn: 'Nota',
-      included: 'Incluido',
-      excluded: 'Excluido',
-      scaleScore: 'Escala 0-10',
-      booleanScore: 'Sí = 10 / No = 0',
-      optionTotal: (name, score) => `Total de ${name}: ${score}`,
-      contributionFormula: (score, weight) =>
-        `${score} de puntuación x ${weight} de peso`,
-      contributionValue: (value) => `${value} de contribución`,
-      rankingLeader: 'En cabeza',
-      rankingTiedForLead: 'Empate en primer lugar',
-      rankingBehindLeader: (gap) => `${gap} por detrás del líder`,
-      tieHandlingNote:
-        'Si los totales más altos son iguales después del cálculo, la decisión se trata como empate en vez de forzar una opción ganadora.',
-      showResults: 'Muestra los resultados para auditar los totales en tiempo real.',
-    },
     results: {
       title: 'Resultados',
       noWeightHeadline:
@@ -628,7 +442,7 @@ export const translations: Record<Language, TranslationCopy> = {
         'Tu matriz queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
       contactLabel: 'Contacto',
       contactEmail: 'hugonzalezhuerta@gmail.com',
-      backToScoring: 'Volver a la puntuación',
+      backToTop: 'Volver arriba',
     },
   },
 };
