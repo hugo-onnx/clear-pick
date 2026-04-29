@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { LandingHero } from './components/LandingHero';
 import { LanguageToggle } from './components/LanguageToggle';
@@ -22,15 +22,53 @@ import {
 import { getDecisionSummary } from './utils/scoring';
 import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
+const MATRIX_SAVE_DEBOUNCE_MS = 250;
+
 function App() {
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
   const [language, setLanguage] = useState(() => loadLanguage());
   const [areResultsHidden, setAreResultsHidden] = useState(false);
+  const pendingMatrixRef = useRef(matrix);
+  const matrixSaveTimeoutRef = useRef<number | null>(null);
   const copy = translations[language];
 
   useEffect(() => {
-    saveActiveDecision(matrix);
+    pendingMatrixRef.current = matrix;
+
+    if (matrixSaveTimeoutRef.current) {
+      window.clearTimeout(matrixSaveTimeoutRef.current);
+    }
+
+    matrixSaveTimeoutRef.current = window.setTimeout(() => {
+      matrixSaveTimeoutRef.current = null;
+      saveActiveDecision(pendingMatrixRef.current);
+    }, MATRIX_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (matrixSaveTimeoutRef.current) {
+        window.clearTimeout(matrixSaveTimeoutRef.current);
+        matrixSaveTimeoutRef.current = null;
+      }
+    };
   }, [matrix]);
+
+  useEffect(() => {
+    const flushPendingMatrixSave = () => {
+      if (matrixSaveTimeoutRef.current) {
+        window.clearTimeout(matrixSaveTimeoutRef.current);
+        matrixSaveTimeoutRef.current = null;
+      }
+
+      saveActiveDecision(pendingMatrixRef.current);
+    };
+
+    window.addEventListener('pagehide', flushPendingMatrixSave);
+
+    return () => {
+      window.removeEventListener('pagehide', flushPendingMatrixSave);
+      flushPendingMatrixSave();
+    };
+  }, []);
 
   useEffect(() => {
     saveLanguage(language);
@@ -53,7 +91,7 @@ function App() {
     setMatrix(createStarterMatrix());
   };
 
-  const summary = getDecisionSummary(matrix);
+  const summary = useMemo(() => getDecisionSummary(matrix), [matrix]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
