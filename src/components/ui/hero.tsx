@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MeshGradient } from '@paper-design/shaders-react';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import type { TranslationCopy } from '@/i18n';
 
 interface ShaderShowcaseProps {
@@ -28,6 +28,7 @@ export default function ShaderShowcase({
 }: ShaderShowcaseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isActive, setIsActive] = useState(false);
+  const [isNoticeExpanded, setIsNoticeExpanded] = useState(false);
 
   useEffect(() => {
     const handleMouseEnter = () => setIsActive(true);
@@ -126,7 +127,7 @@ export default function ShaderShowcase({
             </a>
             <a
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
-              href="#site-footer-note"
+              href="#local-save-notice"
             >
               {copy.navLocalSave}
             </a>
@@ -193,6 +194,64 @@ export default function ShaderShowcase({
             </motion.button>
           </motion.div>
         </main>
+
+        <aside
+          aria-describedby="local-save-notice-body"
+          aria-labelledby="local-save-notice-title"
+          className="absolute bottom-4 right-4 z-30 w-[min(17rem,calc(100vw-2rem))] text-left outline-none sm:bottom-8 sm:right-8"
+          role="note"
+          tabIndex={0}
+          id="local-save-notice"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setIsNoticeExpanded(false);
+            }
+          }}
+          onFocus={() => setIsNoticeExpanded(true)}
+          onMouseEnter={() => setIsNoticeExpanded(true)}
+          onMouseLeave={() => setIsNoticeExpanded(false)}
+        >
+          <motion.div
+            animate={{
+              opacity: isNoticeExpanded ? 1 : 0,
+              scale: isNoticeExpanded ? 1 : 0.98,
+              y: isNoticeExpanded ? 0 : 6,
+            }}
+            className="pointer-events-none absolute bottom-full right-0 mb-2 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-black/45 px-4 py-3 shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl"
+            initial={false}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.16),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.1),transparent_32%)]"
+            />
+            <p
+              className="relative z-10 text-sm leading-6 text-white/72"
+              id="local-save-notice-body"
+            >
+              {copy.localStorageNoticeBody}
+            </p>
+          </motion.div>
+
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/6 px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.14),transparent_42%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.1),transparent_32%)] opacity-90"
+            />
+            <div className="relative z-10 flex items-center gap-3">
+              <ShieldCheck
+                aria-hidden="true"
+                className="h-5 w-5 shrink-0 text-cyan-200"
+              />
+              <h2
+                className="text-xs font-semibold uppercase leading-4 tracking-[0.18em] text-white/90"
+                id="local-save-notice-title"
+              >
+                {copy.localStorageNoticeTitle}
+              </h2>
+            </div>
+          </div>
+        </aside>
       </div>
 
     </section>
