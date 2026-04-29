@@ -84,6 +84,14 @@ describe('App', () => {
         /build a weighted comparison by naming your options, setting what matters, and scoring each choice/i,
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/data stored only on your device/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /your information is saved locally in this browser\. we do not upload, store, or access your decision data\./i,
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
 
@@ -103,7 +111,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /local save/i })).toHaveAttribute(
       'href',
-      '#site-footer-note',
+      '#local-save-notice',
     );
     expect(
       within(footer).getByRole('link', {
@@ -124,6 +132,9 @@ describe('App', () => {
       document.getElementById('site-footer-note'),
     ).toHaveTextContent(
       /your matrix stays stored locally in this browser/i,
+    );
+    expect(document.getElementById('local-save-notice')).toHaveTextContent(
+      /your information is saved locally in this browser/i,
     );
     expect(
       within(footer).getByRole('button', { name: /back to scoring/i }),
@@ -209,6 +220,14 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: /puntuación a ciegas/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/guardado solo en este dispositivo/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /tu matriz se guarda localmente en este navegador\. no subimos, almacenamos ni accedemos a los datos de tu decisión\./i,
+      ),
     ).toBeInTheDocument();
 
     await user.click(
