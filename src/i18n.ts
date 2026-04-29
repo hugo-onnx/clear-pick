@@ -16,10 +16,6 @@ export interface TranslationCopy {
     switchToSpanish: string;
   };
   hero: {
-    navWorkflow: string;
-    navScoring: string;
-    navLocalSave: string;
-    navAria: string;
     eyebrow: string;
     headingAria: string;
     headingFirst: string;
@@ -171,10 +167,6 @@ export const translations: Record<Language, TranslationCopy> = {
       switchToSpanish: 'Switch to Spanish',
     },
     hero: {
-      navWorkflow: 'Workflow',
-      navScoring: 'Scoring',
-      navLocalSave: 'Local save',
-      navAria: 'Hero navigation',
       eyebrow: 'Interactive weighted decisions',
       headingAria: 'Make your hardest decision in 60 seconds',
       headingFirst: 'Make your hardest',
@@ -314,10 +306,6 @@ export const translations: Record<Language, TranslationCopy> = {
       switchToSpanish: 'Cambiar a español',
     },
     hero: {
-      navWorkflow: 'Flujo de trabajo',
-      navScoring: 'Puntuación',
-      navLocalSave: 'Guardado local',
-      navAria: 'Navegación de inicio',
       eyebrow: 'Decisiones ponderadas interactivas',
       headingAria: 'Toma tu decisión más difícil en 60 segundos',
       headingFirst: 'Toma tu decisión',
