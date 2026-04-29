@@ -99,8 +99,6 @@ export interface TranslationCopy {
     scaleRule: string;
     booleanRule: string;
     zeroWeightRule: string;
-    checklistTitle: string;
-    checklistItems: string[];
     hiddenTitle: string;
     hiddenDescription: string;
     weightsTitle: string;
@@ -323,12 +321,6 @@ export const translations: Record<Language, TranslationCopy> = {
       scaleRule: 'Scale scoring uses 0-10.',
       booleanRule: 'Boolean scoring uses Yes = 10 / No = 0.',
       zeroWeightRule: 'A weight of 0 is excluded from totals.',
-      checklistTitle: 'Audit checklist',
-      checklistItems: [
-        'Confirm the raw weights match your actual priorities.',
-        'Check whether the normalized influence percentages feel defensible.',
-        'Review the largest contributions before accepting the ranking.',
-      ],
       hiddenTitle: 'Blind scoring is on',
       hiddenDescription:
         'The methodology and normalized weights stay visible, but live totals, contribution rows, and ranking are hidden until results are shown.',
@@ -537,12 +529,6 @@ export const translations: Record<Language, TranslationCopy> = {
       scaleRule: 'La puntuación de escala usa 0-10.',
       booleanRule: 'La puntuación booleana usa Sí = 10 / No = 0.',
       zeroWeightRule: 'Un peso de 0 se excluye de los totales.',
-      checklistTitle: 'Lista de auditoría',
-      checklistItems: [
-        'Confirma que los pesos brutos reflejan tus prioridades reales.',
-        'Comprueba si los porcentajes de influencia normalizada son defendibles.',
-        'Revisa las mayores contribuciones antes de aceptar la clasificación.',
-      ],
       hiddenTitle: 'La puntuación a ciegas está activa',
       hiddenDescription:
         'La metodología y los pesos normalizados siguen visibles, pero los totales en tiempo real, las contribuciones y la clasificación se ocultan hasta que muestres los resultados.',
