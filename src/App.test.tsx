@@ -1,5 +1,4 @@
 import {
-  act,
   fireEvent,
   render,
   screen,
@@ -993,18 +992,57 @@ describe('App', () => {
     expect(screen.queryByDisplayValue('Meaning')).not.toBeInTheDocument();
   });
 
-  it('keeps the add criterion box focused after submitting a named criterion', async () => {
+  it('keeps and reveals the add criterion box after submitting named criteria', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByLabelText(/new criterion/i), 'Meaning{Enter}');
+    const nextCriterionInput = screen.getByLabelText(
+      /new criterion/i,
+    ) as HTMLInputElement;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(nextCriterionInput, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        bottom: window.innerHeight + 64,
+        height: 44,
+        left: 0,
+        right: 320,
+        top: window.innerHeight + 20,
+        width: 320,
+        x: 0,
+        y: window.innerHeight + 20,
+        toJSON: () => ({}),
+      }),
+    });
+    Object.defineProperty(nextCriterionInput, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    await user.type(nextCriterionInput, 'Meaning{Enter}');
 
     expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
-
-    const nextCriterionInput = screen.getByLabelText(/new criterion/i);
     expect(nextCriterionInput).toHaveValue('');
     expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
     expect(nextCriterionInput).toHaveFocus();
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
+    });
+
+    scrollIntoView.mockClear();
+    await user.type(nextCriterionInput, 'Purpose{Enter}');
+
+    expect(screen.getByDisplayValue('Purpose')).toBeInTheDocument();
+    expect(nextCriterionInput).toHaveValue('');
+    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 4');
+    expect(nextCriterionInput).toHaveFocus();
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
+    });
   });
 
   it('limits new options to six and re-enables adding after removal', async () => {
@@ -1145,29 +1183,52 @@ describe('App', () => {
     expect(screen.getByLabelText(/new option/i)).toHaveFocus();
   });
 
-  it('sets criterion names and focuses a new criterion when Enter is pressed', async () => {
+  it('sets criterion names and focuses the new criterion box when Enter is pressed', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole('button', { name: /add criterion/i }));
 
     const secondCriterion = screen.getByLabelText(/^criterion 2$/i);
+    const newCriterionInput = screen.getByLabelText(
+      /new criterion/i,
+    ) as HTMLInputElement;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(newCriterionInput, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        bottom: window.innerHeight + 64,
+        height: 44,
+        left: 0,
+        right: 320,
+        top: window.innerHeight + 20,
+        width: 320,
+        x: 0,
+        y: window.innerHeight + 20,
+        toJSON: () => ({}),
+      }),
+    });
+    Object.defineProperty(newCriterionInput, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
     expect(secondCriterion).toHaveValue('');
     expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
     await user.type(secondCriterion, 'Long-term fit');
-    await act(async () => {
-      fireEvent.keyDown(secondCriterion, { key: 'Enter' });
-    });
+    await user.keyboard('{Enter}');
 
     expect(secondCriterion).toHaveValue('Long-term fit');
-    await waitFor(() => {
-      const thirdCriterion = screen.getByLabelText(
-        /^criterion 3$/i,
-      ) as HTMLInputElement;
-      expect(thirdCriterion).toHaveFocus();
-      expect(thirdCriterion.selectionStart).toBe(0);
-      expect(thirdCriterion.selectionEnd).toBe(0);
+    expect(newCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+    expect(newCriterionInput).toHaveFocus();
+    expect(newCriterionInput.selectionStart).toBe(0);
+    expect(newCriterionInput.selectionEnd).toBe(0);
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
     });
+    expect(screen.queryByLabelText(/^criterion 3$/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /remove long-term fit/i }),
     ).toBeInTheDocument();
