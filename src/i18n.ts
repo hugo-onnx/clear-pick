@@ -27,6 +27,8 @@ export interface TranslationCopy {
     headingLast: string;
     description: string;
     start: string;
+    localStorageNoticeTitle: string;
+    localStorageNoticeBody: string;
   };
   workspaceLabel: string;
   workspaceTabs: {
@@ -42,6 +44,8 @@ export interface TranslationCopy {
     editorAria: string;
     title: string;
     intro: string;
+    localStorageNoticeTitle: string;
+    localStorageNoticeBody: string;
     optionsRegionAria: string;
     optionsHeading: string;
     optionsDescription: string;
@@ -237,6 +241,9 @@ export const translations: Record<Language, TranslationCopy> = {
       description:
         'Weight your priorities, score your options, and get an instant recommendation grounded in logic.',
       start: 'Start',
+      localStorageNoticeTitle: 'Data stored only on your device',
+      localStorageNoticeBody:
+        'Your information is saved locally in this browser. We do not upload, store, or access your decision data.',
     },
     workspaceLabel: 'Decision workspace',
     workspaceTabs: {
@@ -253,6 +260,9 @@ export const translations: Record<Language, TranslationCopy> = {
       title: 'Weighted Scoring Model',
       intro:
         'Build a weighted comparison by naming your options, setting what matters, and scoring each choice.',
+      localStorageNoticeTitle: 'Data stored only on your device',
+      localStorageNoticeBody:
+        'Your matrix is saved locally in this browser. We do not upload, store, or access your decision data.',
       optionsRegionAria: 'Options to compare',
       optionsHeading: 'Options to compare',
       optionsDescription:
@@ -444,6 +454,9 @@ export const translations: Record<Language, TranslationCopy> = {
       description:
         'Pondera tus prioridades, evalúa tus opciones y obtén una recomendación instantánea basada en la lógica.',
       start: 'Empezar',
+      localStorageNoticeTitle: 'Guardado solo en este dispositivo',
+      localStorageNoticeBody:
+        'Tu matriz se guarda localmente en este navegador. No subimos, almacenamos ni accedemos a los datos de tu decisión.',
     },
     workspaceLabel: 'Espacio de decisión',
     workspaceTabs: {
@@ -460,6 +473,9 @@ export const translations: Record<Language, TranslationCopy> = {
       title: 'Modelo de puntuación ponderada',
       intro:
         'Construye una comparación ponderada nombrando tus opciones, definiendo qué importa y puntuando cada alternativa.',
+      localStorageNoticeTitle: 'Guardado solo en este dispositivo',
+      localStorageNoticeBody:
+        'Tu matriz se guarda localmente en este navegador. No subimos, almacenamos ni accedemos a los datos de tu decisión.',
       optionsRegionAria: 'Opciones para comparar',
       optionsHeading: 'Opciones para comparar',
       optionsDescription:
