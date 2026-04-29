@@ -206,10 +206,10 @@ const labelClass =
   'text-[11px] font-semibold uppercase text-muted-foreground';
 
 const segmentedControlClass =
-  'inline-flex rounded-md border border-border bg-white/75 p-0.5 shadow-sm';
+  'inline-flex rounded-md border border-border bg-white/80 p-1 shadow-sm';
 
 const segmentedButtonClass =
-  'min-h-7 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition';
+  'min-h-9 flex-1 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition sm:flex-none';
 
 function getSegmentedButtonClass(isSelected: boolean): string {
   return cn(
@@ -491,13 +491,13 @@ export function MatrixEditor({
   );
 
   return (
-    <section aria-label={copy.editorAria} className="min-w-0 space-y-10">
-      <header className="border-b border-border pb-5">
+    <section aria-label={copy.editorAria} className="min-w-0 space-y-9">
+      <header className="border-b border-border pb-5 sm:pb-6">
         <div className="max-w-3xl">
-          <h2 className="font-display text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+          <h2 className="font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
             {copy.title}
           </h2>
-          <p className="mt-3 text-base leading-7 text-muted-foreground">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
             {copy.intro}
           </p>
           <div className="mt-5">{scoringControls}</div>
@@ -506,18 +506,18 @@ export function MatrixEditor({
 
       <section
         aria-label={copy.optionsRegionAria}
-        className="space-y-4"
+        className="space-y-5"
         role="region"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 sm:flex-1">
-            <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
+            <h3 className="font-display text-2xl font-semibold tracking-normal text-foreground">
               {copy.optionsHeading}
             </h3>
-            <p className="mt-4 max-w-3xl text-base text-muted-foreground">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
               {copy.optionsDescription}
             </p>
-            <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
+            <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">
               {copy.optionsCount(matrix.options.length)}
             </p>
           </div>
@@ -632,6 +632,7 @@ export function MatrixEditor({
                         </span>
                         <output
                           aria-label={copy.liveScoreAria(displayName)}
+                          aria-live="polite"
                           className="text-xl font-semibold leading-none text-foreground"
                         >
                           {formatPoints(optionTotal)}
@@ -698,15 +699,15 @@ export function MatrixEditor({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 sm:flex-1">
             <h3
-              className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl"
+              className="font-display text-2xl font-semibold tracking-normal text-foreground"
               id="criteria-heading"
             >
               {copy.criteriaHeading}
             </h3>
-            <p className="mt-4 max-w-3xl text-base text-muted-foreground">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
               {copy.criteriaDescription}
             </p>
-            <p className="mt-2 whitespace-nowrap text-sm font-medium text-muted-foreground">
+            <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">
               {copy.criteriaCount(matrix.categories.length)}
             </p>
           </div>
@@ -728,12 +729,12 @@ export function MatrixEditor({
             return (
               <article
                 aria-label={copy.criterionRowAria(criterionDisplayName)}
-                className="rounded-lg border border-border bg-white/75 p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55"
+                className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55 sm:p-5"
                 key={category.id}
                 role="listitem"
               >
                 <div className="space-y-5">
-                  <div className="grid gap-5 lg:grid-cols-[minmax(220px,0.85fr)_minmax(0,1.75fr)]">
+                  <div className="grid gap-5 lg:grid-cols-[minmax(200px,0.78fr)_minmax(0,1.8fr)]">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-3">
                         <label className={labelClass} htmlFor={`category-${category.id}`}>
@@ -766,7 +767,7 @@ export function MatrixEditor({
 
                     </div>
 
-                    <div className="space-y-3 rounded-md bg-slate-950/[0.035] p-3">
+                    <div className="space-y-3 rounded-md bg-slate-950/[0.035] p-3 sm:p-4">
                       <div className="flex items-center justify-between gap-3">
                         <label className={labelClass} htmlFor={`weight-${category.id}`}>
                           {copy.importance}
@@ -882,7 +883,7 @@ export function MatrixEditor({
                         return (
                           <div
                             className={cn(
-                              'grid gap-3 rounded-md border border-border bg-white/65 p-3 sm:grid-cols-[minmax(9rem,0.9fr)_minmax(8.75rem,auto)_minmax(12rem,1.4fr)_minmax(6.75rem,auto)] sm:items-center',
+                              'grid gap-3 rounded-md border border-border bg-white/70 p-3 sm:grid-cols-[minmax(8rem,0.85fr)_minmax(9.5rem,auto)_minmax(12rem,1.45fr)_minmax(5.75rem,auto)] sm:items-center sm:gap-4',
                               !areResultsHidden &&
                                 summary.leadingOptionIds.includes(option.id)
                                 ? scoreRowHighlightClassName
@@ -898,13 +899,13 @@ export function MatrixEditor({
                                 {displayedScoreLabel}
                               </output>
                             </div>
-                            <div className="relative w-32 max-w-full">
+                            <div className="relative w-full sm:w-36">
                               <select
                                 aria-label={copy.scoreModeAria(
                                   optionDisplayName,
                                   criterionDisplayName,
                                 )}
-                                className="h-7 w-full appearance-none rounded-md border border-border bg-white/80 py-0.5 pl-2 pr-6 text-[11px] font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15"
+                                className="h-10 w-full appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 sm:h-8 sm:py-0.5 sm:pl-2 sm:pr-6 sm:text-[11px]"
                                 onChange={(event) =>
                                   onScoreModeChange(
                                     option.id,
@@ -923,17 +924,17 @@ export function MatrixEditor({
                               </select>
                               <ChevronDown
                                 aria-hidden="true"
-                                className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+                                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:right-1.5 sm:h-3 sm:w-3"
                               />
                             </div>
                             {isBooleanScore ? (
-                              <div className="flex flex-wrap items-center gap-2 justify-self-start">
+                              <div className="flex flex-wrap items-center gap-2 justify-self-stretch sm:justify-self-start">
                                 <div
                                   aria-label={copy.scoreAria(
                                     optionDisplayName,
                                     criterionDisplayName,
                                   )}
-                                  className={cn(segmentedControlClass, 'w-fit')}
+                                  className={cn(segmentedControlClass, 'w-full sm:w-fit')}
                                   role="group"
                                 >
                                   <button
