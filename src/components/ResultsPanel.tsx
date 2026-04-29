@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { RotateCcw } from 'lucide-react';
+import { Eye, ListOrdered, RotateCcw } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
 import { MAX_SCORE } from '../utils/matrix';
@@ -48,6 +48,14 @@ function formatPoints(value: number): string {
 
 function getBarWidth(value: number): number {
   return Math.max(0, Math.min(100, (value / MAX_SCORE) * 100));
+}
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => !element.hasAttribute('disabled'));
 }
 
 interface ContributionRowsProps {
@@ -133,6 +141,10 @@ export function ResultsPanel({
   const [isRankingExpanded, setIsRankingExpanded] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const rankingDetailsRef = useRef<HTMLElement | null>(null);
+  const resetDialogRef = useRef<HTMLDivElement | null>(null);
+  const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const resetCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const resultsDetailsId = 'weighted-results-details';
   const rankingDetailsId = 'weighted-results-ranking';
   const resetDialogTitleId = 'reset-matrix-dialog-title';
@@ -159,12 +171,60 @@ export function ResultsPanel({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsResetDialogOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const dialog = resetDialogRef.current;
+
+      if (!dialog) {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialog);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
+    const focusTimer = window.setTimeout(() => {
+      resetCancelButtonRef.current?.focus();
+    }, 0);
+
     window.addEventListener('keydown', handleKeyDown);
 
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isResetDialogOpen]);
+
+  useEffect(() => {
+    if (isResetDialogOpen) {
+      return;
+    }
+
+    previouslyFocusedElementRef.current?.focus();
+    previouslyFocusedElementRef.current = null;
   }, [isResetDialogOpen]);
 
   useEffect(() => {
@@ -181,13 +241,25 @@ export function ResultsPanel({
     });
   }, [isRankingExpanded]);
 
+  const handleOpenResetDialog = () => {
+    previouslyFocusedElementRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : resetTriggerRef.current;
+    setIsResetDialogOpen(true);
+  };
+
+  const handleCloseResetDialog = () => {
+    setIsResetDialogOpen(false);
+  };
+
   const handleConfirmReset = () => {
     setIsResetDialogOpen(false);
     onReset();
   };
 
   const renderNeutralState = () => (
-    <div className="rounded-lg border border-dashed border-border bg-white/65 p-5">
+    <div className="rounded-lg border border-dashed border-border bg-white/[0.72] p-5">
       <h3 className="text-base font-semibold text-foreground">
         {copy.recommendationEmptyTitle}
       </h3>
@@ -213,7 +285,7 @@ export function ResultsPanel({
         ) : (
           <div
             className={cn(
-              'rounded-lg border bg-white/75 p-5 shadow-sm',
+              'rounded-lg border bg-white/[0.82] p-5 shadow-sm',
               summary.isTie ? 'border-amber-500/45' : 'border-cyan-600/35',
             )}
           >
@@ -221,7 +293,7 @@ export function ResultsPanel({
               {copy.recommendationEyebrow}
             </p>
             <div className="mt-3 space-y-2">
-              <h3 className="font-display text-3xl font-semibold tracking-normal text-foreground">
+              <h3 className="break-words font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
                 {summary.isTie
                   ? copy.recommendationTieTitle(leadingNames)
                   : copy.recommendationTitle(topOption.name)}
@@ -239,7 +311,7 @@ export function ResultsPanel({
                 shouldShowAlternative && 'sm:grid-cols-2',
               )}
             >
-              <div className="rounded-md border border-border bg-white/70 p-4">
+              <div className="rounded-md border border-border bg-white/[0.74] p-4">
                 <p className="text-xs font-semibold uppercase text-muted-foreground">
                   {copy.topScore}
                 </p>
@@ -252,7 +324,7 @@ export function ResultsPanel({
               </div>
 
               {shouldShowAlternative ? (
-                <div className="rounded-md border border-border bg-white/70 p-4">
+                <div className="rounded-md border border-border bg-white/[0.74] p-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">
                     {copy.closestAlternative}
                   </p>
@@ -319,7 +391,7 @@ export function ResultsPanel({
                   #{index + 1}
                 </p>
                 <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-foreground">
+                  <h4 className="break-words text-sm font-semibold text-foreground">
                     {option.name}
                   </h4>
                   <p className="text-xs text-muted-foreground">
@@ -366,7 +438,7 @@ export function ResultsPanel({
   );
 
   return (
-    <aside className="min-w-0 xl:sticky xl:top-8 xl:pt-20">
+    <aside className="min-w-0 xl:sticky xl:top-6">
       <div className="space-y-7 border-t border-border pt-7 xl:border-t-0 xl:pt-0">
         <section className="space-y-4">
           <div className="min-w-0">
@@ -383,7 +455,7 @@ export function ResultsPanel({
 
         {areResultsHidden ? (
           <section
-            className="space-y-4 rounded-lg border border-dashed border-border bg-white/65 p-5"
+            className="space-y-4 rounded-lg border border-dashed border-border bg-white/[0.72] p-5"
             id={resultsDetailsId}
           >
             <p
@@ -395,10 +467,12 @@ export function ResultsPanel({
             <Button
               aria-controls={resultsDetailsId}
               aria-expanded="false"
+              className="gap-2"
               onClick={() => onResultsHiddenChange(false)}
               size="sm"
               variant="secondary"
             >
+              <Eye aria-hidden="true" className="h-4 w-4" />
               {copy.showResults}
             </Button>
           </section>
@@ -411,11 +485,12 @@ export function ResultsPanel({
                 <Button
                   aria-controls={rankingDetailsId}
                   aria-expanded={isRankingExpanded}
-                  className="w-full sm:w-auto"
+                  className="w-full gap-2 sm:w-auto"
                   onClick={() => setIsRankingExpanded((current) => !current)}
                   size="sm"
                   variant="outline"
                 >
+                  <ListOrdered aria-hidden="true" className="h-4 w-4" />
                   {isRankingExpanded
                     ? copy.hideFullRanking
                     : copy.showFullRanking}
@@ -430,8 +505,9 @@ export function ResultsPanel({
                 {copy.matrixCount(matrix.options.length, matrix.categories.length)}
               </p>
               <Button
-                className="order-1 w-full gap-2 active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
-                onClick={() => setIsResetDialogOpen(true)}
+                className="order-1 w-full gap-2 text-muted-foreground active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
+                onClick={handleOpenResetDialog}
+                ref={resetTriggerRef}
                 size="sm"
                 variant="outline"
               >
@@ -448,7 +524,10 @@ export function ResultsPanel({
                 className="fixed inset-0 z-50 flex min-h-svh items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm"
                 role="alertdialog"
               >
-                <div className="w-full max-w-md rounded-lg border border-border bg-white/95 p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+                <div
+                  className="w-full max-w-md rounded-lg border border-border bg-white/[0.96] p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
+                  ref={resetDialogRef}
+                >
                   <h3
                     className="font-display text-2xl font-semibold tracking-normal text-foreground"
                     id={resetDialogTitleId}
@@ -463,9 +542,9 @@ export function ResultsPanel({
                   </p>
                   <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <Button
-                      autoFocus
                       className="w-full sm:w-auto"
-                      onClick={() => setIsResetDialogOpen(false)}
+                      onClick={handleCloseResetDialog}
+                      ref={resetCancelButtonRef}
                       size="sm"
                       variant="outline"
                     >
