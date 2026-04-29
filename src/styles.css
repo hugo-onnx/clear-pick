@@ -110,7 +110,7 @@ select {
 }
 
 .matrix-theme {
-  --background: #f7f8f3;
+  --background: #f8fafc;
   --foreground: #172033;
   --card: rgba(255, 255, 255, 0.82);
   --card-foreground: #172033;
@@ -120,7 +120,7 @@ select {
   --primary-foreground: #f8fafc;
   --secondary: rgba(255, 255, 255, 0.72);
   --secondary-foreground: #263244;
-  --muted: #eef2f0;
+  --muted: #eef2f7;
   --muted-foreground: #64748b;
   --accent: #e8f6f8;
   --accent-foreground: #155e75;
@@ -142,6 +142,7 @@ select {
   -webkit-appearance: none;
   cursor: pointer;
   height: 0.65rem;
+  touch-action: pan-y;
   width: 100%;
   border-radius: 999px;
   background-repeat: no-repeat;
@@ -247,6 +248,10 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -254,5 +259,36 @@ select {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 1ms !important;
+  }
+
+  .matrix-range,
+  .matrix-range::-webkit-slider-thumb,
+  .matrix-range::-moz-range-thumb {
+    transition: none !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .matrix-range {
+    height: 0.9rem;
+  }
+
+  .matrix-range::-webkit-slider-runnable-track {
+    height: 0.9rem;
+  }
+
+  .matrix-range::-moz-range-track {
+    height: 0.9rem;
+  }
+
+  .matrix-range::-webkit-slider-thumb {
+    margin-top: -5px;
+    height: 1.4rem;
+    width: 1.4rem;
+  }
+
+  .matrix-range::-moz-range-thumb {
+    height: 1.4rem;
+    width: 1.4rem;
   }
 }
