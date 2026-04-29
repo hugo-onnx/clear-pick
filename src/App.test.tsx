@@ -13,6 +13,7 @@ import { LANGUAGE_STORAGE_KEY } from './i18n';
 import {
   SCORE_MODE_BOOLEAN,
   SCORE_MODE_SCALE,
+  createCategory,
   createStarterMatrix,
 } from './utils/matrix';
 import { STORAGE_KEY } from './utils/storage';
@@ -31,6 +32,29 @@ function saveScoredMatrix() {
   savedMatrix.categories[0].weight = 10;
   savedMatrix.scores[savedMatrix.options[0].id][categoryId] = 10;
   savedMatrix.scores[savedMatrix.options[1].id][categoryId] = 4;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+  return savedMatrix;
+}
+
+function saveAuditMatrix() {
+  const savedMatrix = createStarterMatrix();
+  const impactCriterionId = savedMatrix.categories[0].id;
+  const balanceCriterion = createCategory('Balance', 4, SCORE_MODE_SCALE);
+  const firstOptionId = savedMatrix.options[0].id;
+  const secondOptionId = savedMatrix.options[1].id;
+
+  savedMatrix.options[0].name = 'Stay here';
+  savedMatrix.options[1].name = 'Move abroad';
+  savedMatrix.categories[0].name = 'Growth';
+  savedMatrix.categories[0].weight = 6;
+  savedMatrix.categories.push(balanceCriterion);
+  savedMatrix.scores[firstOptionId][impactCriterionId] = 9;
+  savedMatrix.scores[firstOptionId][balanceCriterion.id] = 5;
+  savedMatrix.scores[secondOptionId][impactCriterionId] = 6;
+  savedMatrix.scores[secondOptionId][balanceCriterion.id] = 8;
+  savedMatrix.scoreModes[firstOptionId][balanceCriterion.id] = SCORE_MODE_SCALE;
+  savedMatrix.scoreModes[secondOptionId][balanceCriterion.id] = SCORE_MODE_SCALE;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
 
   return savedMatrix;
@@ -538,6 +562,144 @@ describe('App', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('renders workspace tabs and switches between scoring and audit views', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const tablist = screen.getByRole('tablist', {
+      name: /decision workspace views/i,
+    });
+    const scoreTab = within(tablist).getByRole('tab', {
+      name: /score matrix/i,
+    });
+    const auditTab = within(tablist).getByRole('tab', {
+      name: /how scoring works/i,
+    });
+
+    expect(scoreTab).toHaveAttribute('aria-selected', 'true');
+    expect(auditTab).toHaveAttribute('aria-selected', 'false');
+    expect(
+      screen.getByRole('tabpanel', { name: /score matrix/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /options to compare/i }),
+    ).toBeInTheDocument();
+
+    await user.click(auditTab);
+
+    expect(scoreTab).toHaveAttribute('aria-selected', 'false');
+    expect(auditTab).toHaveAttribute('aria-selected', 'true');
+    expect(
+      screen.getByRole('tabpanel', { name: /how scoring works/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /how scoring works/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/normalized weight = positive criterion weight/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no positive criterion weights are available/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: /options to compare/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(scoreTab);
+
+    expect(scoreTab).toHaveAttribute('aria-selected', 'true');
+    expect(
+      screen.getByRole('region', { name: /options to compare/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows normalized weights and contribution math in the audit view', async () => {
+    const user = userEvent.setup();
+    saveAuditMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('tab', { name: /how scoring works/i }));
+
+    expect(
+      screen.getByRole('heading', { name: /normalized weights/i }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('60%').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('40%').length).toBeGreaterThan(0);
+
+    const stayBreakdown = screen.getByRole('article', {
+      name: /stay here contribution breakdown/i,
+    });
+
+    expect(
+      within(stayBreakdown).getByText(/stay here total: 7\.4\/10/i),
+    ).toBeInTheDocument();
+    expect(
+      within(stayBreakdown).getByText(/5\.4 pts contribution/i),
+    ).toBeInTheDocument();
+    expect(
+      within(stayBreakdown).getByText(/9\/10 score x 60% weight/i),
+    ).toBeInTheDocument();
+    expect(
+      within(stayBreakdown).getByText(/2\.0 pts contribution/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /scoring audit ranking/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/move abroad total: 6\.8\/10/i)).toBeInTheDocument();
+    expect(screen.getByText(/0\.6 pts behind leader/i)).toBeInTheDocument();
+  });
+
+  it('hides audit totals, contribution rows, and ranking while blind scoring is on', async () => {
+    const user = userEvent.setup();
+    saveAuditMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
+    await user.click(screen.getByRole('tab', { name: /how scoring works/i }));
+
+    expect(screen.getByText(/blind scoring is on/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /normalized weights/i }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('60%').length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole('region', { name: /contribution breakdown/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: /scoring audit ranking/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/stay here total: 7\.4\/10/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/0\.6 pts behind leader/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('localizes the audit tab and explanation in Spanish', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(
+      screen.getByRole('button', { name: /switch to spanish/i }),
+    );
+    await user.click(
+      screen.getByRole('tab', { name: /cómo funciona la puntuación/i }),
+    );
+
+    expect(
+      screen.getByRole('heading', { name: /cómo funciona la puntuación/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/peso normalizado = peso positivo del criterio/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/pesos normalizados/i)).toBeInTheDocument();
+  });
+
   it('hides result designs and explains the bias guard', async () => {
     const user = userEvent.setup();
     saveScoredMatrix();
@@ -698,6 +860,15 @@ describe('App', () => {
     ).toHaveValue('0');
 
     await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    const resetDialog = screen.getByRole('alertdialog', {
+      name: /reset this matrix/i,
+    });
+    expect(
+      within(resetDialog).getByText(/clear your options, criteria, weights, and scores/i),
+    ).toBeInTheDocument();
+    await user.click(
+      within(resetDialog).getByRole('button', { name: /reset matrix/i }),
+    );
 
     const resetScoreModeSelect = screen.getByRole('combobox', {
       name: /scoring mode for option 1 on criterion 1/i,
@@ -1003,6 +1174,11 @@ describe('App', () => {
     });
 
     await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    await user.click(
+      within(
+        screen.getByRole('alertdialog', { name: /reset this matrix/i }),
+      ).getByRole('button', { name: /reset matrix/i }),
+    );
 
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
@@ -1010,5 +1186,29 @@ describe('App', () => {
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
     expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
     expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
+  });
+
+  it('keeps matrix edits when the reset warning is cancelled', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const firstOption = screen.getByLabelText(/^option 1$/i);
+    await user.type(firstOption, 'Choosing a city');
+    await user.tab();
+
+    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    const resetDialog = screen.getByRole('alertdialog', {
+      name: /reset this matrix/i,
+    });
+
+    await user.click(
+      within(resetDialog).getByRole('button', { name: /keep editing/i }),
+    );
+
+    expect(
+      screen.queryByRole('alertdialog', { name: /reset this matrix/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('Choosing a city');
   });
 });
