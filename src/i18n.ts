@@ -52,9 +52,8 @@ export interface TranslationCopy {
     criteriaHeading: string;
     criteriaDescription: string;
     criteriaCount: (count: number) => string;
+    scoringControls: string;
     blindScoring: string;
-    blindScoringOn: string;
-    blindScoringOff: string;
     blindScoringHelpLabel: string;
     blindScoringHelp: string;
     criteriaList: string;
@@ -203,12 +202,11 @@ export const translations: Record<Language, TranslationCopy> = {
       criteriaDescription:
         'Name the factors that matter, set how strongly each one should influence the decision from 0-10, then choose whether each option score is quantitative or a has/does-not-have condition. A weight of 0 excludes that criterion.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
+      scoringControls: 'Scoring controls',
       blindScoring: 'Blind scoring',
-      blindScoringOn: 'On',
-      blindScoringOff: 'Off',
       blindScoringHelpLabel: 'Why this helps',
       blindScoringHelp:
-        'Hides live totals and recommendations while you score, so the current leader does not anchor your judgment.',
+        'Hides live totals and recommendations while you score, helping reduce bias as you compare options.',
       criteriaList: 'Criteria list',
       criterionLabel: (index) => `Criterion ${index}`,
       newCriterion: 'New criterion',
@@ -335,12 +333,11 @@ export const translations: Record<Language, TranslationCopy> = {
       criteriaDescription:
         'Nombra los factores importantes, define cuánto debe influir cada uno en la decisión de 0 a 10 y luego elige si cada puntuación de opción es cuantitativa o una condición de tiene/no tiene. Un peso de 0 excluye ese criterio.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterio' : 'criterios'}`,
+      scoringControls: 'Controles de puntuación',
       blindScoring: 'Puntuación a ciegas',
-      blindScoringOn: 'Activada',
-      blindScoringOff: 'Desactivada',
       blindScoringHelpLabel: 'Por qué ayuda',
       blindScoringHelp:
-        'Oculta los totales en vivo y las recomendaciones mientras puntúas, para que la opción líder no influya en tu juicio.',
+        'Oculta los totales en vivo y las recomendaciones mientras puntúas, para ayudar a reducir sesgos al comparar opciones.',
       criteriaList: 'Lista de criterios',
       criterionLabel: (index) => `Criterio ${index}`,
       newCriterion: 'Nuevo criterio',

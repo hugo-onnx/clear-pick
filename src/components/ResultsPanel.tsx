@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { RotateCcw } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
 import { MAX_SCORE } from '../utils/matrix';
@@ -384,17 +385,19 @@ export function ResultsPanel({
               </section>
             ) : null}
 
-            <section className="flex flex-col gap-4 border-t border-border pt-7">
-              <Button
-                className="w-full text-muted-foreground sm:w-auto"
-                onClick={onReset}
-                variant="ghost"
-              >
-                {copy.reset}
-              </Button>
-              <p className="text-xs uppercase text-muted-foreground">
+            <section className="flex flex-col gap-4 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
+              <p className="order-2 text-xs uppercase text-muted-foreground sm:order-1">
                 {copy.matrixCount(matrix.options.length, matrix.categories.length)}
               </p>
+              <Button
+                className="order-1 w-full gap-2 active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
+                onClick={onReset}
+                size="sm"
+                variant="outline"
+              >
+                <RotateCcw aria-hidden="true" className="h-4 w-4" />
+                {copy.reset}
+              </Button>
             </section>
           </>
         )}

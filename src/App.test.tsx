@@ -549,7 +549,6 @@ describe('App', () => {
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
     ).toBeChecked();
-    expect(screen.getByText(/^on$/i)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /show results/i }),
     ).toHaveAttribute('aria-expanded', 'false');
@@ -594,7 +593,6 @@ describe('App', () => {
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
     ).not.toBeChecked();
-    expect(screen.getByText(/^off$/i)).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
