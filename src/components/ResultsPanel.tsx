@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RotateCcw } from 'lucide-react';
@@ -131,8 +131,11 @@ export function ResultsPanel({
   onReset,
 }: ResultsPanelProps) {
   const [isRankingExpanded, setIsRankingExpanded] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const resultsDetailsId = 'weighted-results-details';
   const rankingDetailsId = 'weighted-results-ranking';
+  const resetDialogTitleId = 'reset-matrix-dialog-title';
+  const resetDialogDescriptionId = 'reset-matrix-dialog-description';
   const leadingNames = summary.leadingOptionIds
     .map((optionId) =>
       summary.rankedOptions.find((option) => option.id === optionId)?.name,
@@ -146,6 +149,27 @@ export function ResultsPanel({
   } else if (summary.hasScoringBasis && leadingNames.length > 0) {
     headline = null;
   }
+
+  useEffect(() => {
+    if (!isResetDialogOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsResetDialogOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isResetDialogOpen]);
+
+  const handleConfirmReset = () => {
+    setIsResetDialogOpen(false);
+    onReset();
+  };
 
   const renderNeutralState = () => (
     <div className="rounded-lg border border-dashed border-border bg-white/65 p-5">
@@ -391,7 +415,7 @@ export function ResultsPanel({
               </p>
               <Button
                 className="order-1 w-full gap-2 active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
-                onClick={onReset}
+                onClick={() => setIsResetDialogOpen(true)}
                 size="sm"
                 variant="outline"
               >
@@ -399,6 +423,49 @@ export function ResultsPanel({
                 {copy.reset}
               </Button>
             </section>
+
+            {isResetDialogOpen ? (
+              <div
+                aria-labelledby={resetDialogTitleId}
+                aria-describedby={resetDialogDescriptionId}
+                aria-modal="true"
+                className="fixed inset-0 z-50 flex min-h-svh items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm"
+                role="alertdialog"
+              >
+                <div className="w-full max-w-md rounded-lg border border-border bg-white/95 p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+                  <h3
+                    className="font-display text-2xl font-semibold tracking-normal text-foreground"
+                    id={resetDialogTitleId}
+                  >
+                    {copy.resetDialogTitle}
+                  </h3>
+                  <p
+                    className="mt-3 text-sm leading-6 text-muted-foreground"
+                    id={resetDialogDescriptionId}
+                  >
+                    {copy.resetDialogDescription}
+                  </p>
+                  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button
+                      autoFocus
+                      className="w-full sm:w-auto"
+                      onClick={() => setIsResetDialogOpen(false)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {copy.resetDialogCancel}
+                    </Button>
+                    <Button
+                      className="w-full sm:w-auto"
+                      onClick={handleConfirmReset}
+                      size="sm"
+                    >
+                      {copy.resetDialogConfirm}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </>
         )}
       </div>
