@@ -111,7 +111,7 @@ export default function ShaderShowcase({
 
       <div className="relative z-20 flex min-h-[100svh] w-full flex-col">
         <header className="absolute left-0 top-0 z-30 hidden items-center px-8 py-6 sm:flex">
-          <nav className="flex items-center space-x-2" aria-label="Hero navigation">
+          <nav className="flex items-center space-x-2" aria-label={copy.navAria}>
             <a
               className="rounded-full px-3 py-2 text-xs font-light text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white"
               href="#decision-matrix"
