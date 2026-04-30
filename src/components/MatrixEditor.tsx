@@ -1,4 +1,4 @@
-import { ChevronDown, CircleHelp, Plus, X } from 'lucide-react';
+import { ChevronDown, CircleHelp, Plus, Sparkles, X } from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -27,8 +27,13 @@ import {
   clampScore,
   clampWeight,
   getDisplayName,
+  isBlankDecisionMatrix,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
+import {
+  loadOnboardingDismissed,
+  saveOnboardingDismissed,
+} from '../utils/storage';
 
 interface MatrixEditorProps {
   areResultsHidden: boolean;
@@ -48,6 +53,7 @@ interface MatrixEditorProps {
     scoreMode: ScoreMode,
   ) => void;
   onScoreChange: (optionId: string, categoryId: string, score: number) => void;
+  onLoadExample: () => void;
   onResultsHiddenChange: (areResultsHidden: boolean) => void;
 }
 
@@ -234,10 +240,14 @@ export function MatrixEditor({
   onCategoryWeightChange,
   onScoreModeChange,
   onScoreChange,
+  onLoadExample,
   onResultsHiddenChange,
 }: MatrixEditorProps) {
   const [pendingOptionName, setPendingOptionName] = useState('');
   const [pendingCategoryName, setPendingCategoryName] = useState('');
+  const [isFirstRunHintDismissed, setIsFirstRunHintDismissed] = useState(() =>
+    loadOnboardingDismissed(),
+  );
   const [draftOptionNames, setDraftOptionNames] = useState<Record<string, string>>(
     () =>
       Object.fromEntries(
@@ -259,6 +269,12 @@ export function MatrixEditor({
   const totalsByOptionId = new Map(
     summary.rankedOptions.map((option) => [option.id, option.total]),
   );
+  const shouldShowFirstRunHint =
+    isBlankDecisionMatrix(matrix) && !isFirstRunHintDismissed;
+  const handleDismissFirstRunHint = () => {
+    setIsFirstRunHintDismissed(true);
+    saveOnboardingDismissed();
+  };
   const handleAddOptionSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canAddOptions) {
@@ -503,6 +519,58 @@ export function MatrixEditor({
           <div className="mt-5">{scoringControls}</div>
         </div>
       </header>
+
+      <section
+        aria-label={copy.onboardingGuideAria}
+        className="rounded-lg border border-border bg-white/[0.76] p-4 shadow-sm sm:p-5"
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <ol className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-semibold text-foreground sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-3">
+            {copy.onboardingSteps.map((step, index) => (
+              <li
+                className="border-l-2 border-cyan-700/30 pl-3 leading-6"
+                key={step}
+              >
+                {index + 1}. {step}
+              </li>
+            ))}
+          </ol>
+          <Button
+            className="w-full gap-2 sm:w-auto"
+            onClick={onLoadExample}
+            size="sm"
+            variant="secondary"
+          >
+            <Sparkles aria-hidden="true" className="h-4 w-4" />
+            {copy.loadExample}
+          </Button>
+        </div>
+
+        {shouldShowFirstRunHint ? (
+          <div
+            className="mt-4 flex items-start gap-3 border-t border-border pt-4"
+            role="status"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                {copy.firstRunHintTitle}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {copy.firstRunHintBody}
+              </p>
+            </div>
+            <Button
+              aria-label={copy.dismissFirstRunHint}
+              className={minorButtonClass}
+              onClick={handleDismissFirstRunHint}
+              size="icon"
+              variant="ghost"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : null}
+      </section>
 
       <section
         aria-label={copy.optionsRegionAria}
