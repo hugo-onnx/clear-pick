@@ -10,6 +10,7 @@ import {
   clampScoreForMode,
   clampWeight,
   createCategory,
+  createCareerMoveMatrix,
   createOption,
   createStarterMatrix,
   DEFAULT_SCORE,
@@ -89,6 +90,11 @@ function App() {
 
   const handleReset = () => {
     setMatrix(createStarterMatrix());
+  };
+
+  const handleLoadExample = () => {
+    setMatrix(createCareerMoveMatrix(copy.matrix.careerMoveExample));
+    setAreResultsHidden(false);
   };
 
   const summary = useMemo(() => getDecisionSummary(matrix), [matrix]);
@@ -241,6 +247,7 @@ function App() {
                     };
                   })
                 }
+                onLoadExample={handleLoadExample}
                 onResultsHiddenChange={setAreResultsHidden}
               />
 
