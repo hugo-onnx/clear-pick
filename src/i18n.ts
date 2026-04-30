@@ -1,3 +1,5 @@
+import type { CareerMoveExampleLabels } from './utils/matrix';
+
 export const LANGUAGES = ['en', 'es'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
@@ -33,6 +35,13 @@ export interface TranslationCopy {
     intro: string;
     localStorageNoticeTitle: string;
     localStorageNoticeBody: string;
+    onboardingGuideAria: string;
+    onboardingSteps: string[];
+    loadExample: string;
+    firstRunHintTitle: string;
+    firstRunHintBody: string;
+    dismissFirstRunHint: string;
+    careerMoveExample: CareerMoveExampleLabels;
     optionsRegionAria: string;
     optionsHeading: string;
     optionsDescription: string;
@@ -188,6 +197,30 @@ export const translations: Record<Language, TranslationCopy> = {
       localStorageNoticeTitle: 'Stored only on this device',
       localStorageNoticeBody:
         'Your matrix stays in this browser. We do not upload, store, or access it.',
+      onboardingGuideAria: 'Workflow guide',
+      onboardingSteps: [
+        'Name options',
+        'Weight criteria',
+        'Score and compare',
+      ],
+      loadExample: 'Load example',
+      firstRunHintTitle: 'Start with the shape of the decision',
+      firstRunHintBody:
+        'Name at least two options, add what matters, then move one importance slider above 0 to make the ranking meaningful.',
+      dismissFirstRunHint: 'Dismiss onboarding hint',
+      careerMoveExample: {
+        options: {
+          stayCurrentRole: 'Stay in current role',
+          acceptNewRole: 'Accept new role',
+          startFreelancing: 'Start freelancing',
+        },
+        criteria: {
+          growth: 'Growth',
+          compensation: 'Compensation',
+          workLifeBalance: 'Work-life balance',
+          risk: 'Risk',
+        },
+      },
       optionsRegionAria: 'Options to compare',
       optionsHeading: 'Options to compare',
       optionsDescription:
@@ -198,7 +231,7 @@ export const translations: Record<Language, TranslationCopy> = {
       optionPlaceholder: (index) => `Option ${index}`,
       newOption: 'New option',
       addOption: 'Add option',
-      addOptionToScore: 'Add an option to score',
+      addOptionToScore: 'Name this option to unlock meaningful scoring.',
       liveTotal: 'Live total',
       liveScoreAria: (name) => `Live score for ${name}`,
       resultsHiddenWhileScoring: 'Results hidden while you score.',
@@ -208,7 +241,7 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Tied',
       criteriaHeading: 'Criteria, weights, and scores',
       criteriaDescription:
-        'Name what matters, set each weight from 0-10, then score every option by scale or yes/no. A weight of 0 excludes that criterion.',
+        'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then score every option by scale or yes/no.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
       scoringControls: 'Scoring controls',
       blindScoring: 'Blind scoring',
@@ -239,7 +272,7 @@ export const translations: Record<Language, TranslationCopy> = {
     results: {
       title: 'Results',
       noWeightHeadline:
-        'Give at least one criterion some weight to surface a recommendation.',
+        'Move at least one importance slider above 0 to surface a recommendation.',
       tieHeadline: (names) =>
         `Current tie: ${joinEnglishLabels(names)} are evenly matched right now.`,
       showResults: 'Show results',
@@ -274,7 +307,7 @@ export const translations: Record<Language, TranslationCopy> = {
       weightedScore: 'weighted score',
       scoreBarAria: (name, score) => `${name} has a weighted score of ${score}`,
       noPositiveWeights:
-        'No positive criterion weights are available, so every option is currently neutral.',
+        'Move an importance slider above 0 and the ranking will update.',
       reset: 'Reset matrix',
       resetDialogTitle: 'Reset this matrix?',
       resetDialogDescription:
@@ -327,6 +360,30 @@ export const translations: Record<Language, TranslationCopy> = {
       localStorageNoticeTitle: 'Guardado en este dispositivo',
       localStorageNoticeBody:
         'Tu matriz queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
+      onboardingGuideAria: 'Guía de flujo de trabajo',
+      onboardingSteps: [
+        'Nombra opciones',
+        'Pondera criterios',
+        'Puntúa y compara',
+      ],
+      loadExample: 'Cargar ejemplo',
+      firstRunHintTitle: 'Empieza por la forma de la decisión',
+      firstRunHintBody:
+        'Nombra al menos dos opciones, añade lo que importa y sube una importancia por encima de 0 para que la clasificación sea útil.',
+      dismissFirstRunHint: 'Descartar pista de inicio',
+      careerMoveExample: {
+        options: {
+          stayCurrentRole: 'Quedarme en mi puesto actual',
+          acceptNewRole: 'Aceptar el nuevo puesto',
+          startFreelancing: 'Empezar como freelance',
+        },
+        criteria: {
+          growth: 'Crecimiento',
+          compensation: 'Compensación',
+          workLifeBalance: 'Equilibrio vida-trabajo',
+          risk: 'Riesgo',
+        },
+      },
       optionsRegionAria: 'Opciones para comparar',
       optionsHeading: 'Opciones para comparar',
       optionsDescription:
@@ -337,7 +394,7 @@ export const translations: Record<Language, TranslationCopy> = {
       optionPlaceholder: (index) => `Opción ${index}`,
       newOption: 'Nueva opción',
       addOption: 'Añadir opción',
-      addOptionToScore: 'Añade una opción para puntuarla',
+      addOptionToScore: 'Nombra esta opción para desbloquear una puntuación útil.',
       liveTotal: 'Total en tiempo real',
       liveScoreAria: (name) => `Puntuación en tiempo real de ${name}`,
       resultsHiddenWhileScoring: 'Resultados ocultos mientras puntúas.',
@@ -347,7 +404,7 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Empate',
       criteriaHeading: 'Criterios, pesos y puntuaciones',
       criteriaDescription:
-        'Nombra lo que importa, define cada peso de 0 a 10 y puntúa cada opción con escala o sí/no. Un peso de 0 excluye ese criterio.',
+        'Nombra lo que importa, define la importancia de 0 a 10 (0 ignora el criterio, 10 lo convierte en prioridad máxima) y puntúa cada opción con escala o sí/no.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterio' : 'criterios'}`,
       scoringControls: 'Controles de puntuación',
       blindScoring: 'Puntuación a ciegas',
@@ -378,7 +435,7 @@ export const translations: Record<Language, TranslationCopy> = {
     results: {
       title: 'Resultados',
       noWeightHeadline:
-        'Asigna peso al menos a un criterio para mostrar una recomendación.',
+        'Sube al menos un control de importancia por encima de 0 para mostrar una recomendación.',
       tieHeadline: (names) =>
         `Empate actual: ${joinSpanishLabels(names)} tienen la misma puntuación ahora mismo.`,
       showResults: 'Mostrar resultados',
@@ -414,7 +471,7 @@ export const translations: Record<Language, TranslationCopy> = {
       scoreBarAria: (name, score) =>
         `${name} tiene una puntuación ponderada de ${score}`,
       noPositiveWeights:
-        'No hay criterios con pesos positivos, así que todas las opciones quedan neutras por ahora.',
+        'Sube un control de importancia por encima de 0 y la clasificación se actualizará.',
       reset: 'Reiniciar matriz',
       resetDialogTitle: '¿Reiniciar esta matriz?',
       resetDialogDescription:
