@@ -3,11 +3,14 @@ import type { DecisionMatrix } from '../types';
 import {
   SCORE_MODE_BOOLEAN,
   SCORE_MODE_SCALE,
+  createCareerMoveMatrix,
   clampScoreForMode,
   createStarterMatrix,
+  isBlankDecisionMatrix,
   normalizeDecisionMatrix,
   synchronizeScores,
 } from './matrix';
+import { getDecisionSummary } from './scoring';
 
 const storedOptions = [
   { id: 'stay', name: 'Stay' },
@@ -63,6 +66,67 @@ describe('matrix normalization', () => {
     expect(matrix.scoreModes[matrix.options[0].id]?.[matrix.categories[0].id]).toBe(
       SCORE_MODE_SCALE,
     );
+    expect(isBlankDecisionMatrix(matrix)).toBe(true);
+  });
+
+  it('detects when a starter matrix is no longer blank', () => {
+    const namedOption = createStarterMatrix();
+    namedOption.options[0].name = 'Remote role';
+
+    const weightedCriterion = createStarterMatrix();
+    weightedCriterion.categories[0].weight = 1;
+
+    const scoredOption = createStarterMatrix();
+    scoredOption.scores[scoredOption.options[0].id][scoredOption.categories[0].id] =
+      1;
+
+    expect(isBlankDecisionMatrix(namedOption)).toBe(false);
+    expect(isBlankDecisionMatrix(weightedCriterion)).toBe(false);
+    expect(isBlankDecisionMatrix(scoredOption)).toBe(false);
+  });
+
+  it('creates the localized career move sample matrix', () => {
+    const matrix = createCareerMoveMatrix({
+      options: {
+        stayCurrentRole: 'Stay in current role',
+        acceptNewRole: 'Accept new role',
+        startFreelancing: 'Start freelancing',
+      },
+      criteria: {
+        growth: 'Growth',
+        compensation: 'Compensation',
+        workLifeBalance: 'Work-life balance',
+        risk: 'Risk',
+      },
+    });
+    const ids = [
+      ...matrix.options.map((option) => option.id),
+      ...matrix.categories.map((category) => category.id),
+    ];
+    const summary = getDecisionSummary(matrix);
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(matrix.options.map((option) => option.name)).toEqual([
+      'Stay in current role',
+      'Accept new role',
+      'Start freelancing',
+    ]);
+    expect(matrix.categories.map((category) => category.name)).toEqual([
+      'Growth',
+      'Compensation',
+      'Work-life balance',
+      'Risk',
+    ]);
+    expect(matrix.categories.map((category) => category.weight)).toEqual([
+      9, 8, 7, 6,
+    ]);
+    expect(matrix.scoreModes[matrix.options[0].id]?.[matrix.categories[0].id]).toBe(
+      SCORE_MODE_SCALE,
+    );
+    expect(matrix.scores[matrix.options[1].id]?.[matrix.categories[0].id]).toBe(9);
+    expect(matrix.scores[matrix.options[2].id]?.[matrix.categories[3].id]).toBe(3);
+    expect(summary.topOption?.name).toBe('Accept new role');
+    expect(summary.sortedLeaderContributions[0]?.name).toBe('Growth');
   });
 
   it('uses a five-point threshold when converting scores to boolean scoring', () => {
