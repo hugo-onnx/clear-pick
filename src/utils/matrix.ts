@@ -25,6 +25,20 @@ const STARTER_CATEGORIES = [{ name: '', weight: DEFAULT_WEIGHT }];
 const BLANK_STARTER_WEIGHT_VALUES = [0, 1, 50];
 const BLANK_STARTER_SCORE_VALUES = [0, 1, 50];
 
+export interface CareerMoveExampleLabels {
+  options: {
+    stayCurrentRole: string;
+    acceptNewRole: string;
+    startFreelancing: string;
+  };
+  criteria: {
+    growth: string;
+    compensation: string;
+    workLifeBalance: string;
+    risk: string;
+  };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -103,6 +117,35 @@ export function getScoreModeForCell(
 
   return normalizeScoreMode(
     matrix.scoreModes?.[optionId]?.[categoryId] ?? categoryScoreMode,
+  );
+}
+
+export function isBlankDecisionMatrix(matrix: DecisionMatrix): boolean {
+  const hasOnlyBlankOptions = matrix.options.every(
+    (option) => option.name.trim().length === 0,
+  );
+  const hasOnlyBlankCategories = matrix.categories.every(
+    (category) =>
+      category.name.trim().length === 0 &&
+      clampWeight(category.weight) === DEFAULT_WEIGHT &&
+      normalizeScoreMode(category.scoreMode) === DEFAULT_SCORE_MODE,
+  );
+
+  if (!hasOnlyBlankOptions || !hasOnlyBlankCategories) {
+    return false;
+  }
+
+  return matrix.options.every((option) =>
+    matrix.categories.every((category) => {
+      const score = matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
+      const scoreMode =
+        matrix.scoreModes?.[option.id]?.[category.id] ?? category.scoreMode;
+
+      return (
+        clampScore(score) === DEFAULT_SCORE &&
+        normalizeScoreMode(scoreMode) === DEFAULT_SCORE_MODE
+      );
+    }),
   );
 }
 
@@ -341,6 +384,47 @@ export function createStarterMatrix(): DecisionMatrix {
     });
   });
   const scoreModes = buildScoreModes(options, categories);
+
+  return {
+    options,
+    categories,
+    scores,
+    scoreModes,
+  };
+}
+
+export function createCareerMoveMatrix(
+  labels: CareerMoveExampleLabels,
+): DecisionMatrix {
+  const options = [
+    labels.options.stayCurrentRole,
+    labels.options.acceptNewRole,
+    labels.options.startFreelancing,
+  ].map((name) => createOption(name));
+  const categories = [
+    { name: labels.criteria.growth, weight: 9 },
+    { name: labels.criteria.compensation, weight: 8 },
+    { name: labels.criteria.workLifeBalance, weight: 7 },
+    { name: labels.criteria.risk, weight: 6 },
+  ].map((category) => createCategory(category.name, category.weight));
+  const careerMoveScores = [
+    [5, 6, 8, 9],
+    [9, 9, 6, 5],
+    [8, 7, 7, 3],
+  ];
+  const scoreModes = buildScoreModes(options, categories);
+  const scores: ScoresByOption = {};
+
+  options.forEach((option, optionIndex) => {
+    scores[option.id] = {};
+
+    categories.forEach((category, categoryIndex) => {
+      scores[option.id][category.id] = clampScoreForMode(
+        careerMoveScores[optionIndex]?.[categoryIndex] ?? DEFAULT_SCORE,
+        scoreModes[option.id]?.[category.id],
+      );
+    });
+  });
 
   return {
     options,
