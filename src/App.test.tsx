@@ -14,7 +14,7 @@ import {
   SCORE_MODE_SCALE,
   createStarterMatrix,
 } from './utils/matrix';
-import { STORAGE_KEY } from './utils/storage';
+import { ONBOARDING_DISMISSAL_STORAGE_KEY, STORAGE_KEY } from './utils/storage';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -218,6 +218,124 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders the onboarding strip in English and Spanish', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const englishGuide = screen.getByRole('region', {
+      name: /workflow guide/i,
+    });
+    expect(within(englishGuide).getByText('1. Name options')).toBeInTheDocument();
+    expect(
+      within(englishGuide).getByText('2. Weight criteria'),
+    ).toBeInTheDocument();
+    expect(
+      within(englishGuide).getByText('3. Score and compare'),
+    ).toBeInTheDocument();
+    expect(
+      within(englishGuide).getByRole('button', { name: /load example/i }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: /switch to spanish/i }),
+    );
+
+    const spanishGuide = screen.getByRole('region', {
+      name: /guía de flujo de trabajo/i,
+    });
+    expect(
+      within(spanishGuide).getByText('1. Nombra opciones'),
+    ).toBeInTheDocument();
+    expect(
+      within(spanishGuide).getByText('2. Pondera criterios'),
+    ).toBeInTheDocument();
+    expect(
+      within(spanishGuide).getByText('3. Puntúa y compara'),
+    ).toBeInTheDocument();
+    expect(
+      within(spanishGuide).getByRole('button', { name: /cargar ejemplo/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows and persists dismissal of the blank first-run hint', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+
+    expect(
+      screen.getByText(/start with the shape of the decision/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/move one importance slider above 0/i),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: /dismiss onboarding hint/i }),
+    );
+
+    expect(
+      screen.queryByText(/start with the shape of the decision/i),
+    ).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(ONBOARDING_DISMISSAL_STORAGE_KEY)).toBe(
+      'true',
+    );
+
+    unmount();
+    render(<App />);
+
+    expect(
+      screen.queryByText(/start with the shape of the decision/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('loads the career move example with visible ranked results', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
+    expect(screen.getByRole('switch', { name: /blind scoring/i })).toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: /load example/i }));
+
+    expect(
+      screen.getByRole('switch', { name: /blind scoring/i }),
+    ).not.toBeChecked();
+    expect(screen.getByDisplayValue('Stay in current role')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Accept new role')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Start freelancing')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Growth')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Compensation')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Work-life balance')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Risk')).toBeInTheDocument();
+    expect(screen.getByLabelText(/importance for growth/i)).toHaveValue('9');
+    expect(screen.getByLabelText(/importance for compensation/i)).toHaveValue('8');
+    expect(
+      screen.getByLabelText(/score for accept new role on growth/i),
+    ).toHaveValue('9');
+    expect(
+      screen.getByLabelText(/score for start freelancing on risk/i),
+    ).toHaveValue('3');
+    expect(
+      screen.getByRole('region', { name: /recommendation preview/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/accept new role is the strongest option/i),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    await user.click(
+      within(
+        screen.getByRole('alertdialog', { name: /reset this matrix/i }),
+      ).getByRole('button', { name: /reset matrix/i }),
+    );
+
+    expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
+    expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
+    expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
+    expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
+  });
+
   it('keeps blank starter option cards visually unscored until the name is committed', async () => {
     const user = userEvent.setup();
 
@@ -232,7 +350,7 @@ describe('App', () => {
       within(optionsRegion).queryByLabelText(/live score for option 1/i),
     ).not.toBeInTheDocument();
     expect(
-      within(optionsRegion).getAllByText(/add an option to score/i),
+      within(optionsRegion).getAllByText(/name this option to unlock meaningful scoring/i),
     ).toHaveLength(2);
 
     const firstOption = screen.getByLabelText(/^option 1$/i) as HTMLInputElement;
@@ -313,7 +431,7 @@ describe('App', () => {
       within(optionsRegion).queryByLabelText(/live score for option 3/i),
     ).not.toBeInTheDocument();
     expect(
-      within(optionsRegion).getAllByText(/add an option to score/i),
+      within(optionsRegion).getAllByText(/name this option to unlock meaningful scoring/i),
     ).toHaveLength(3);
   });
 
@@ -551,7 +669,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/no recommendation yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/no positive criterion weights are available/i),
+      screen.getByText(/move an importance slider above 0/i),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /see full ranking/i }),
