@@ -438,11 +438,27 @@ describe('App', () => {
   it('scrolls each newly added option card into view', async () => {
     const user = userEvent.setup();
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const originalScrollBy = window.scrollBy;
+    const originalVisualViewport = window.visualViewport;
     const scrollIntoViewMock = vi.fn();
+    const scrollByMock = vi.fn();
 
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scrollIntoViewMock,
+    });
+    Object.defineProperty(window, 'scrollBy', {
+      configurable: true,
+      value: scrollByMock,
+    });
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: {
+        height: 300,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 390,
+      } as VisualViewport,
     });
 
     vi.spyOn(
@@ -500,11 +516,24 @@ describe('App', () => {
       block: 'center',
       inline: 'nearest',
     });
+    expect(scrollByMock).toHaveBeenCalledWith({
+      behavior: 'auto',
+      top: 56,
+    });
     expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
 
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: originalScrollIntoView,
+    });
+    Object.defineProperty(window, 'scrollBy', {
+      configurable: true,
+      value: originalScrollBy,
+    });
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: originalVisualViewport,
     });
   });
 
