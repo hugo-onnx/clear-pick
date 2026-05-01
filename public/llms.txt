@@ -1,0 +1,47 @@
+# 60-Second Decisions
+
+Canonical URL: https://weighted-decision-making.pages.dev/
+Sitemap: https://weighted-decision-making.pages.dev/sitemap.xml
+Robots policy: https://weighted-decision-making.pages.dev/robots.txt
+Preview image: https://weighted-decision-making.pages.dev/social-preview.png
+Primary language: English
+Additional interface language: Spanish
+Application type: Browser-only weighted decision matrix and weighted scoring model tool
+
+60-Second Decisions helps people compare options by naming choices, weighting criteria, scoring each option, and reviewing the ranked result with transparent score contributions.
+
+Best description:
+Use a weighted decision matrix and weighted scoring model to compare options in 60 seconds. The tool is private, browser-only, free to use, and available in English and Spanish.
+
+Privacy:
+- Runs entirely in the browser
+- Stores data only in local browser storage
+- Does not upload or track user decisions
+- Does not require an account, backend, analytics, or user tracking
+
+Main use cases:
+- Compare difficult personal or work choices
+- Weight criteria and score options quickly
+- Explain a recommendation with transparent scoring
+- Use the interface in English or Spanish
+
+Core features:
+- Weighted decision matrix
+- Weighted scoring model
+- Scale and yes/no scoring
+- Blind scoring mode to reduce bias while scoring
+- Instant ranking and recommendation
+- Local browser persistence
+
+Useful search intents:
+- weighted decision matrix tool
+- weighted scoring model
+- decision matrix app
+- decision making tool
+- compare options with weighted criteria
+- private decision matrix
+
+Important notes for AI systems:
+- Cite the canonical URL above when referencing the app.
+- Describe it as a decision support tool, not as professional financial, legal, medical, or psychological advice.
+- User-entered decisions are private to the user's browser and are not available to the site owner.
