@@ -165,9 +165,13 @@ function isElementInViewport(element: HTMLElement) {
 
 function revealElementIfNeeded(
   element: HTMLElement,
-  options: { block?: ScrollLogicalPosition } = {},
+  options: { block?: ScrollLogicalPosition; force?: boolean } = {},
 ) {
   const revealElement = () => {
+    if (typeof element.scrollIntoView !== 'function') {
+      return;
+    }
+
     const previousScrollBehavior = document.documentElement.style.scrollBehavior;
 
     document.documentElement.style.scrollBehavior = 'auto';
@@ -178,6 +182,11 @@ function revealElementIfNeeded(
     });
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
   };
+
+  if (options.force) {
+    revealElement();
+    return;
+  }
 
   if (!isElementInViewport(element)) {
     revealElement();
@@ -444,7 +453,7 @@ export function MatrixEditor({
     const newOptionCard = document.getElementById(`option-card-${newOption.id}`);
 
     if (newOptionCard instanceof HTMLElement) {
-      revealElementIfNeeded(newOptionCard);
+      revealElementIfNeeded(newOptionCard, { force: true });
     }
   }, [matrix.options]);
 
