@@ -131,7 +131,7 @@ export default function ShaderShowcase({
   return (
     <section
       aria-labelledby={headingId}
-      className="relative flex min-h-[calc(100svh-3.5rem)] overflow-hidden bg-black text-white sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100vh-5rem)]"
+      className="relative flex min-h-svh overflow-hidden bg-black text-white sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100vh-5rem)]"
       onMouseEnter={() => setIsActive(true)}
       onMouseLeave={() => setIsActive(false)}
       ref={containerRef}
@@ -205,24 +205,24 @@ export default function ShaderShowcase({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-black/85"
       />
 
-      <div className="relative z-20 flex min-h-[calc(100svh-3.5rem)] w-full flex-col sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100vh-5rem)]">
-        <main className="relative z-20 mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-4xl flex-col items-center justify-center px-4 pb-32 pt-20 text-center sm:min-h-[calc(100svh-4rem)] sm:px-8 sm:pb-28 lg:min-h-[calc(100vh-5rem)]">
+      <div className="relative z-20 flex min-h-svh w-full flex-col sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100vh-5rem)]">
+        <main className="relative z-20 mx-auto flex min-h-svh w-full max-w-4xl flex-col items-center justify-center px-4 pb-32 pt-20 text-center sm:min-h-[calc(100svh-4rem)] sm:px-8 sm:pb-28 sm:pt-24 lg:min-h-[calc(100vh-5rem)]">
           <div
             className="relative mb-4 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/15 bg-black/30 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,0.24)] backdrop-blur-sm sm:px-4"
             style={{ filter: 'url(#glass-effect)' }}
           >
             <Sparkles aria-hidden="true" className="relative z-10 size-4 text-cyan-100" />
-            <span className="relative z-10 min-w-0 text-sm font-semibold leading-5 text-white/95">
+            <span className="relative z-10 min-w-0 text-xs font-semibold leading-5 text-white/95 sm:text-sm">
               {copy.eyebrow}
             </span>
           </div>
 
           <h1
             aria-label={copy.headingAria}
-            className="mb-5 w-full max-w-[20rem] text-balance text-4xl font-bold leading-none tracking-normal text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.45)] sm:max-w-4xl sm:text-6xl md:text-7xl lg:text-8xl"
+            className="mb-5 w-full max-w-[22rem] text-balance text-[clamp(2.55rem,12vw,4rem)] font-bold leading-none tracking-normal text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.45)] sm:max-w-4xl sm:text-6xl md:text-7xl lg:text-8xl"
             id={headingId}
           >
-            <span className="mx-auto mb-2 block max-w-[18rem] pb-1 text-3xl font-normal leading-[1.16] tracking-normal text-white sm:max-w-none sm:text-6xl lg:text-7xl">
+            <span className="mx-auto mb-2 block max-w-[18rem] pb-1 text-[clamp(1.75rem,8vw,3rem)] font-normal leading-[1.16] tracking-normal text-white sm:max-w-none sm:text-6xl lg:text-7xl">
               {copy.headingFirst}
             </span>
             <span className="block font-black text-white drop-shadow-2xl">
@@ -234,14 +234,14 @@ export default function ShaderShowcase({
           </h1>
 
           <p
-            className="mx-auto mb-7 max-w-2xl text-pretty text-base font-medium leading-7 text-white/86 sm:text-lg sm:leading-8"
+            className="mx-auto mb-7 w-full max-w-[19.5rem] text-pretty text-base font-medium leading-7 text-white/86 sm:max-w-2xl sm:text-lg sm:leading-8"
           >
             {copy.description}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <button
-              className="inline-flex min-h-12 cursor-pointer transform-gpu items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 px-7 py-3 text-base font-black text-white shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition-all duration-300 [font-weight:900] hover:scale-[1.03] hover:from-cyan-400 hover:to-orange-400 hover:shadow-[0_20px_54px_rgba(0,0,0,0.34)] active:scale-[0.97] motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:px-9 sm:py-4"
+              className="inline-flex min-h-12 w-full max-w-[13rem] cursor-pointer transform-gpu items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 px-7 py-3 text-base font-black text-white shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition-all duration-300 [font-weight:900] hover:scale-[1.03] hover:from-cyan-400 hover:to-orange-400 hover:shadow-[0_20px_54px_rgba(0,0,0,0.34)] active:scale-[0.97] motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:w-auto sm:max-w-none sm:px-9 sm:py-4"
               onClick={onPrimaryCtaClick}
               type="button"
             >
@@ -255,7 +255,7 @@ export default function ShaderShowcase({
           aria-describedby="local-save-notice-body"
           aria-labelledby="local-save-notice-title"
           aria-expanded={isNoticeExpanded}
-          className="absolute inset-x-3 bottom-3 z-30 mx-auto w-auto max-w-sm text-left outline-none sm:inset-x-auto sm:bottom-6 sm:right-6 sm:mx-0 sm:w-[min(18rem,calc(100vw-2rem))]"
+          className="absolute inset-x-4 bottom-4 z-30 w-auto max-w-none text-left outline-none sm:inset-x-auto sm:bottom-6 sm:right-6 sm:mx-0 sm:w-[min(18rem,calc(100vw-2rem))]"
           role="note"
           tabIndex={0}
           id="local-save-notice"
@@ -299,7 +299,7 @@ export default function ShaderShowcase({
                 className="h-5 w-5 shrink-0 text-cyan-200"
               />
               <h2
-                className="text-xs font-semibold uppercase leading-4 text-white/95"
+                className="min-w-0 break-words text-xs font-semibold uppercase leading-4 text-white/95"
                 id="local-save-notice-title"
               >
                 {copy.localStorageNoticeTitle}
