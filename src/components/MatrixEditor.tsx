@@ -151,16 +151,61 @@ function selectInputText(input: HTMLInputElement) {
 
 function isElementInViewport(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
+  const visualViewport = window.visualViewport;
+  const viewportTop = visualViewport?.offsetTop ?? 0;
+  const viewportLeft = visualViewport?.offsetLeft ?? 0;
   const viewportHeight =
-    window.innerHeight || document.documentElement.clientHeight;
-  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    visualViewport?.height ??
+    window.innerHeight ??
+    document.documentElement.clientHeight;
+  const viewportWidth =
+    visualViewport?.width ??
+    window.innerWidth ??
+    document.documentElement.clientWidth;
 
   return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <= viewportHeight &&
-    rect.right <= viewportWidth
+    rect.top >= viewportTop &&
+    rect.left >= viewportLeft &&
+    rect.bottom <= viewportTop + viewportHeight &&
+    rect.right <= viewportLeft + viewportWidth
   );
+}
+
+const revealRetryDelays = [90, 240, 420];
+const visualViewportRevealMargin = 16;
+
+function nudgeElementIntoVisualViewport(element: HTMLElement) {
+  if (typeof window.scrollBy !== 'function' || !window.visualViewport) {
+    return;
+  }
+
+  const rect = element.getBoundingClientRect();
+  const visibleTop = window.visualViewport.offsetTop + visualViewportRevealMargin;
+  const visibleBottom =
+    window.visualViewport.offsetTop +
+    window.visualViewport.height -
+    visualViewportRevealMargin;
+  const visibleHeight = visibleBottom - visibleTop;
+  let scrollDelta = 0;
+
+  if (rect.height > visibleHeight) {
+    if (rect.top < visibleTop || rect.bottom > visibleBottom) {
+      scrollDelta = rect.top - visibleTop;
+    }
+  } else if (rect.bottom > visibleBottom) {
+    scrollDelta = rect.bottom - visibleBottom;
+  } else if (rect.top < visibleTop) {
+    scrollDelta = rect.top - visibleTop;
+  }
+
+  if (Math.abs(scrollDelta) < 1) {
+    return;
+  }
+
+  window.scrollBy({
+    behavior: 'auto',
+    top: scrollDelta,
+  });
 }
 
 function revealElementIfNeeded(
@@ -180,15 +225,13 @@ function revealElementIfNeeded(
       block: options.block ?? 'center',
       inline: 'nearest',
     });
+    nudgeElementIntoVisualViewport(element);
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
   };
 
   if (options.force) {
     revealElement();
-    return;
-  }
-
-  if (!isElementInViewport(element)) {
+  } else if (!isElementInViewport(element)) {
     revealElement();
   }
 
@@ -201,6 +244,16 @@ function revealElementIfNeeded(
       revealElement();
     }
   });
+
+  if (options.force) {
+    for (const delay of revealRetryDelays) {
+      window.setTimeout(() => {
+        if (!isElementInViewport(element)) {
+          revealElement();
+        }
+      }, delay);
+    }
+  }
 }
 
 function revealInputIfNeeded(input: HTMLInputElement) {
@@ -451,6 +504,11 @@ export function MatrixEditor({
 
     const newOption = matrix.options[matrix.options.length - 1];
     const newOptionCard = document.getElementById(`option-card-${newOption.id}`);
+    const newOptionInput = document.getElementById(`option-${newOption.id}`);
+
+    if (newOptionInput instanceof HTMLInputElement) {
+      focusInputText(newOptionInput);
+    }
 
     if (newOptionCard instanceof HTMLElement) {
       revealElementIfNeeded(newOptionCard, { force: true });
