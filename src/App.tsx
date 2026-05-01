@@ -24,6 +24,31 @@ import { getDecisionSummary } from './utils/scoring';
 import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
 const MATRIX_SAVE_DEBOUNCE_MS = 250;
+const MATRIX_SCROLL_RETRY_DELAYS_MS = [120, 320];
+
+function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
+  const scroll = () => {
+    const decisionMatrix = document.getElementById('decision-matrix');
+
+    if (typeof decisionMatrix?.scrollIntoView === 'function') {
+      decisionMatrix.scrollIntoView({
+        behavior,
+        block: 'start',
+      });
+    }
+  };
+
+  const scheduleAfterPaint =
+    window.requestAnimationFrame?.bind(window) ??
+    ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+
+  scroll();
+  scheduleAfterPaint(scroll);
+
+  for (const delay of MATRIX_SCROLL_RETRY_DELAYS_MS) {
+    window.setTimeout(scroll, delay);
+  }
+}
 
 function App() {
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
@@ -106,14 +131,7 @@ function App() {
 
   const handleReset = () => {
     setMatrix(createStarterMatrix());
-    const decisionMatrix = document.getElementById('decision-matrix');
-
-    if (typeof decisionMatrix?.scrollIntoView === 'function') {
-      decisionMatrix.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    }
+    scrollToDecisionMatrix();
   };
 
   const handleLoadExample = () => {
