@@ -91,6 +91,10 @@ select {
   font: inherit;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 @layer base {
   * {
     @apply border-border;
