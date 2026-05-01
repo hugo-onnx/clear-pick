@@ -3,7 +3,7 @@ import type { CareerMoveExampleLabels } from './utils/matrix';
 export const LANGUAGES = ['en', 'es'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
-export const LANGUAGE_STORAGE_KEY = 'weighted-matrix:language:v1';
+export const LANGUAGE_STORAGE_KEY = '60second-decisions:language:v1';
 
 export interface TranslationCopy {
   document: {
@@ -309,18 +309,18 @@ export const translations: Record<Language, TranslationCopy> = {
       scoreBarAria: (name, score) => `${name} has a weighted score of ${score}`,
       noPositiveWeights:
         'Move an importance slider above 0 and the ranking will update.',
-      reset: 'Reset matrix',
-      resetDialogTitle: 'Reset this matrix?',
+      reset: 'Start over',
+      resetDialogTitle: 'Start over?',
       resetDialogDescription:
         'This will clear your options, criteria, weights, and scores stored in this browser.',
       resetDialogCancel: 'Keep editing',
-      resetDialogConfirm: 'Reset matrix',
+      resetDialogConfirm: 'Start over',
       matrixCount: (options, categories) => `${options} options / ${categories} criteria`,
     },
     footer: {
       productLabel: 'Weighted Scoring Model',
       note:
-        'Your matrix stays stored locally in this browser, so you can return to it without creating an account.',
+        'Your data stays stored locally in this browser, so you can return to it without creating an account.',
       contactLabel: 'Contact',
       contactEmail: 'hugonzalezhuerta@gmail.com',
       backToTop: 'Back to top',
@@ -473,12 +473,12 @@ export const translations: Record<Language, TranslationCopy> = {
         `${name} tiene una puntuación ponderada de ${score}`,
       noPositiveWeights:
         'Sube un control de importancia por encima de 0 y la clasificación se actualizará.',
-      reset: 'Reiniciar matriz',
-      resetDialogTitle: '¿Reiniciar esta matriz?',
+      reset: 'Empezar de nuevo',
+      resetDialogTitle: '¿Empezar de nuevo?',
       resetDialogDescription:
         'Se borrarán tus opciones, criterios, pesos y puntuaciones guardados en este navegador.',
       resetDialogCancel: 'Seguir editando',
-      resetDialogConfirm: 'Reiniciar matriz',
+      resetDialogConfirm: 'Empezar de nuevo',
       matrixCount: (options, categories) =>
         `${options} opciones / ${categories} criterios`,
     },
