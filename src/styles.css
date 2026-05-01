@@ -64,6 +64,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(env(safe-area-inset-top) + 4rem);
 }
 
 html,
@@ -75,6 +76,12 @@ body,
 
 body {
   min-height: 100vh;
+}
+
+@media (min-width: 640px) {
+  html {
+    scroll-padding-top: calc(env(safe-area-inset-top) + 4.5rem);
+  }
 }
 
 button,
