@@ -170,6 +170,36 @@ describe('App', () => {
     });
   });
 
+  it('scrolls to the decision matrix after confirming reset', async () => {
+    const user = userEvent.setup();
+    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /start over/i }));
+    await user.click(
+      within(
+        screen.getByRole('alertdialog', { name: /start over/i }),
+      ).getByRole('button', { name: /start over/i }),
+    );
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({
+      behavior: 'smooth',
+      block: 'start',
+    });
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: originalScrollIntoView,
+    });
+  });
+
   it('toggles the interface between English and Spanish', async () => {
     const user = userEvent.setup();
 
