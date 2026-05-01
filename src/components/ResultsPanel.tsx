@@ -254,6 +254,7 @@ export function ResultsPanel({
   };
 
   const handleConfirmReset = () => {
+    previouslyFocusedElementRef.current = null;
     setIsResetDialogOpen(false);
     onReset();
   };
