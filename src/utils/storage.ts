@@ -1,9 +1,9 @@
 import type { DecisionMatrix } from '../types';
 import { createStarterMatrix, normalizeDecisionMatrix } from './matrix';
 
-export const STORAGE_KEY = 'weighted-matrix:active-decision:v1';
+export const STORAGE_KEY = '60second-decisions:active-decision:v1';
 export const ONBOARDING_DISMISSAL_STORAGE_KEY =
-  'weighted-matrix:onboarding-dismissed:v1';
+  '60second-decisions:onboarding-dismissed:v1';
 
 export function loadActiveDecision(): DecisionMatrix {
   if (typeof window === 'undefined') {
