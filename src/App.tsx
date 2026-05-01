@@ -72,16 +72,32 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const updateMetaContent = (selector: string, content: string) => {
+      const meta = document.querySelector<HTMLMetaElement>(selector);
+      if (meta) {
+        meta.content = content;
+      }
+    };
+
     saveLanguage(language);
     document.documentElement.lang = language;
     document.title = copy.document.title;
 
-    const description = document.querySelector<HTMLMetaElement>(
-      'meta[name="description"]',
+    updateMetaContent('meta[name="description"]', copy.document.description);
+    updateMetaContent('meta[property="og:title"]', copy.document.title);
+    updateMetaContent(
+      'meta[property="og:description"]',
+      copy.document.description,
     );
-    if (description) {
-      description.content = copy.document.description;
-    }
+    updateMetaContent('meta[name="twitter:title"]', copy.document.title);
+    updateMetaContent(
+      'meta[name="twitter:description"]',
+      copy.document.description,
+    );
+    updateMetaContent(
+      'meta[property="og:locale"]',
+      language === 'es' ? 'es_ES' : 'en_US',
+    );
   }, [copy.document.description, copy.document.title, language]);
 
   const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
