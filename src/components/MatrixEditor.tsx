@@ -260,13 +260,35 @@ function revealInputIfNeeded(input: HTMLInputElement) {
   revealElementIfNeeded(input);
 }
 
-function focusElementAfterPaint(element: HTMLInputElement) {
+function focusElementAfterPaint(
+  element: HTMLInputElement,
+  options: {
+    onlyIfActiveElement?: HTMLElement | null;
+    onlyIfFocusWithin?: HTMLElement | null;
+    reveal?: boolean;
+  } = {},
+) {
   const scheduleAfterPaint =
     window.requestAnimationFrame?.bind(window) ??
     ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
 
   scheduleAfterPaint(() => {
-    focusInputText(element);
+    if (
+      options.onlyIfActiveElement &&
+      document.activeElement !== options.onlyIfActiveElement
+    ) {
+      return;
+    }
+
+    if (
+      options.onlyIfFocusWithin &&
+      document.activeElement instanceof HTMLElement &&
+      !options.onlyIfFocusWithin.contains(document.activeElement)
+    ) {
+      return;
+    }
+
+    focusInputText(element, { reveal: options.reveal });
   });
 }
 
@@ -336,6 +358,11 @@ export function MatrixEditor({
   const [draftSliderValues, setDraftSliderValues] = useState<
     Record<string, number>
   >({});
+  const pendingOptionFormRef = useRef<HTMLFormElement>(null);
+  const pendingOptionInputRef = useRef<HTMLInputElement>(null);
+  const pendingOptionSubmitButtonRef = useRef<HTMLButtonElement>(null);
+  const shouldFocusPendingOptionAfterAddRef = useRef(false);
+  const isPointerSubmittingOptionRef = useRef(false);
   const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
   const shouldRevealNewOptionRef = useRef(false);
   const previousOptionCountRef = useRef(matrix.options.length);
@@ -359,12 +386,26 @@ export function MatrixEditor({
   const handleAddOptionSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canAddOptions) {
+      shouldFocusPendingOptionAfterAddRef.current = false;
+      isPointerSubmittingOptionRef.current = false;
       return;
     }
 
+    const isKeyboardSubmit =
+      !isPointerSubmittingOptionRef.current &&
+      document.activeElement === pendingOptionInputRef.current;
+    shouldFocusPendingOptionAfterAddRef.current =
+      (shouldFocusPendingOptionAfterAddRef.current || isKeyboardSubmit) &&
+      matrix.options.length + 1 < MAX_OPTIONS;
+    isPointerSubmittingOptionRef.current = false;
     shouldRevealNewOptionRef.current = true;
     onAddOption(pendingOptionName.trim());
     setPendingOptionName('');
+  };
+  const handlePendingOptionKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      shouldFocusPendingOptionAfterAddRef.current = true;
+    }
   };
   const handleAddCategorySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -404,6 +445,7 @@ export function MatrixEditor({
     const nextInput = document.getElementById(nextInputId);
 
     if (nextInput instanceof HTMLInputElement) {
+      revealInputIfNeeded(nextInput);
       selectInputText(nextInput);
     }
   };
@@ -515,9 +557,33 @@ export function MatrixEditor({
     const newOption = matrix.options[matrix.options.length - 1];
     const newOptionCard = document.getElementById(`option-card-${newOption.id}`);
     const newOptionInput = document.getElementById(`option-${newOption.id}`);
+    const pendingOptionForm = pendingOptionFormRef.current;
+    const pendingOptionInput = pendingOptionInputRef.current;
+    const pendingOptionSubmitButton = pendingOptionSubmitButtonRef.current;
+    const shouldFocusPendingOptionAfterAdd =
+      shouldFocusPendingOptionAfterAddRef.current &&
+      matrix.options.length < MAX_OPTIONS;
+    shouldFocusPendingOptionAfterAddRef.current = false;
+
+    if (
+      shouldFocusPendingOptionAfterAdd &&
+      pendingOptionInput instanceof HTMLInputElement
+    ) {
+      if (pendingOptionForm instanceof HTMLElement) {
+        revealElementIfNeeded(pendingOptionForm, { force: true });
+      }
+
+      focusElementAfterPaint(pendingOptionInput, {
+        onlyIfFocusWithin: pendingOptionForm,
+        reveal: true,
+      });
+      return;
+    }
 
     if (newOptionInput instanceof HTMLInputElement) {
-      focusElementAfterPaint(newOptionInput);
+      focusElementAfterPaint(newOptionInput, {
+        onlyIfActiveElement: pendingOptionSubmitButton,
+      });
     }
 
     if (newOptionCard instanceof HTMLElement) {
@@ -777,6 +843,11 @@ export function MatrixEditor({
 
                 <Input
                   className="mt-3 h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
+                  enterKeyHint={
+                    index < matrix.options.length - 1 || canAddOptions
+                      ? 'next'
+                      : 'done'
+                  }
                   id={`option-${option.id}`}
                   onKeyDown={(event) =>
                     handleOptionNameKeyDown(event, option.id, index)
@@ -840,6 +911,7 @@ export function MatrixEditor({
               aria-label={copy.addOption}
               className="flex min-h-[12.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
               onSubmit={handleAddOptionSubmit}
+              ref={pendingOptionFormRef}
             >
               <div>
                 <div className="flex h-8 items-start justify-between gap-3">
@@ -852,14 +924,24 @@ export function MatrixEditor({
                 <div className="mt-3 flex gap-2">
                   <Input
                     className="h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
+                    enterKeyHint={
+                      matrix.options.length + 1 < MAX_OPTIONS ? 'next' : 'done'
+                    }
                     id="new-option-name"
                     onChange={(event) => setPendingOptionName(event.target.value)}
+                    onKeyDown={handlePendingOptionKeyDown}
                     placeholder={copy.optionPlaceholder(matrix.options.length + 1)}
+                    ref={pendingOptionInputRef}
                     value={pendingOptionName}
                   />
                   <Button
                     aria-label={copy.addOption}
                     className="h-11 w-11 shrink-0"
+                    onPointerDown={() => {
+                      isPointerSubmittingOptionRef.current = true;
+                      shouldFocusPendingOptionAfterAddRef.current = false;
+                    }}
+                    ref={pendingOptionSubmitButtonRef}
                     size="icon"
                     type="submit"
                   >
