@@ -189,6 +189,9 @@ describe('App', () => {
       ).getByRole('button', { name: /start over/i }),
     );
 
+    await waitFor(() => {
+      expect(scrollIntoViewMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+    });
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
       block: 'start',
@@ -465,6 +468,33 @@ describe('App', () => {
     ).toHaveLength(3);
   });
 
+  it('adds an option and focuses the next add card when Enter is pressed', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/new option/i), 'Start the business{Enter}');
+
+    const newOptionCardInput = screen.getByLabelText(/^option 3$/i);
+    const nextOptionInput = screen.getByLabelText(/new option/i);
+
+    expect(newOptionCardInput).toHaveValue('Start the business');
+    await waitFor(() => {
+      expect(nextOptionInput).toHaveFocus();
+    });
+    expect(nextOptionInput).toHaveValue('');
+
+    await user.type(nextOptionInput, 'Hire a manager{Enter}');
+
+    const fourthOptionCardInput = screen.getByLabelText(/^option 4$/i);
+    const followingOptionInput = screen.getByLabelText(/new option/i);
+
+    expect(fourthOptionCardInput).toHaveValue('Hire a manager');
+    await waitFor(() => {
+      expect(followingOptionInput).toHaveFocus();
+    });
+    expect(followingOptionInput).toHaveValue('');
+  });
+
   it('scrolls each newly added option card into view', async () => {
     const user = userEvent.setup();
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
@@ -541,7 +571,7 @@ describe('App', () => {
     await waitFor(() => {
       expect(scrollIntoViewMock.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
-    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'auto',
       block: 'center',
       inline: 'nearest',
@@ -551,7 +581,9 @@ describe('App', () => {
       top: 56,
     });
     expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
+    });
 
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
