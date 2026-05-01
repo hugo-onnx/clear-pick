@@ -435,6 +435,72 @@ describe('App', () => {
     ).toHaveLength(3);
   });
 
+  it('scrolls the newly added option card into view', async () => {
+    const user = userEvent.setup();
+    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
+
+    vi.spyOn(
+      window.HTMLElement.prototype,
+      'getBoundingClientRect',
+    ).mockImplementation(function getBoundingClientRect(this: HTMLElement) {
+      if (this.id.startsWith('option-card-')) {
+        return {
+          bottom: 1120,
+          height: 220,
+          left: 0,
+          right: 320,
+          toJSON: () => ({}),
+          top: 900,
+          width: 320,
+          x: 0,
+          y: 900,
+        } as DOMRect;
+      }
+
+      return {
+        bottom: 0,
+        height: 0,
+        left: 0,
+        right: 0,
+        toJSON: () => ({}),
+        top: 0,
+        width: 0,
+        x: 0,
+        y: 0,
+      } as DOMRect;
+    });
+
+    render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
+
+    await user.click(
+      within(optionsRegion).getByRole('button', { name: /add option/i }),
+    );
+
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'auto',
+        block: 'center',
+        inline: 'nearest',
+      });
+    });
+    expect(screen.getByLabelText(/^option 3$/i)).toBeInTheDocument();
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: originalScrollIntoView,
+    });
+  });
+
   it('renders criteria as a vertical list instead of a table', () => {
     render(<App />);
 
