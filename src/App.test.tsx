@@ -435,7 +435,7 @@ describe('App', () => {
     ).toHaveLength(3);
   });
 
-  it('scrolls the newly added option card into view', async () => {
+  it('scrolls each newly added option card into view', async () => {
     const user = userEvent.setup();
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
     const scrollIntoViewMock = vi.fn();
@@ -451,15 +451,15 @@ describe('App', () => {
     ).mockImplementation(function getBoundingClientRect(this: HTMLElement) {
       if (this.id.startsWith('option-card-')) {
         return {
-          bottom: 1120,
+          bottom: 340,
           height: 220,
           left: 0,
           right: 320,
           toJSON: () => ({}),
-          top: 900,
+          top: 120,
           width: 320,
           x: 0,
-          y: 900,
+          y: 120,
         } as DOMRect;
       }
 
@@ -482,18 +482,25 @@ describe('App', () => {
       name: /options to compare/i,
     });
 
-    await user.click(
-      within(optionsRegion).getByRole('button', { name: /add option/i }),
-    );
+    for (let optionIndex = 3; optionIndex <= 5; optionIndex += 1) {
+      await user.click(
+        within(optionsRegion).getByRole('button', { name: /add option/i }),
+      );
+
+      expect(
+        screen.getByLabelText(new RegExp(`^option ${optionIndex}$`, 'i')),
+      ).toBeInTheDocument();
+    }
 
     await waitFor(() => {
-      expect(scrollIntoViewMock).toHaveBeenCalledWith({
-        behavior: 'auto',
-        block: 'center',
-        inline: 'nearest',
-      });
+      expect(scrollIntoViewMock.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
-    expect(screen.getByLabelText(/^option 3$/i)).toBeInTheDocument();
+    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
+    });
+    expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
 
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
