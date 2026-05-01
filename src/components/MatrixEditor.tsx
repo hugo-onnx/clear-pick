@@ -951,7 +951,7 @@ export function MatrixEditor({
                         return (
                           <div
                             className={cn(
-                              'grid gap-3 rounded-md border border-border bg-white/70 p-3 sm:grid-cols-[minmax(8rem,0.85fr)_minmax(9.5rem,auto)_minmax(12rem,1.45fr)_minmax(5.75rem,auto)] sm:items-center sm:gap-4',
+                              'grid gap-3 rounded-md border border-border bg-white/70 p-3 md:grid-cols-[minmax(8rem,0.85fr)_minmax(9.5rem,auto)_minmax(12rem,1.45fr)_minmax(5.75rem,auto)] md:items-center md:gap-4',
                               !areResultsHidden &&
                                 summary.leadingOptionIds.includes(option.id)
                                 ? scoreRowHighlightClassName
@@ -959,21 +959,21 @@ export function MatrixEditor({
                             )}
                             key={`${option.id}-${category.id}`}
                           >
-                            <div className="flex min-w-0 items-center justify-between gap-3 sm:block">
+                            <div className="flex min-w-0 items-center justify-between gap-3 md:block">
                               <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
                                 {optionDisplayName}
                               </span>
-                              <output className="text-sm font-semibold text-foreground sm:hidden">
+                              <output className="text-sm font-semibold text-foreground md:hidden">
                                 {displayedScoreLabel}
                               </output>
                             </div>
-                            <div className="relative w-full sm:w-36">
+                            <div className="relative w-full md:w-36">
                               <select
                                 aria-label={copy.scoreModeAria(
                                   optionDisplayName,
                                   criterionDisplayName,
                                 )}
-                                className="h-10 w-full appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 sm:h-8 sm:py-0.5 sm:pl-2 sm:pr-6 sm:text-[11px]"
+                                className="h-10 w-full appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 md:h-8 md:py-0.5 md:pl-2 md:pr-6 md:text-[11px]"
                                 onChange={(event) =>
                                   onScoreModeChange(
                                     option.id,
@@ -992,17 +992,17 @@ export function MatrixEditor({
                               </select>
                               <ChevronDown
                                 aria-hidden="true"
-                                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:right-1.5 sm:h-3 sm:w-3"
+                                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground md:right-1.5 md:h-3 md:w-3"
                               />
                             </div>
                             {isBooleanScore ? (
-                              <div className="flex flex-wrap items-center gap-2 justify-self-stretch sm:justify-self-start">
+                              <div className="flex flex-wrap items-center gap-2 justify-self-stretch md:justify-self-start">
                                 <div
                                   aria-label={copy.scoreAria(
                                     optionDisplayName,
                                     criterionDisplayName,
                                   )}
-                                  className={cn(segmentedControlClass, 'w-full sm:w-fit')}
+                                  className={cn(segmentedControlClass, 'w-full md:w-fit')}
                                   role="group"
                                 >
                                   <button
@@ -1105,7 +1105,7 @@ export function MatrixEditor({
                                 value={displayedScore}
                               />
                             )}
-                            <output className="hidden text-right text-sm font-semibold text-foreground sm:block">
+                            <output className="hidden text-right text-sm font-semibold text-foreground md:block">
                               {displayedScoreLabel}
                             </output>
                           </div>
