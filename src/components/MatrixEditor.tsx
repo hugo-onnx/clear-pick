@@ -260,6 +260,16 @@ function revealInputIfNeeded(input: HTMLInputElement) {
   revealElementIfNeeded(input);
 }
 
+function focusElementAfterPaint(element: HTMLInputElement) {
+  const scheduleAfterPaint =
+    window.requestAnimationFrame?.bind(window) ??
+    ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+
+  scheduleAfterPaint(() => {
+    focusInputText(element);
+  });
+}
+
 function focusInputText(
   input: HTMLInputElement,
   options: { reveal?: boolean } = {},
@@ -507,7 +517,7 @@ export function MatrixEditor({
     const newOptionInput = document.getElementById(`option-${newOption.id}`);
 
     if (newOptionInput instanceof HTMLInputElement) {
-      focusInputText(newOptionInput);
+      focusElementAfterPaint(newOptionInput);
     }
 
     if (newOptionCard instanceof HTMLElement) {
