@@ -82,7 +82,7 @@ describe('App', () => {
     expect(within(footer).getByText('Weighted Scoring Model')).toBeInTheDocument();
     expect(
       within(footer).getByText(
-        /your matrix stays stored locally in this browser/i,
+        /your data stays stored locally in this browser/i,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /workflow/i })).not.toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('App', () => {
     expect(
       document.getElementById('site-footer-note'),
     ).toHaveTextContent(
-      /your matrix stays stored locally in this browser/i,
+      /your data stays stored locally in this browser/i,
     );
     expect(document.getElementById('local-save-notice')).toHaveTextContent(
       /your decision stays in this browser/i,
@@ -323,11 +323,11 @@ describe('App', () => {
       screen.getByText(/accept new role is the strongest option/i),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    await user.click(screen.getByRole('button', { name: /start over/i }));
     await user.click(
       within(
-        screen.getByRole('alertdialog', { name: /reset this matrix/i }),
-      ).getByRole('button', { name: /reset matrix/i }),
+        screen.getByRole('alertdialog', { name: /start over/i }),
+      ).getByRole('button', { name: /start over/i }),
     );
 
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
@@ -624,7 +624,7 @@ describe('App', () => {
       screen.queryByRole('region', { name: /weighted ranking/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /reset matrix/i }),
+      screen.getByRole('button', { name: /start over/i }),
     ).toBeInTheDocument();
   });
 
@@ -709,7 +709,7 @@ describe('App', () => {
       screen.queryByRole('button', { name: /see full ranking/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /reset matrix/i }),
+      screen.queryByRole('button', { name: /start over/i }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /hide results/i }),
@@ -835,15 +835,15 @@ describe('App', () => {
       }),
     ).toHaveValue('0');
 
-    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    await user.click(screen.getByRole('button', { name: /start over/i }));
     const resetDialog = screen.getByRole('alertdialog', {
-      name: /reset this matrix/i,
+      name: /start over/i,
     });
     expect(
       within(resetDialog).getByText(/clear your options, criteria, weights, and scores/i),
     ).toBeInTheDocument();
     await user.click(
-      within(resetDialog).getByRole('button', { name: /reset matrix/i }),
+      within(resetDialog).getByRole('button', { name: /start over/i }),
     );
 
     const resetScoreModeSelect = screen.getByRole('combobox', {
@@ -1211,11 +1211,11 @@ describe('App', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: /reset matrix/i }));
+    await user.click(screen.getByRole('button', { name: /start over/i }));
     await user.click(
       within(
-        screen.getByRole('alertdialog', { name: /reset this matrix/i }),
-      ).getByRole('button', { name: /reset matrix/i }),
+        screen.getByRole('alertdialog', { name: /start over/i }),
+      ).getByRole('button', { name: /start over/i }),
     );
 
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
@@ -1255,16 +1255,16 @@ describe('App', () => {
     await user.type(firstOption, 'Choosing a city');
     await user.tab();
 
-    const resetButton = screen.getByRole('button', { name: /reset matrix/i });
+    const resetButton = screen.getByRole('button', { name: /start over/i });
     await user.click(resetButton);
     const resetDialog = screen.getByRole('alertdialog', {
-      name: /reset this matrix/i,
+      name: /start over/i,
     });
     const cancelResetButton = within(resetDialog).getByRole('button', {
       name: /keep editing/i,
     });
     const confirmResetButton = within(resetDialog).getByRole('button', {
-      name: /reset matrix/i,
+      name: /start over/i,
     });
 
     await waitFor(() => expect(cancelResetButton).toHaveFocus());
@@ -1276,7 +1276,7 @@ describe('App', () => {
     await user.click(cancelResetButton);
 
     expect(
-      screen.queryByRole('alertdialog', { name: /reset this matrix/i }),
+      screen.queryByRole('alertdialog', { name: /start over/i }),
     ).not.toBeInTheDocument();
     expect(resetButton).toHaveFocus();
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('Choosing a city');
