@@ -163,21 +163,24 @@ function isElementInViewport(element: HTMLElement) {
   );
 }
 
-function revealInputIfNeeded(input: HTMLInputElement) {
-  const revealInput = () => {
+function revealElementIfNeeded(
+  element: HTMLElement,
+  options: { block?: ScrollLogicalPosition } = {},
+) {
+  const revealElement = () => {
     const previousScrollBehavior = document.documentElement.style.scrollBehavior;
 
     document.documentElement.style.scrollBehavior = 'auto';
-    input.scrollIntoView({
+    element.scrollIntoView({
       behavior: 'auto',
-      block: 'center',
+      block: options.block ?? 'center',
       inline: 'nearest',
     });
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
   };
 
-  if (!isElementInViewport(input)) {
-    revealInput();
+  if (!isElementInViewport(element)) {
+    revealElement();
   }
 
   const scheduleAfterPaint =
@@ -185,10 +188,14 @@ function revealInputIfNeeded(input: HTMLInputElement) {
     ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
 
   scheduleAfterPaint(() => {
-    if (!isElementInViewport(input)) {
-      revealInput();
+    if (!isElementInViewport(element)) {
+      revealElement();
     }
   });
+}
+
+function revealInputIfNeeded(input: HTMLInputElement) {
+  revealElementIfNeeded(input);
 }
 
 function focusInputText(
@@ -258,6 +265,8 @@ export function MatrixEditor({
     Record<string, number>
   >({});
   const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
+  const shouldRevealNewOptionRef = useRef(false);
+  const previousOptionCountRef = useRef(matrix.options.length);
   const shouldFocusNewCategoryRef = useRef(false);
   const shouldRevealPendingCategoryRef = useRef(false);
   const previousCategoryCountRef = useRef(matrix.categories.length);
@@ -281,6 +290,7 @@ export function MatrixEditor({
       return;
     }
 
+    shouldRevealNewOptionRef.current = true;
     onAddOption(pendingOptionName.trim());
     setPendingOptionName('');
   };
@@ -415,6 +425,27 @@ export function MatrixEditor({
 
       return nextDrafts;
     });
+  }, [matrix.options]);
+
+  useEffect(() => {
+    const previousOptionCount = previousOptionCountRef.current;
+    previousOptionCountRef.current = matrix.options.length;
+
+    if (
+      !shouldRevealNewOptionRef.current ||
+      matrix.options.length <= previousOptionCount
+    ) {
+      return;
+    }
+
+    shouldRevealNewOptionRef.current = false;
+
+    const newOption = matrix.options[matrix.options.length - 1];
+    const newOptionCard = document.getElementById(`option-card-${newOption.id}`);
+
+    if (newOptionCard instanceof HTMLElement) {
+      revealElementIfNeeded(newOptionCard);
+    }
   }, [matrix.options]);
 
   useEffect(() => {
@@ -630,6 +661,7 @@ export function MatrixEditor({
                   'relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-lg border bg-white/85 p-4 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55',
                   isTopOption ? optionHighlightClassName : 'border-border',
                 )}
+                id={`option-card-${option.id}`}
                 key={option.id}
               >
                 {isTopOption ? (
@@ -973,7 +1005,7 @@ export function MatrixEditor({
                                   optionDisplayName,
                                   criterionDisplayName,
                                 )}
-                                className="h-10 w-full appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 md:h-8 md:py-0.5 md:pl-2 md:pr-6 md:text-[11px]"
+                                className="h-10 w-full cursor-pointer appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 md:h-8 md:py-0.5 md:pl-2 md:pr-6 md:text-[11px]"
                                 onChange={(event) =>
                                   onScoreModeChange(
                                     option.id,
