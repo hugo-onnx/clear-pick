@@ -165,8 +165,9 @@ function joinSpanishLabels(labels: string[]): string {
 export const translations: Record<Language, TranslationCopy> = {
   en: {
     document: {
-      title: '60-Second Decisions',
-      description: 'Reflect on complex life decisions with an interactive weighted matrix.',
+      title: '60-Second Decisions | Weighted Decision Matrix Tool',
+      description:
+        'Use a weighted decision matrix and weighted scoring model to compare options in 60 seconds. Private, browser-only, and available in English and Spanish.',
     },
     languageToggle: {
       label: 'Language',
@@ -327,9 +328,9 @@ export const translations: Record<Language, TranslationCopy> = {
   },
   es: {
     document: {
-      title: 'Decisiones en 60 segundos',
+      title: 'Decisiones en 60 segundos | Herramienta de matriz ponderada',
       description:
-        'Reflexiona sobre decisiones complejas con una matriz ponderada interactiva.',
+        'Usa una matriz de decision ponderada y un modelo de puntuacion ponderada para comparar opciones en 60 segundos. Privado, solo en el navegador y disponible en espanol.',
     },
     languageToggle: {
       label: 'Idioma',
