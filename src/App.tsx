@@ -106,6 +106,14 @@ function App() {
 
   const handleReset = () => {
     setMatrix(createStarterMatrix());
+    const decisionMatrix = document.getElementById('decision-matrix');
+
+    if (typeof decisionMatrix?.scrollIntoView === 'function') {
+      decisionMatrix.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
   };
 
   const handleLoadExample = () => {
