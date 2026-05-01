@@ -438,8 +438,8 @@ export function ResultsPanel({
   );
 
   return (
-    <aside className="min-w-0 xl:sticky xl:top-6">
-      <div className="space-y-7 border-t border-border pt-7 xl:border-t-0 xl:pt-0">
+    <aside className="min-w-0 lg:sticky lg:top-6">
+      <div className="space-y-7 border-t border-border pt-7 lg:border-t-0 lg:pt-0">
         <section className="space-y-4">
           <div className="min-w-0">
             <h2 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
