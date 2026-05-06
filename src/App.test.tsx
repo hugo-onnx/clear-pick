@@ -814,7 +814,7 @@ describe('App', () => {
 
     let quickDecider = await openQuickDeciderTab(user);
     const loadButton = within(quickDecider).getByRole('button', {
-      name: /load weighted options/i,
+      name: /load options/i,
     });
 
     expect(loadButton).toBeDisabled();
@@ -845,7 +845,7 @@ describe('App', () => {
     quickDecider = await openQuickDeciderTab(user);
     expect(
       within(quickDecider).getByRole('button', {
-        name: /load weighted options/i,
+        name: /load options/i,
       }),
     ).toBeDisabled();
 
@@ -855,7 +855,7 @@ describe('App', () => {
     quickDecider = await openQuickDeciderTab(user);
     await user.click(
       within(quickDecider).getByRole('button', {
-        name: /load weighted options/i,
+        name: /load options/i,
       }),
     );
 
@@ -888,7 +888,7 @@ describe('App', () => {
     const quickDecider = await openQuickDeciderTab(user);
     await user.click(
       within(quickDecider).getByRole('button', {
-        name: /load weighted options/i,
+        name: /load options/i,
       }),
     );
 
