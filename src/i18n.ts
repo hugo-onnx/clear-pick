@@ -250,7 +250,7 @@ export const translations: Record<Language, TranslationCopy> = {
       quickDecider: 'Quick Decider',
     },
     seoContent: {
-      eyebrow: 'How it works?',
+      eyebrow: 'How it works',
       heading: 'A private weighted decision tool for faster choices',
       description:
         '60-Second Decisions is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
@@ -668,7 +668,7 @@ export const translations: Record<Language, TranslationCopy> = {
       scoreModeBoolean: 'Sí / No',
       yes: 'Sí',
       no: 'No',
-      booleanScoreScale: 'Si, da la puntuación completa. No, no suma.',
+      booleanScoreScale: 'Sí, da la puntuación completa. No, no suma.',
       optionScores: 'Puntuaciones de opciones',
       optionScoresAria: (name) => `Puntuaciones de opciones para ${name}`,
       scoreAria: (optionName, criterionName) =>
