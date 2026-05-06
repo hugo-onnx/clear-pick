@@ -706,7 +706,10 @@ function App() {
               id="quick-decider-panel"
               role="tabpanel"
             >
-              <QuickDecider copy={copy.quickDecider} />
+              <QuickDecider
+                availableSourceOptions={matrix.options}
+                copy={copy.quickDecider}
+              />
             </section>
           </main>
 
