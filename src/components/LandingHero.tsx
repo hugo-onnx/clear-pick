@@ -10,14 +10,15 @@ function scrollToMatrix() {
 
 interface LandingHeroProps {
   copy: TranslationCopy['hero'];
+  onPrimaryCtaClick?: () => void;
 }
 
-export function LandingHero({ copy }: LandingHeroProps) {
+export function LandingHero({ copy, onPrimaryCtaClick = scrollToMatrix }: LandingHeroProps) {
   return (
     <ShaderShowcase
       copy={copy}
       headingId="landing-title"
-      onPrimaryCtaClick={scrollToMatrix}
+      onPrimaryCtaClick={onPrimaryCtaClick}
     />
   );
 }
