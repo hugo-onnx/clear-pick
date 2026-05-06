@@ -136,30 +136,6 @@ export default function ShaderShowcase({
       onMouseLeave={() => setIsActive(false)}
       ref={containerRef}
     >
-      <svg aria-hidden="true" className="absolute inset-0 h-0 w-0">
-        <defs>
-          <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
-            <feTurbulence baseFrequency="0.005" numOctaves="1" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" />
-            <feColorMatrix
-              result="tint"
-              type="matrix"
-              values="1 0 0 0 0.02
-                      0 1 0 0 0.02
-                      0 0 1 0 0.05
-                      0 0 0 0.9 0"
-            />
-          </filter>
-          <filter id="text-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>
-
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[linear-gradient(135deg,#020617_0%,#063547_34%,#111827_62%,#9a3412_100%)]"
@@ -207,10 +183,11 @@ export default function ShaderShowcase({
 
       <div className="relative z-20 flex min-h-svh w-full flex-col sm:min-h-[calc(100svh-4rem)] lg:min-h-[calc(100vh-5rem)]">
         <main className="relative z-20 mx-auto flex min-h-svh w-full max-w-4xl flex-col items-center justify-center px-4 pb-32 pt-20 text-center sm:min-h-[calc(100svh-4rem)] sm:px-8 sm:pb-28 sm:pt-24 lg:min-h-[calc(100vh-5rem)]">
-          <div
-            className="relative mb-4 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/15 bg-black/30 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,0.24)] backdrop-blur-sm sm:px-4"
-            style={{ filter: 'url(#glass-effect)' }}
-          >
+          <div className="relative isolate mb-4 inline-flex max-w-full items-center gap-2 overflow-hidden rounded-lg border border-white/15 bg-slate-950/50 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,0.24)] sm:px-4">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-cyan-400/[0.04]"
+            />
             <Sparkles aria-hidden="true" className="relative z-10 size-4 text-cyan-100" />
             <span className="relative z-10 min-w-0 text-xs font-semibold leading-5 text-white/95 sm:text-sm">
               {copy.eyebrow}
