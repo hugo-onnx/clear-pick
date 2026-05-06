@@ -70,6 +70,8 @@ export interface TranslationCopy {
     addOption: string;
     removeOption: (name: string) => string;
     decide: string;
+    loadWeightedOptions: string;
+    loadWeightedOptionsHint: string;
     reset: string;
     disabledHint: string;
     limitHint: string;
@@ -325,6 +327,8 @@ export const translations: Record<Language, TranslationCopy> = {
       addOption: 'Add option',
       removeOption: (name) => `Remove ${name}`,
       decide: 'Decide for me',
+      loadWeightedOptions: 'Load weighted options',
+      loadWeightedOptionsHint: 'Name at least two weighted options to load.',
       reset: 'Reset',
       disabledHint: 'Name at least two options to decide.',
       limitHint: 'Six options is the limit.',
@@ -458,7 +462,7 @@ export const translations: Record<Language, TranslationCopy> = {
       matrixCount: (options, categories) => `${options} options / ${categories} criteria`,
     },
     footer: {
-      productLabel: 'Weighted Scoring',
+      productLabel: '60-Second Decisions',
       note:
         'Your data stays stored locally in this browser, so you can return to it without creating an account.',
       howItWorks: 'How it works',
@@ -582,6 +586,9 @@ export const translations: Record<Language, TranslationCopy> = {
       addOption: 'Añadir opción',
       removeOption: (name) => `Eliminar ${name}`,
       decide: 'Decide por mí',
+      loadWeightedOptions: 'Cargar opciones ponderadas',
+      loadWeightedOptionsHint:
+        'Nombra al menos dos opciones ponderadas para cargarlas.',
       reset: 'Reiniciar',
       disabledHint: 'Nombra al menos dos opciones para decidir.',
       limitHint: 'Seis opciones es el límite.',
@@ -717,7 +724,7 @@ export const translations: Record<Language, TranslationCopy> = {
         `${options} opciones / ${categories} criterios`,
     },
     footer: {
-      productLabel: 'Modelo de puntuación ponderada',
+      productLabel: '60-Second Decisions',
       note:
         'Tu decisión queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
       howItWorks: 'Cómo funciona',
