@@ -1,10 +1,13 @@
+import { Dices, ListOrdered } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { LandingHero } from './components/LandingHero';
 import { LanguageToggle } from './components/LanguageToggle';
 import { MatrixEditor } from './components/MatrixEditor';
+import { QuickDecider } from './components/QuickDecider';
 import { ResultsPanel } from './components/ResultsPanel';
 import { loadLanguage, saveLanguage, translations } from './i18n';
+import { cn } from './lib/utils';
 import type { DecisionMatrix, ScoreMode } from './types';
 import {
   clampScoreForMode,
@@ -25,8 +28,38 @@ import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
 const MATRIX_SAVE_DEBOUNCE_MS = 250;
 const MATRIX_SCROLL_RETRY_DELAYS_MS = [120, 320];
+type WorkspaceTab = 'matrix' | 'quickDecider';
+
+let pendingMatrixScrollAnimationFrame: number | null = null;
+let pendingMatrixScrollTimeouts: number[] = [];
+
+function clearScheduledDecisionMatrixScrolls() {
+  if (pendingMatrixScrollAnimationFrame !== null) {
+    window.cancelAnimationFrame?.(pendingMatrixScrollAnimationFrame);
+    pendingMatrixScrollAnimationFrame = null;
+  }
+
+  for (const timeoutId of pendingMatrixScrollTimeouts) {
+    window.clearTimeout(timeoutId);
+  }
+
+  pendingMatrixScrollTimeouts = [];
+}
+
+function scheduleDecisionMatrixScroll(scroll: () => void, delay: number) {
+  const timeoutId = window.setTimeout(() => {
+    pendingMatrixScrollTimeouts = pendingMatrixScrollTimeouts.filter(
+      (id) => id !== timeoutId,
+    );
+    scroll();
+  }, delay);
+
+  pendingMatrixScrollTimeouts.push(timeoutId);
+}
 
 function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
+  clearScheduledDecisionMatrixScrolls();
+
   const scroll = () => {
     const decisionMatrix = document.getElementById('decision-matrix');
 
@@ -38,15 +71,19 @@ function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
     }
   };
 
-  const scheduleAfterPaint =
-    window.requestAnimationFrame?.bind(window) ??
-    ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
-
   scroll();
-  scheduleAfterPaint(scroll);
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    pendingMatrixScrollAnimationFrame = window.requestAnimationFrame(() => {
+      pendingMatrixScrollAnimationFrame = null;
+      scroll();
+    });
+  } else {
+    scheduleDecisionMatrixScroll(scroll, 0);
+  }
 
   for (const delay of MATRIX_SCROLL_RETRY_DELAYS_MS) {
-    window.setTimeout(scroll, delay);
+    scheduleDecisionMatrixScroll(scroll, delay);
   }
 }
 
@@ -54,6 +91,8 @@ function App() {
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
   const [language, setLanguage] = useState(() => loadLanguage());
   const [areResultsHidden, setAreResultsHidden] = useState(false);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] =
+    useState<WorkspaceTab>('matrix');
   const pendingMatrixRef = useRef(matrix);
   const matrixSaveTimeoutRef = useRef<number | null>(null);
   const copy = translations[language];
@@ -96,6 +135,8 @@ function App() {
     };
   }, []);
 
+  useEffect(() => clearScheduledDecisionMatrixScrolls, []);
+
   useEffect(() => {
     const updateMetaContent = (selector: string, content: string) => {
       const meta = document.querySelector<HTMLMetaElement>(selector);
@@ -129,7 +170,13 @@ function App() {
     setMatrix((current) => synchronizeScores(transform(current)));
   };
 
+  const handleHeroStart = () => {
+    setActiveWorkspaceTab('matrix');
+    scrollToDecisionMatrix();
+  };
+
   const handleReset = () => {
+    setActiveWorkspaceTab('matrix');
     setMatrix(createStarterMatrix());
     scrollToDecisionMatrix();
   };
@@ -140,6 +187,28 @@ function App() {
   };
 
   const summary = useMemo(() => getDecisionSummary(matrix), [matrix]);
+  const workspaceTabs = [
+    {
+      icon: ListOrdered,
+      id: 'matrix',
+      label: copy.workspaceTabs.matrix,
+      panelId: 'weighted-matrix-panel',
+      tabId: 'weighted-matrix-tab',
+    },
+    {
+      icon: Dices,
+      id: 'quickDecider',
+      label: copy.workspaceTabs.quickDecider,
+      panelId: 'quick-decider-panel',
+      tabId: 'quick-decider-tab',
+    },
+  ] satisfies Array<{
+    icon: typeof ListOrdered;
+    id: WorkspaceTab;
+    label: string;
+    panelId: string;
+    tabId: string;
+  }>;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
@@ -148,7 +217,7 @@ function App() {
         language={language}
         onLanguageChange={setLanguage}
       />
-      <LandingHero copy={copy.hero} />
+      <LandingHero copy={copy.hero} onPrimaryCtaClick={handleHeroStart} />
 
       <section
         aria-label={copy.workspaceLabel}
@@ -161,7 +230,48 @@ function App() {
 
         <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-8 px-3 pb-10 pt-7 sm:gap-10 sm:px-6 sm:pb-14 sm:pt-10 lg:px-8 lg:pb-16 lg:pt-12">
           <main className="space-y-9" id="decision-matrix">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.72fr)] lg:items-start xl:gap-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.72fr)]">
+            <div
+              aria-label={copy.workspaceTabs.label}
+              className="inline-flex max-w-full rounded-full border border-border bg-white/[0.72] p-1 shadow-sm"
+              role="tablist"
+            >
+              {workspaceTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isSelected = activeWorkspaceTab === tab.id;
+
+                return (
+                  <button
+                    aria-controls={tab.panelId}
+                    aria-selected={isSelected}
+                    className={cn(
+                      'inline-flex min-h-10 min-w-0 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-4',
+                      isSelected
+                        ? 'bg-gradient-to-r from-cyan-600 to-orange-600 text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)]'
+                        : 'hover:bg-white hover:text-cyan-800',
+                    )}
+                    id={tab.tabId}
+                    key={tab.id}
+                    onClick={() => setActiveWorkspaceTab(tab.id)}
+                    role="tab"
+                    type="button"
+                  >
+                    <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <section
+              aria-labelledby="weighted-matrix-tab"
+              className={cn(
+                'gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.72fr)] lg:items-start xl:gap-10 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.72fr)]',
+                activeWorkspaceTab === 'matrix' ? 'grid' : 'hidden',
+              )}
+              hidden={activeWorkspaceTab !== 'matrix'}
+              id="weighted-matrix-panel"
+              role="tabpanel"
+            >
               <MatrixEditor
                 areResultsHidden={areResultsHidden}
                 copy={copy.matrix}
@@ -301,7 +411,17 @@ function App() {
                 summary={summary}
                 onReset={handleReset}
               />
-            </div>
+            </section>
+
+            <section
+              aria-labelledby="quick-decider-tab"
+              className={activeWorkspaceTab === 'quickDecider' ? undefined : 'hidden'}
+              hidden={activeWorkspaceTab !== 'quickDecider'}
+              id="quick-decider-panel"
+              role="tabpanel"
+            >
+              <QuickDecider copy={copy.quickDecider} />
+            </section>
           </main>
 
           <AppFooter copy={copy.footer} />
