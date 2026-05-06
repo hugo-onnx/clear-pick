@@ -281,6 +281,11 @@ button:not(:disabled) {
 @media (pointer: coarse) {
   .matrix-range {
     height: 0.9rem;
+    transition: none;
+  }
+
+  .matrix-range:hover {
+    filter: none;
   }
 
   .matrix-range::-webkit-slider-runnable-track {
@@ -295,10 +300,26 @@ button:not(:disabled) {
     margin-top: -5px;
     height: 1.4rem;
     width: 1.4rem;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.14);
+    transition: none;
   }
 
   .matrix-range::-moz-range-thumb {
     height: 1.4rem;
     width: 1.4rem;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.14);
+    transition: none;
+  }
+
+  .matrix-range:hover::-webkit-slider-thumb,
+  .matrix-range:focus-visible::-webkit-slider-thumb,
+  .matrix-range:active::-webkit-slider-thumb,
+  .matrix-range:hover::-moz-range-thumb,
+  .matrix-range:focus-visible::-moz-range-thumb,
+  .matrix-range:active::-moz-range-thumb {
+    background: linear-gradient(135deg, #ecfeff, #22d3ee);
+    border-color: #0891b2;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.14);
+    transform: none;
   }
 }
