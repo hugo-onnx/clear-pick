@@ -224,25 +224,25 @@ describe('App', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', {
+      screen.queryByRole('heading', {
         name: /a private weighted decision tool for faster choices/i,
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/60-second decisions is a private browser-only tool/i),
-    ).toBeInTheDocument();
+      screen.queryByText(/60-second decisions is a private browser-only tool/i),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /name options/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('heading', { name: /name options/i }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /weight criteria/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('heading', { name: /weight criteria/i }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /score and compare/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('heading', { name: /score and compare/i }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /read the full guide/i }),
-    ).toHaveAttribute('href', '/how-it-works');
+      screen.queryByRole('link', { name: /read the full guide/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: /what is 60-second decisions\?/i }),
     ).not.toBeInTheDocument();
@@ -441,16 +441,16 @@ describe('App', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', {
+      screen.queryByRole('heading', {
         name: /una herramienta privada de decisión ponderada para elegir más rápido/i,
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/60-second decisions es una herramienta privada/i),
-    ).toBeInTheDocument();
+      screen.queryByText(/60-second decisions es una herramienta privada/i),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /leer la guía completa/i }),
-    ).toHaveAttribute('href', '/how-it-works');
+      screen.queryByRole('link', { name: /leer la guía completa/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
     ).not.toBeInTheDocument();
@@ -498,25 +498,25 @@ describe('App', () => {
         name: /a private weighted decision tool for faster choices/i,
       }),
     ).toBeInTheDocument();
-    const howItWorksNav = screen.getByRole('navigation', {
-      name: /how it works/i,
-    });
     expect(
-      within(howItWorksNav).queryByRole('link', {
+      screen.queryByRole('navigation', { name: /how it works/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', {
         name: /three-step workflow/i,
       }),
     ).not.toBeInTheDocument();
     expect(
-      within(howItWorksNav).queryByRole('link', { name: /when to use it/i }),
+      screen.queryByRole('link', { name: /when to use it/i }),
     ).not.toBeInTheDocument();
     expect(
-      within(howItWorksNav).queryByRole('link', {
+      screen.queryByRole('link', {
         name: /private by default/i,
       }),
     ).not.toBeInTheDocument();
     expect(
-      within(howItWorksNav).getByRole('link', { name: /^faq$/i }),
-    ).toHaveAttribute('href', '#faq-heading');
+      screen.queryByRole('link', { name: /^faq$/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /when to use it/i }),
     ).toBeInTheDocument();
@@ -562,7 +562,7 @@ describe('App', () => {
     );
   });
 
-  it('scrolls to the FAQ table when the how-it-works hash route loads', async () => {
+  it('scrolls to the FAQ section when the how-it-works hash route loads', async () => {
     window.history.pushState({}, '', '/how-it-works#faq-heading');
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
     const scrollIntoViewMock = vi.fn();
