@@ -87,7 +87,255 @@ function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
   }
 }
 
+function HomeSeoSummary({ copy }: { copy: typeof translations.en.seoContent }) {
+  return (
+    <section
+      aria-labelledby="seo-content-heading"
+      className=""
+    >
+      <div
+        aria-hidden="true"
+        className="mb-8 h-px w-full bg-gradient-to-r from-transparent via-cyan-700/35 to-transparent sm:mb-10"
+      />
+      <div className="overflow-hidden rounded-[2rem] border border-border bg-white/[0.74] px-5 py-7 shadow-soft sm:px-8 sm:py-9 lg:px-10 lg:py-11">
+        <div className="mx-auto max-w-4xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
+            {copy.eyebrow}
+          </p>
+          <h2
+            className="mt-3 font-display text-3xl font-semibold leading-tight text-foreground sm:text-4xl"
+            id="seo-content-heading"
+          >
+            {copy.heading}
+          </h2>
+          <p className="mt-5 text-lg leading-8 text-muted-foreground">
+            {copy.description}
+          </p>
+
+          <div className="mt-7 space-y-6 text-base leading-8 text-slate-700">
+            {copy.workflow.map((step, index) => (
+              <section aria-labelledby={`home-step-${index}`} key={step.title}>
+                <h3
+                  className="text-xl font-extrabold text-foreground"
+                  id={`home-step-${index}`}
+                >
+                  <span className="mr-2 text-orange-700">
+                    {String(index + 1).padStart(2, '0')}.
+                  </span>
+                  {step.title}
+                </h3>
+                <p className="mt-2">{step.body}</p>
+              </section>
+            ))}
+
+            <section aria-labelledby="home-privacy-heading">
+              <h3
+                className="text-xl font-extrabold text-cyan-950"
+                id="home-privacy-heading"
+              >
+                {copy.privacyHeading}
+              </h3>
+              <p className="mt-2 text-cyan-950/78">{copy.privacyBody}</p>
+            </section>
+          </div>
+
+          <a
+            className="mt-8 inline-flex rounded-full border border-cyan-900/15 bg-white px-4 py-2 text-sm font-bold text-cyan-800 shadow-sm transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href="/how-it-works"
+          >
+            {copy.learnMore}
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksPage({
+  copy,
+  footerCopy,
+}: {
+  copy: typeof translations.en.seoContent;
+  footerCopy: typeof translations.en.footer;
+}) {
+  return (
+    <div className="matrix-theme relative min-h-screen bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="h-1 w-full bg-gradient-to-r from-cyan-600/80 via-white/60 to-orange-500/80"
+      />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <main className="space-y-8">
+          <section
+            aria-labelledby="how-it-works-heading"
+            className="rounded-[2rem] border border-border bg-white/[0.78] p-6 shadow-soft sm:p-8 lg:p-10"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
+              {copy.eyebrow}
+            </p>
+            <h1
+              className="mt-3 max-w-4xl font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl"
+              id="how-it-works-heading"
+            >
+              {copy.heading}
+            </h1>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+              {copy.description}
+            </p>
+            <a
+              className="mt-6 inline-flex rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              href="/"
+            >
+              {copy.backToTool}
+            </a>
+          </section>
+
+          <section
+            aria-labelledby="workflow-heading"
+            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
+          >
+            <h2
+              className="font-display text-3xl font-semibold text-foreground"
+              id="workflow-heading"
+            >
+              {copy.workflowHeading}
+            </h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {copy.workflow.map((step, index) => (
+                <article
+                  className="rounded-3xl border border-border bg-white/84 p-5"
+                  key={step.title}
+                >
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-700">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <h3 className="mt-3 text-lg font-bold text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {step.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="use-cases-heading"
+            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
+          >
+            <h2
+              className="font-display text-3xl font-semibold text-foreground"
+              id="use-cases-heading"
+            >
+              {copy.useCasesHeading}
+            </h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {copy.useCases.map((useCase) => (
+                <article
+                  className="rounded-3xl border border-border bg-gradient-to-br from-white/92 to-slate-50/80 p-5"
+                  key={useCase.title}
+                >
+                  <h3 className="text-lg font-bold text-foreground">
+                    {useCase.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {useCase.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="privacy-heading"
+            className="rounded-[2rem] border border-cyan-900/10 bg-cyan-50/70 p-6 shadow-soft sm:p-8"
+          >
+            <h2
+              className="font-display text-3xl font-semibold text-cyan-950"
+              id="privacy-heading"
+            >
+              {copy.privacyHeading}
+            </h2>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-cyan-950/75">
+              {copy.privacyBody}
+            </p>
+          </section>
+
+          <section
+            aria-labelledby="faq-heading"
+            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
+          >
+            <h2
+              className="font-display text-3xl font-semibold text-foreground"
+              id="faq-heading"
+            >
+              {copy.faqHeading}
+            </h2>
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {copy.faq.map((item) => (
+                <article
+                  className="rounded-3xl border border-border bg-white/82 p-5"
+                  key={item.question}
+                >
+                  <h3 className="text-base font-bold text-foreground">
+                    {item.question}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {item.answer}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </main>
+
+        <AppFooter copy={footerCopy} />
+      </div>
+    </div>
+  );
+}
+
+function getCurrentPathname() {
+  if (typeof window === 'undefined') {
+    return '/';
+  }
+
+  return window.location.pathname;
+}
+
+function isHowItWorksPath(pathname: string) {
+  return pathname.replace(/\/+$/, '') === '/how-it-works';
+}
+
+function getFaqStructuredData(copy: typeof translations.en.seoContent) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': 'https://weighted-decision-making.pages.dev/how-it-works#faq',
+    name: copy.faqHeading,
+    mainEntity: copy.faq.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+function FaqStructuredData({ copy }: { copy: typeof translations.en.seoContent }) {
+  return (
+    <script type="application/ld+json">
+      {JSON.stringify(getFaqStructuredData(copy))}
+    </script>
+  );
+}
+
 function App() {
+  const [pathname] = useState(() => getCurrentPathname());
+  const isHowItWorks = isHowItWorksPath(pathname);
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
   const [language, setLanguage] = useState(() => loadLanguage());
   const [areResultsHidden, setAreResultsHidden] = useState(false);
@@ -147,24 +395,38 @@ function App() {
 
     saveLanguage(language);
     document.documentElement.lang = language;
-    document.title = copy.document.title;
+    const documentTitle = isHowItWorks
+      ? copy.document.howItWorksTitle
+      : copy.document.title;
+    const documentDescription = isHowItWorks
+      ? copy.document.howItWorksDescription
+      : copy.document.description;
 
-    updateMetaContent('meta[name="description"]', copy.document.description);
-    updateMetaContent('meta[property="og:title"]', copy.document.title);
+    document.title = documentTitle;
+
+    updateMetaContent('meta[name="description"]', documentDescription);
+    updateMetaContent('meta[property="og:title"]', documentTitle);
     updateMetaContent(
       'meta[property="og:description"]',
-      copy.document.description,
+      documentDescription,
     );
-    updateMetaContent('meta[name="twitter:title"]', copy.document.title);
+    updateMetaContent('meta[name="twitter:title"]', documentTitle);
     updateMetaContent(
       'meta[name="twitter:description"]',
-      copy.document.description,
+      documentDescription,
     );
     updateMetaContent(
       'meta[property="og:locale"]',
       language === 'es' ? 'es_ES' : 'en_US',
     );
-  }, [copy.document.description, copy.document.title, language]);
+  }, [
+    copy.document.description,
+    copy.document.howItWorksDescription,
+    copy.document.howItWorksTitle,
+    copy.document.title,
+    isHowItWorks,
+    language,
+  ]);
 
   const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
     setMatrix((current) => synchronizeScores(transform(current)));
@@ -209,6 +471,20 @@ function App() {
     panelId: string;
     tabId: string;
   }>;
+
+  if (isHowItWorks) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+        <FaqStructuredData copy={copy.seoContent} />
+        <LanguageToggle
+          copy={copy.languageToggle}
+          language={language}
+          onLanguageChange={setLanguage}
+        />
+        <HowItWorksPage copy={copy.seoContent} footerCopy={copy.footer} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
@@ -423,6 +699,8 @@ function App() {
               <QuickDecider copy={copy.quickDecider} />
             </section>
           </main>
+
+          <HomeSeoSummary copy={copy.seoContent} />
 
           <AppFooter copy={copy.footer} />
         </div>
