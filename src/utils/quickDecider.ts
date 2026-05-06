@@ -32,6 +32,16 @@ export function createQuickDecisionOptionsFromNames(value: unknown): Option[] {
   return normalizeQuickDecisionNames(value).map((name) => createOption(name));
 }
 
+export function createQuickDecisionOptionsFromMatrixOptions(
+  options: Option[],
+): Option[] {
+  return options
+    .map((option) => option.name.trim())
+    .filter((name) => name.length > 0)
+    .slice(0, MAX_OPTIONS)
+    .map((name) => createOption(name));
+}
+
 export function createBlankQuickDecisionOptions(): Option[] {
   return createQuickDecisionOptionsFromNames([]);
 }
