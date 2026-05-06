@@ -8,13 +8,19 @@ import {
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import { LANGUAGE_STORAGE_KEY } from './i18n';
+import { MatrixEditor } from './components/MatrixEditor';
+import { LANGUAGE_STORAGE_KEY, translations } from './i18n';
 import {
   SCORE_MODE_BOOLEAN,
   SCORE_MODE_SCALE,
   createStarterMatrix,
 } from './utils/matrix';
-import { ONBOARDING_DISMISSAL_STORAGE_KEY, STORAGE_KEY } from './utils/storage';
+import { getDecisionSummary } from './utils/scoring';
+import {
+  ONBOARDING_DISMISSAL_STORAGE_KEY,
+  QUICK_DECIDER_STORAGE_KEY,
+  STORAGE_KEY,
+} from './utils/storage';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -36,6 +42,145 @@ function saveScoredMatrix() {
   return savedMatrix;
 }
 
+function installOptionRevealMocks({
+  cardTop = 96,
+  reducedMotion = false,
+  viewport = {
+    height: 520,
+    offsetLeft: 0,
+    offsetTop: 24,
+    width: 390,
+  },
+}: {
+  cardTop?: number;
+  reducedMotion?: boolean;
+  viewport?: Pick<
+    VisualViewport,
+    'height' | 'offsetLeft' | 'offsetTop' | 'width'
+  >;
+} = {}) {
+  const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+  const originalScrollBy = window.scrollBy;
+  const originalScrollTo = window.scrollTo;
+  const originalVisualViewport = window.visualViewport;
+  const originalMatchMedia = window.matchMedia;
+  const scrollIntoView = vi.fn();
+  const scrollBy = vi.fn();
+  const scrollTo = vi.fn();
+  const getBoundingClientRectSpy = vi.spyOn(
+    window.HTMLElement.prototype,
+    'getBoundingClientRect',
+  );
+
+  Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: scrollIntoView,
+  });
+  Object.defineProperty(window, 'scrollBy', {
+    configurable: true,
+    value: scrollBy,
+  });
+  Object.defineProperty(window, 'scrollTo', {
+    configurable: true,
+    value: scrollTo,
+  });
+  Object.defineProperty(window, 'visualViewport', {
+    configurable: true,
+    value: viewport as VisualViewport,
+  });
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string) =>
+      ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches:
+          reducedMotion &&
+          query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      }) as MediaQueryList,
+  });
+
+  getBoundingClientRectSpy.mockImplementation(function getBoundingClientRect(
+    this: HTMLElement,
+  ) {
+    if (
+      this.hasAttribute('data-focus-card') ||
+      this.hasAttribute('data-option-focus-card')
+    ) {
+      return {
+        bottom: cardTop + 220,
+        height: 220,
+        left: 0,
+        right: 320,
+        toJSON: () => ({}),
+        top: cardTop,
+        width: 320,
+        x: 0,
+        y: cardTop,
+      } as DOMRect;
+    }
+
+    return {
+      bottom: 0,
+      height: 0,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 0,
+      width: 0,
+      x: 0,
+      y: 0,
+    } as DOMRect;
+  });
+
+  return {
+    expectedTopCorrection: cardTop - (viewport.offsetTop + 16),
+    restore() {
+      getBoundingClientRectSpy.mockRestore();
+      Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+        configurable: true,
+        value: originalScrollIntoView,
+      });
+      Object.defineProperty(window, 'scrollBy', {
+        configurable: true,
+        value: originalScrollBy,
+      });
+      Object.defineProperty(window, 'scrollTo', {
+        configurable: true,
+        value: originalScrollTo,
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: originalVisualViewport,
+      });
+      Object.defineProperty(window, 'matchMedia', {
+        configurable: true,
+        value: originalMatchMedia,
+      });
+    },
+    scrollBy,
+    scrollIntoView,
+    scrollTo,
+  };
+}
+
+function installMobileOptionRevealMocks() {
+  return installOptionRevealMocks();
+}
+
+async function openQuickDeciderTab(user: { click: (element: Element) => Promise<void> }) {
+  await user.click(screen.getByRole('tab', { name: /quick decider/i }));
+
+  return screen.getByRole('region', {
+    name: /quick random decider/i,
+  });
+}
+
 describe('App', () => {
   it('renders the hero and footer anchors', () => {
     render(<App />);
@@ -52,6 +197,15 @@ describe('App', () => {
     expect(
       screen.getByRole('region', { name: /options to compare/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('tab', { name: /weighted matrix/i }),
+    ).toHaveAttribute('aria-selected', 'true');
+    expect(
+      screen.getByRole('tab', { name: /quick decider/i }),
+    ).toHaveAttribute('aria-selected', 'false');
+    expect(
+      screen.queryByRole('region', { name: /quick random decider/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /weighted scoring model/i }),
     ).toBeInTheDocument();
@@ -90,17 +244,17 @@ describe('App', () => {
     expect(
       screen.queryByRole('link', { name: /local save/i }),
     ).not.toBeInTheDocument();
-    expect(
-      within(footer).getByRole('link', {
-        name: /hugonzalezhuerta@gmail\.com/i,
-      }),
-    ).toHaveAttribute('href', 'mailto:hugonzalezhuerta@gmail.com');
+    const supportLink = within(footer).getByRole('link', {
+      name: /contact support/i,
+    });
+    expect(supportLink).toHaveAttribute(
+      'href',
+      'mailto:hugonzalezhuerta@gmail.com',
+    );
+    expect(supportLink).not.toHaveTextContent(/hugonzalezhuerta@gmail\.com/i);
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /templates/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('link', { name: /support/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/trust strip/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/minimal premium/i)).not.toBeInTheDocument();
@@ -130,10 +284,18 @@ describe('App', () => {
 
     render(<App />);
 
+    await user.click(screen.getByRole('tab', { name: /quick decider/i }));
+    expect(
+      screen.getByRole('tab', { name: /quick decider/i }),
+    ).toHaveAttribute('aria-selected', 'true');
+
     expect(document.getElementById('decision-matrix')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^start$/i }));
 
+    expect(
+      screen.getByRole('tab', { name: /weighted matrix/i }),
+    ).toHaveAttribute('aria-selected', 'true');
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
       block: 'start',
@@ -208,6 +370,10 @@ describe('App', () => {
 
     render(<App />);
 
+    expect(
+      screen.getByRole('tab', { name: /quick decider/i }),
+    ).toBeInTheDocument();
+
     await user.click(
       screen.getByRole('button', { name: /switch to spanish/i }),
     );
@@ -226,11 +392,16 @@ describe('App', () => {
       screen.getByRole('region', { name: /opciones para comparar/i }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole('tab', { name: /selector rápido/i }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /^empezar$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: /puntuación a ciegas/i }),
     ).toBeInTheDocument();
+    expect(screen.getAllByText(/valorar 0-10/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/sí \/ no/i).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/guardado en este dispositivo/i),
     ).toBeInTheDocument();
@@ -238,6 +409,10 @@ describe('App', () => {
       screen.getByText(
         /tu decisión queda en este navegador\. no subimos, almacenamos ni accedemos a esos datos\./i,
       ),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
+    expect(
+      screen.getByRole('region', { name: /selector aleatorio rápido/i }),
     ).toBeInTheDocument();
 
     await user.click(
@@ -248,6 +423,203 @@ describe('App', () => {
     expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
     expect(
       screen.getByRole('button', { name: /^start$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('picks a quick decider option immediately with every named option eligible', async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, 'random');
+
+    render(<App />);
+
+    let quickDecider = await openQuickDeciderTab(user);
+    const decideButton = within(quickDecider).getByRole('button', {
+      name: /decide for me/i,
+    });
+
+    expect(decideButton).toBeDisabled();
+    expect(
+      within(quickDecider).getByText(/name at least two options to decide/i),
+    ).toBeInTheDocument();
+
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 1$/i),
+      'Sushi',
+    );
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 2$/i),
+      'Pizza',
+    );
+
+    randomSpy.mockReturnValueOnce(0.75);
+    await user.click(decideButton);
+
+    expect(
+      within(quickDecider).getByText('Go with: Pizza.'),
+    ).toBeInTheDocument();
+
+    randomSpy.mockReturnValueOnce(0.75);
+    await user.click(decideButton);
+
+    expect(
+      within(quickDecider).getByText('Go with: Pizza.'),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        JSON.parse(window.localStorage.getItem(QUICK_DECIDER_STORAGE_KEY) ?? '[]'),
+      ).toEqual(['Sushi', 'Pizza']);
+    });
+
+    await user.click(screen.getByRole('tab', { name: /weighted matrix/i }));
+    expect(
+      screen.queryByRole('region', { name: /quick random decider/i }),
+    ).not.toBeInTheDocument();
+    quickDecider = await openQuickDeciderTab(user);
+    expect(within(quickDecider).getByLabelText(/^quick option 1$/i)).toHaveValue(
+      'Sushi',
+    );
+    expect(
+      within(quickDecider).getByText('Go with: Pizza.'),
+    ).toBeInTheDocument();
+  });
+
+  it('restores persisted quick decider options', async () => {
+    window.localStorage.setItem(
+      QUICK_DECIDER_STORAGE_KEY,
+      JSON.stringify(['Tea', 'Coffee', 'Juice']),
+    );
+
+    render(<App />);
+
+    const quickDecider = await openQuickDeciderTab(userEvent.setup());
+
+    expect(within(quickDecider).getByLabelText(/^quick option 1$/i)).toHaveValue(
+      'Tea',
+    );
+    expect(within(quickDecider).getByLabelText(/^quick option 2$/i)).toHaveValue(
+      'Coffee',
+    );
+    expect(within(quickDecider).getByLabelText(/^quick option 3$/i)).toHaveValue(
+      'Juice',
+    );
+  });
+
+  it('adds and removes quick decider options within the six-option limit', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const quickDecider = await openQuickDeciderTab(user);
+
+    await user.click(
+      within(quickDecider).getByRole('button', { name: /add option/i }),
+    );
+    await waitFor(() => {
+      expect(within(quickDecider).getByLabelText(/^quick option 3$/i)).toHaveFocus();
+    });
+
+    for (let index = 0; index < 3; index += 1) {
+      await user.click(
+        within(quickDecider).getByRole('button', { name: /add option/i }),
+      );
+    }
+
+    expect(
+      within(quickDecider).getAllByRole('textbox', { name: /quick option/i }),
+    ).toHaveLength(6);
+    expect(
+      within(quickDecider).queryByRole('button', { name: /add option/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(quickDecider).getByText(/six options is the limit/i),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(quickDecider).getByRole('button', {
+        name: /remove quick option 6/i,
+      }),
+    );
+
+    expect(
+      within(quickDecider).getAllByRole('textbox', { name: /quick option/i }),
+    ).toHaveLength(5);
+    expect(
+      within(quickDecider).getByRole('button', { name: /add option/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('resets quick decider options and clears the result', async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, 'random');
+
+    render(<App />);
+
+    const quickDecider = await openQuickDeciderTab(user);
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 1$/i),
+      'Tea',
+    );
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 2$/i),
+      'Coffee',
+    );
+
+    randomSpy.mockReturnValueOnce(0);
+    await user.click(
+      within(quickDecider).getByRole('button', { name: /decide for me/i }),
+    );
+    expect(
+      within(quickDecider).getByText('Go with: Tea.'),
+    ).toBeInTheDocument();
+
+    await user.click(within(quickDecider).getByRole('button', { name: /reset/i }));
+
+    expect(
+      within(quickDecider).getAllByRole('textbox', { name: /quick option/i }),
+    ).toHaveLength(2);
+    expect(within(quickDecider).getByLabelText(/^quick option 1$/i)).toHaveValue(
+      '',
+    );
+    expect(within(quickDecider).getByLabelText(/^quick option 2$/i)).toHaveValue('');
+    expect(
+      within(quickDecider).queryByText(/go with:/i),
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        JSON.parse(window.localStorage.getItem(QUICK_DECIDER_STORAGE_KEY) ?? '[]'),
+      ).toEqual(['', '']);
+    });
+  });
+
+  it('renders simplified quick decider copy in Spanish', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.click(
+      screen.getByRole('button', { name: /switch to spanish/i }),
+    );
+    await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
+
+    const quickDecider = screen.getByRole('region', {
+      name: /selector aleatorio rápido/i,
+    });
+
+    expect(
+      within(quickDecider).getByRole('heading', {
+        name: /no puedo decidir entre/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(quickDecider).getByRole('button', { name: /decide por mí/i }),
+    ).toBeDisabled();
+    expect(
+      within(quickDecider).getByRole('button', { name: /añadir opción/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(quickDecider).getByText(/nombra al menos dos opciones para decidir/i),
     ).toBeInTheDocument();
   });
 
@@ -497,106 +869,49 @@ describe('App', () => {
 
   it('scrolls each newly added option card into view', async () => {
     const user = userEvent.setup();
-    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
-    const originalScrollBy = window.scrollBy;
-    const originalVisualViewport = window.visualViewport;
-    const scrollIntoViewMock = vi.fn();
-    const scrollByMock = vi.fn();
-
-    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoViewMock,
-    });
-    Object.defineProperty(window, 'scrollBy', {
-      configurable: true,
-      value: scrollByMock,
-    });
-    Object.defineProperty(window, 'visualViewport', {
-      configurable: true,
-      value: {
+    const mobileReveal = installOptionRevealMocks({
+      cardTop: 120,
+      viewport: {
         height: 300,
         offsetLeft: 0,
         offsetTop: 0,
         width: 390,
-      } as VisualViewport,
+      },
     });
 
-    vi.spyOn(
-      window.HTMLElement.prototype,
-      'getBoundingClientRect',
-    ).mockImplementation(function getBoundingClientRect(this: HTMLElement) {
-      if (this.id.startsWith('option-card-')) {
-        return {
-          bottom: 340,
-          height: 220,
-          left: 0,
-          right: 320,
-          toJSON: () => ({}),
-          top: 120,
-          width: 320,
-          x: 0,
-          y: 120,
-        } as DOMRect;
+    try {
+      render(<App />);
+
+      const optionsRegion = screen.getByRole('region', {
+        name: /options to compare/i,
+      });
+
+      for (let optionIndex = 3; optionIndex <= 5; optionIndex += 1) {
+        await user.click(
+          within(optionsRegion).getByRole('button', { name: /add option/i }),
+        );
+
+        expect(
+          screen.getByLabelText(new RegExp(`^option ${optionIndex}$`, 'i')),
+        ).toBeInTheDocument();
       }
 
-      return {
-        bottom: 0,
-        height: 0,
-        left: 0,
-        right: 0,
-        toJSON: () => ({}),
-        top: 0,
-        width: 0,
-        x: 0,
-        y: 0,
-      } as DOMRect;
-    });
-
-    render(<App />);
-
-    const optionsRegion = screen.getByRole('region', {
-      name: /options to compare/i,
-    });
-
-    for (let optionIndex = 3; optionIndex <= 5; optionIndex += 1) {
-      await user.click(
-        within(optionsRegion).getByRole('button', { name: /add option/i }),
-      );
-
-      expect(
-        screen.getByLabelText(new RegExp(`^option ${optionIndex}$`, 'i')),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(3);
+      });
+      expect(mobileReveal.scrollTo).toHaveBeenLastCalledWith({
+        behavior: 'smooth',
+        top: mobileReveal.expectedTopCorrection,
+      });
+      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
+      expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
+      });
+    } finally {
+      mobileReveal.restore();
     }
-
-    await waitFor(() => {
-      expect(scrollIntoViewMock.mock.calls.length).toBeGreaterThanOrEqual(3);
-    });
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'nearest',
-    });
-    expect(scrollByMock).toHaveBeenCalledWith({
-      behavior: 'auto',
-      top: 56,
-    });
-    expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
-    });
-
-    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: originalScrollIntoView,
-    });
-    Object.defineProperty(window, 'scrollBy', {
-      configurable: true,
-      value: originalScrollBy,
-    });
-    Object.defineProperty(window, 'visualViewport', {
-      configurable: true,
-      value: originalVisualViewport,
-    });
   });
 
   it('renders criteria as a vertical list instead of a table', () => {
@@ -671,20 +986,98 @@ describe('App', () => {
   it('smooth snap moves in tenths and commits rounded integer scores on release', async () => {
     render(<App />);
 
+    const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
+    fireEvent.pointerDown(weightSlider);
+    fireEvent.change(weightSlider, { target: { value: '10' } });
+    fireEvent.pointerUp(weightSlider);
+
+    await userEvent.click(screen.getByRole('button', { name: /see full ranking/i }));
+
     const scoreSlider = screen.getByLabelText(
       /score for option 1 on criterion 1/i,
     );
+    const ranking = screen.getByRole('region', { name: /weighted ranking/i });
+
+    expect(within(ranking).getAllByText(/^tied$/i)).toHaveLength(2);
 
     fireEvent.pointerDown(scoreSlider);
     fireEvent.change(scoreSlider, { target: { value: '4.6' } });
+    fireEvent.input(scoreSlider, { target: { value: '4.7' } });
 
-    expect(scoreSlider).toHaveValue('4.6');
+    expect(scoreSlider).toHaveValue('4.7');
+    expect(screen.getAllByText('5/10').length).toBeGreaterThan(0);
+    expect(screen.queryByText('4.7/10')).not.toBeInTheDocument();
+    expect(within(ranking).getAllByText(/^tied$/i)).toHaveLength(2);
 
     fireEvent.pointerUp(scoreSlider);
 
     await waitFor(() => {
-      expect(scoreSlider).toHaveValue('5');
+      expect(
+        screen.getByLabelText(/score for option 1 on criterion 1/i),
+      ).toHaveValue('5');
     });
+    expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
+  });
+
+  it('does not commit score or weight slider changes until release', () => {
+    const matrix = createStarterMatrix();
+    const onCategoryWeightChange = vi.fn();
+    const onScoreChange = vi.fn();
+
+    render(
+      <MatrixEditor
+        areResultsHidden={false}
+        copy={translations.en.matrix}
+        matrix={matrix}
+        summary={getDecisionSummary(matrix)}
+        onAddOption={vi.fn()}
+        onRemoveOption={vi.fn()}
+        onOptionNameChange={vi.fn()}
+        onAddCategory={vi.fn()}
+        onRemoveCategory={vi.fn()}
+        onCategoryNameChange={vi.fn()}
+        onCategoryWeightChange={onCategoryWeightChange}
+        onScoreModeChange={vi.fn()}
+        onScoreChange={onScoreChange}
+        onLoadExample={vi.fn()}
+        onResultsHiddenChange={vi.fn()}
+      />,
+    );
+
+    const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
+    fireEvent.pointerDown(weightSlider);
+    fireEvent.change(weightSlider, { target: { value: '2.2' } });
+    fireEvent.change(weightSlider, { target: { value: '7.6' } });
+
+    expect(onCategoryWeightChange).not.toHaveBeenCalled();
+    expect(weightSlider).toHaveValue('7.6');
+
+    fireEvent.pointerUp(weightSlider);
+
+    expect(onCategoryWeightChange).toHaveBeenCalledTimes(1);
+    expect(onCategoryWeightChange).toHaveBeenCalledWith(
+      matrix.categories[0].id,
+      8,
+    );
+
+    const scoreSlider = screen.getByLabelText(
+      /score for option 1 on criterion 1/i,
+    );
+    fireEvent.pointerDown(scoreSlider);
+    fireEvent.change(scoreSlider, { target: { value: '3.2' } });
+    fireEvent.change(scoreSlider, { target: { value: '3.4' } });
+
+    expect(onScoreChange).not.toHaveBeenCalled();
+    expect(scoreSlider).toHaveValue('3.4');
+
+    fireEvent.pointerUp(scoreSlider);
+
+    expect(onScoreChange).toHaveBeenCalledTimes(1);
+    expect(onScoreChange).toHaveBeenCalledWith(
+      matrix.options[0].id,
+      matrix.categories[0].id,
+      3,
+    );
   });
 
   it('converts an option score to yes/no scoring with weighted binary values', async () => {
@@ -716,10 +1109,10 @@ describe('App', () => {
     });
 
     const firstScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring mode for option 1 on criterion 1/i,
+      name: /scoring type for option 1 on criterion 1/i,
     });
     const secondScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring mode for option 2 on criterion 1/i,
+      name: /scoring type for option 2 on criterion 1/i,
     });
 
     await user.selectOptions(firstScoreModeSelect, SCORE_MODE_BOOLEAN);
@@ -743,7 +1136,10 @@ describe('App', () => {
     expect(
       within(firstBooleanScore).getByRole('button', { name: /^no$/i }),
     ).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText(/yes = 10 \/ no = 0/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/yes \/ no/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/yes, gives full credit\. no, gives none\./i),
+    ).toBeInTheDocument();
     expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
 
     await user.click(screen.getByRole('button', { name: /see full ranking/i }));
@@ -810,10 +1206,7 @@ describe('App', () => {
       'true',
     );
     expect(within(ranking).getByText('Stay here')).toBeInTheDocument();
-    expect(within(ranking).getByText(/10\/10 weighted score/i)).toBeInTheDocument();
-    expect(
-      within(ranking).queryByText(/10\.0\/10 weighted score/i),
-    ).not.toBeInTheDocument();
+    expect(within(ranking).getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
     expect(within(ranking).getByText(/6\.0 pts behind leader/i)).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
@@ -883,6 +1276,66 @@ describe('App', () => {
     );
   });
 
+  it('opens and closes the blind scoring help text from the question mark button', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const helpButton = screen.getByRole('button', { name: /why this helps/i });
+    const helpText = screen.getByRole('tooltip');
+    const innerWidthSpy = vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+    vi.spyOn(helpButton, 'getBoundingClientRect').mockReturnValue({
+      bottom: 88,
+      height: 40,
+      left: 200,
+      right: 240,
+      top: 48,
+      width: 40,
+      x: 200,
+      y: 48,
+      toJSON: () => ({}),
+    });
+
+    expect(helpButton).toHaveAttribute('aria-expanded', 'false');
+    expect(helpText).not.toHaveClass('opacity-100');
+
+    await user.click(helpButton);
+
+    expect(helpButton).toHaveAttribute('aria-expanded', 'true');
+    expect(helpText).toHaveClass('opacity-100');
+    expect(helpText).toHaveTextContent(
+      /hides live totals and recommendations while you score/i,
+    );
+    expect(
+      helpText.style.getPropertyValue('--blind-scoring-help-left'),
+    ).toBe('76px');
+    expect(helpText.style.getPropertyValue('--blind-scoring-help-top')).toBe(
+      '96px',
+    );
+
+    await user.click(helpButton);
+
+    expect(helpButton).toHaveAttribute('aria-expanded', 'false');
+    expect(helpText).not.toHaveClass('opacity-100');
+
+    innerWidthSpy.mockReturnValue(1024);
+    await user.click(helpButton);
+
+    expect(helpButton).toHaveAttribute('aria-expanded', 'true');
+    expect(helpText).toHaveClass('opacity-100');
+    expect(
+      helpText.style.getPropertyValue('--blind-scoring-help-left'),
+    ).toBe('248px');
+    expect(helpText.style.getPropertyValue('--blind-scoring-help-top')).toBe(
+      '48px',
+    );
+
+    await user.click(document.body);
+
+    expect(helpButton).toHaveAttribute('aria-expanded', 'false');
+    expect(helpText).not.toHaveClass('opacity-100');
+  });
+
   it('restores the recommendation when results are shown again', async () => {
     const user = userEvent.setup();
     saveScoredMatrix();
@@ -935,13 +1388,13 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /add criterion/i }));
 
     const firstCriterionFirstOptionMode = screen.getByRole('combobox', {
-      name: /scoring mode for option 1 on criterion 1/i,
+      name: /scoring type for option 1 on criterion 1/i,
     });
     const secondCriterionFirstOptionMode = screen.getByRole('combobox', {
-      name: /scoring mode for option 1 on eligibility/i,
+      name: /scoring type for option 1 on eligibility/i,
     });
     const secondCriterionSecondOptionMode = screen.getByRole('combobox', {
-      name: /scoring mode for option 2 on eligibility/i,
+      name: /scoring type for option 2 on eligibility/i,
     });
 
     await user.selectOptions(
@@ -985,7 +1438,7 @@ describe('App', () => {
     render(<App />);
 
     const scoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring mode for option 1 on criterion 1/i,
+      name: /scoring type for option 1 on criterion 1/i,
     });
     expect(scoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
     expect(
@@ -1011,7 +1464,7 @@ describe('App', () => {
     );
 
     const resetScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring mode for option 1 on criterion 1/i,
+      name: /scoring type for option 1 on criterion 1/i,
     });
     expect(resetScoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
     expect(
@@ -1114,57 +1567,51 @@ describe('App', () => {
     expect(screen.queryByDisplayValue('Meaning')).not.toBeInTheDocument();
   });
 
-  it('keeps and reveals the add criterion box after submitting named criteria', async () => {
+  it('focuses the new criterion importance slider after submitting named criteria', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    const reveal = installMobileOptionRevealMocks();
 
-    const nextCriterionInput = screen.getByLabelText(
-      /new criterion/i,
-    ) as HTMLInputElement;
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(nextCriterionInput, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({
-        bottom: window.innerHeight + 64,
-        height: 44,
-        left: 0,
-        right: 320,
-        top: window.innerHeight + 20,
-        width: 320,
-        x: 0,
-        y: window.innerHeight + 20,
-        toJSON: () => ({}),
-      }),
-    });
-    Object.defineProperty(nextCriterionInput, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
+    try {
+      render(<App />);
 
-    await user.type(nextCriterionInput, 'Meaning{Enter}');
+      const nextCriterionInput = screen.getByLabelText(
+        /new criterion/i,
+      ) as HTMLInputElement;
 
-    expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
-    expect(nextCriterionInput).toHaveValue('');
-    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
-    expect(nextCriterionInput).toHaveFocus();
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'nearest',
-    });
+      await user.type(nextCriterionInput, 'Meaning');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
 
-    scrollIntoView.mockClear();
-    await user.type(nextCriterionInput, 'Purpose{Enter}');
+      expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
+      expect(nextCriterionInput).toHaveValue('');
+      expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+      expect(nextCriterionInput).not.toHaveFocus();
+      expect(screen.getByLabelText(/importance for meaning/i)).toHaveFocus();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
 
-    expect(screen.getByDisplayValue('Purpose')).toBeInTheDocument();
-    expect(nextCriterionInput).toHaveValue('');
-    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 4');
-    expect(nextCriterionInput).toHaveFocus();
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'nearest',
-    });
+      reveal.scrollTo.mockClear();
+      await user.type(nextCriterionInput, 'Purpose{Enter}');
+
+      expect(screen.getByDisplayValue('Purpose')).toBeInTheDocument();
+      expect(nextCriterionInput).toHaveValue('');
+      expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 4');
+      expect(nextCriterionInput).not.toHaveFocus();
+      expect(screen.getByLabelText(/importance for purpose/i)).toHaveFocus();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+    } finally {
+      reveal.restore();
+    }
   });
 
   it('limits new options to six and re-enables adding after removal', async () => {
@@ -1305,55 +1752,666 @@ describe('App', () => {
     expect(screen.getByLabelText(/new option/i)).toHaveFocus();
   });
 
-  it('sets criterion names and focuses the new criterion box when Enter is pressed', async () => {
+  it('scrolls the next option card to the mobile viewport top after Enter', async () => {
+    const user = userEvent.setup();
+    const mobileReveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+      const secondOptionCard = secondOption.closest('[data-option-focus-card]');
+
+      await user.type(firstOption, 'Remote role');
+      mobileReveal.scrollIntoView.mockClear();
+      mobileReveal.scrollBy.mockClear();
+      mobileReveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(firstOption).toHaveValue('Remote role');
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(secondOptionCard).toBeInstanceOf(HTMLElement);
+      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: mobileReveal.expectedTopCorrection,
+      });
+      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      mobileReveal.restore();
+    }
+  });
+
+  it('scrolls the add-option card to the mobile viewport top after the last option input Enter', async () => {
+    const user = userEvent.setup();
+    const mobileReveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+      const addOptionInput = screen.getByLabelText(/new option/i);
+      const addOptionCard = addOptionInput.closest('[data-option-focus-card]');
+
+      await user.type(secondOption, 'Office role');
+      mobileReveal.scrollIntoView.mockClear();
+      mobileReveal.scrollBy.mockClear();
+      mobileReveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(secondOption).toHaveValue('Office role');
+      await waitFor(() => {
+        expect(addOptionInput).toHaveFocus();
+      });
+      expect(addOptionCard).toBeInstanceOf(HTMLElement);
+      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: mobileReveal.expectedTopCorrection,
+      });
+      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      mobileReveal.restore();
+    }
+  });
+
+  it('keeps focus on the next blank add-option input and scrolls its mobile card after Enter', async () => {
+    const user = userEvent.setup();
+    const mobileReveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      const addOptionInput = screen.getByLabelText(/new option/i);
+
+      await user.type(addOptionInput, 'Third path');
+      mobileReveal.scrollIntoView.mockClear();
+      mobileReveal.scrollBy.mockClear();
+      mobileReveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByLabelText(/^option 3$/i)).toHaveValue('Third path');
+
+      const nextAddOptionInput = screen.getByLabelText(/new option/i);
+      const nextAddOptionCard = nextAddOptionInput.closest(
+        '[data-option-focus-card]',
+      );
+
+      await waitFor(() => {
+        expect(nextAddOptionInput).toHaveFocus();
+      });
+      expect(nextAddOptionInput).toHaveValue('');
+      expect(nextAddOptionCard).toBeInstanceOf(HTMLElement);
+      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: mobileReveal.expectedTopCorrection,
+      });
+      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      mobileReveal.restore();
+    }
+  });
+
+  it('keeps tablet option-entry focus stationary when the target card is comfortably visible', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 96,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 820,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+
+      await user.type(firstOption, 'Remote role');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('keeps desktop option-entry focus stationary when the target card is visible', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 96,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 1280,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+
+      await user.type(firstOption, 'Remote role');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses one nearest reveal for an offscreen tablet option-entry target', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 780,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 820,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+
+      await user.type(firstOption, 'Remote role');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses one nearest reveal for an offscreen desktop option-entry target', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 780,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 1280,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+
+      await user.type(firstOption, 'Remote role');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses instant option-entry reveal when reduced motion is preferred', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({ reducedMotion: true });
+
+    try {
+      render(<App />);
+
+      const firstOption = screen.getByLabelText(/^option 1$/i);
+      const secondOption = screen.getByLabelText(/^option 2$/i);
+
+      await user.type(firstOption, 'Remote role');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(secondOption).toHaveFocus();
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'auto',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('reveals the final added option and moves focus out of option text boxes after Enter', async () => {
+    const user = userEvent.setup();
+    const mobileReveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      for (const name of ['Third path', 'Fourth path', 'Fifth path']) {
+        const newOptionInput = screen.getByLabelText(/new option/i);
+        await user.clear(newOptionInput);
+        await user.type(newOptionInput, name);
+        await user.keyboard('{Enter}');
+
+        expect(screen.getByLabelText(/new option/i)).toHaveFocus();
+      }
+
+      const finalOptionInput = screen.getByLabelText(/new option/i);
+      await user.clear(finalOptionInput);
+      await user.type(finalOptionInput, 'Sixth path');
+      mobileReveal.scrollIntoView.mockClear();
+      mobileReveal.scrollBy.mockClear();
+      mobileReveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+      });
+      expect(screen.getByDisplayValue('Sixth path')).not.toHaveFocus();
+      expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
+      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: mobileReveal.expectedTopCorrection,
+      });
+      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      mobileReveal.restore();
+    }
+  });
+
+  it('commits and blurs the last option input when the option limit is already reached', async () => {
+    const user = userEvent.setup();
+    const savedMatrix = createStarterMatrix();
+    const categoryId = savedMatrix.categories[0].id;
+
+    savedMatrix.options = Array.from({ length: 6 }, (_, index) => ({
+      id: `saved-option-${index + 1}`,
+      name: `Saved option ${index + 1}`,
+    }));
+    savedMatrix.scores = Object.fromEntries(
+      savedMatrix.options.map((option) => [option.id, { [categoryId]: 5 }]),
+    );
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMatrix));
+
+    render(<App />);
+
+    const lastOption = screen.getByLabelText(/^option 6$/i);
+    await user.clear(lastOption);
+    await user.type(lastOption, 'Final saved path');
+    await user.keyboard('{Enter}');
+
+    expect(lastOption).toHaveValue('Final saved path');
+    expect(lastOption).not.toHaveFocus();
+    expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
+    expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
+  });
+
+  it('sets criterion names and focuses the same criterion importance slider when Enter is pressed', async () => {
+    const user = userEvent.setup();
+    const reveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      await user.click(screen.getByRole('button', { name: /add criterion/i }));
+
+      const firstCriterion = screen.getByLabelText(
+        /^criterion 1$/i,
+      ) as HTMLInputElement;
+      const secondCriterion = screen.getByLabelText(
+        /^criterion 2$/i,
+      ) as HTMLInputElement;
+      const newCriterionInput = screen.getByLabelText(
+        /new criterion/i,
+      ) as HTMLInputElement;
+
+      expect(secondCriterion).toHaveValue('');
+      expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
+
+      await user.type(firstCriterion, 'Cost');
+      reveal.scrollTo.mockClear();
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(firstCriterion).toHaveValue('Cost');
+      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+
+      await user.click(secondCriterion);
+      await user.type(secondCriterion, 'Long-term fit');
+      reveal.scrollTo.mockClear();
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(secondCriterion).toHaveValue('Long-term fit');
+      expect(newCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+      expect(newCriterionInput).not.toHaveFocus();
+      expect(screen.getByLabelText(/importance for long-term fit/i)).toHaveFocus();
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+      expect(screen.queryByLabelText(/^criterion 3$/i)).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /remove long-term fit/i }),
+      ).toBeInTheDocument();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('creates a blank criterion from a blank submit and focuses the new criterion input', async () => {
+    const user = userEvent.setup();
+    const reveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.click(screen.getByRole('button', { name: /add criterion/i }));
+
+      const secondCriterion = screen.getByLabelText(
+        /^criterion 2$/i,
+      ) as HTMLInputElement;
+      expect(secondCriterion).toHaveValue('');
+      expect(secondCriterion).toHaveFocus();
+      expect(secondCriterion.selectionStart).toBe(0);
+      expect(secondCriterion.selectionEnd).toBe(0);
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('keeps tablet criterion-entry focus stationary when the target card is comfortably visible', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 96,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 820,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      await user.click(screen.getByRole('button', { name: /add criterion/i }));
+      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
+
+      await user.type(firstCriterion, 'Cost');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses one nearest reveal for an offscreen desktop criterion-entry target', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({
+      cardTop: 780,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 1280,
+      },
+    });
+
+    try {
+      render(<App />);
+
+      await user.click(screen.getByRole('button', { name: /add criterion/i }));
+      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
+
+      await user.type(firstCriterion, 'Cost');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
+      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses instant criterion-entry reveal when reduced motion is preferred', async () => {
+    const user = userEvent.setup();
+    const reveal = installOptionRevealMocks({ reducedMotion: true });
+
+    try {
+      render(<App />);
+
+      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
+      await user.type(firstCriterion, 'Cost');
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      await user.keyboard('{Enter}');
+
+      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'auto',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('reveals scoring widgets on focus without changing their values', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: /add criterion/i }));
-
-    const secondCriterion = screen.getByLabelText(/^criterion 2$/i);
-    const newCriterionInput = screen.getByLabelText(
-      /new criterion/i,
-    ) as HTMLInputElement;
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(newCriterionInput, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({
-        bottom: window.innerHeight + 64,
-        height: 44,
-        left: 0,
-        right: 320,
-        top: window.innerHeight + 20,
-        width: 320,
-        x: 0,
-        y: window.innerHeight + 20,
-        toJSON: () => ({}),
-      }),
+    const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
+    const scoreModeSelect = screen.getByRole('combobox', {
+      name: /scoring type for option 1 on criterion 1/i,
     });
-    Object.defineProperty(newCriterionInput, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
+    const scoreSlider = screen.getByLabelText(/score for option 1 on criterion 1/i);
+
+    fireEvent.focus(weightSlider);
+    expect(weightSlider).toHaveValue('0');
+    fireEvent.focus(scoreModeSelect);
+    expect(scoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
+    fireEvent.focus(scoreSlider);
+    expect(scoreSlider).toHaveValue('0');
+
+    await user.selectOptions(scoreModeSelect, SCORE_MODE_BOOLEAN);
+    const booleanScoreGroup = screen.getByRole('group', {
+      name: /score for option 1 on criterion 1/i,
+    });
+    const yesButton = within(booleanScoreGroup).getByRole('button', {
+      name: /^yes$/i,
+    });
+    const noButton = within(booleanScoreGroup).getByRole('button', {
+      name: /^no$/i,
     });
 
-    expect(secondCriterion).toHaveValue('');
-    expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
-    await user.type(secondCriterion, 'Long-term fit');
-    await user.keyboard('{Enter}');
+    fireEvent.focus(yesButton);
+    expect(yesButton).toHaveAttribute('aria-pressed', 'false');
+    expect(noButton).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.focus(noButton);
+    expect(yesButton).toHaveAttribute('aria-pressed', 'false');
+    expect(noButton).toHaveAttribute('aria-pressed', 'true');
+  });
 
-    expect(secondCriterion).toHaveValue('Long-term fit');
-    expect(newCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
-    expect(newCriterionInput).toHaveFocus();
-    expect(newCriterionInput.selectionStart).toBe(0);
-    expect(newCriterionInput.selectionEnd).toBe(0);
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'nearest',
+  it('uses one nearest reveal for an offscreen tablet scoring row focus', () => {
+    const reveal = installOptionRevealMocks({
+      cardTop: 780,
+      viewport: {
+        height: 720,
+        offsetLeft: 0,
+        offsetTop: 0,
+        width: 820,
+      },
     });
-    expect(screen.queryByLabelText(/^criterion 3$/i)).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /remove long-term fit/i }),
-    ).toBeInTheDocument();
+
+    try {
+      render(<App />);
+
+      const scoreModeSelect = screen.getByRole('combobox', {
+        name: /scoring type for option 1 on criterion 1/i,
+      });
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      fireEvent.focus(scoreModeSelect);
+
+      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('uses one direct mobile reveal for scoring row focus', () => {
+    const reveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      const scoreSlider = screen.getByLabelText(/score for option 1 on criterion 1/i);
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      fireEvent.focus(scoreSlider);
+
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        top: reveal.expectedTopCorrection,
+      });
+      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
+  });
+
+  it('keeps mobile score-mode select focus stationary', () => {
+    const reveal = installMobileOptionRevealMocks();
+
+    try {
+      render(<App />);
+
+      const scoreModeSelect = screen.getByRole('combobox', {
+        name: /scoring type for option 1 on criterion 1/i,
+      });
+      reveal.scrollIntoView.mockClear();
+      reveal.scrollBy.mockClear();
+      reveal.scrollTo.mockClear();
+      fireEvent.focus(scoreModeSelect);
+
+      expect(scoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
+      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
+      expect(reveal.scrollTo).not.toHaveBeenCalled();
+      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    } finally {
+      reveal.restore();
+    }
   });
 
   it('persists edits and can reset back to the blank default matrix', async () => {
