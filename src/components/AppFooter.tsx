@@ -1,4 +1,4 @@
-import { ArrowUp, BookOpen, Mail } from 'lucide-react';
+import { ArrowUp, BookOpen, CircleHelp, Mail } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import { Button } from './ui/button';
 
@@ -49,6 +49,12 @@ export function AppFooter({ copy }: AppFooterProps) {
                 <a href="/how-it-works">
                   <BookOpen aria-hidden="true" className="size-4" />
                   {copy.howItWorks}
+                </a>
+              </Button>
+              <Button asChild className="gap-2" size="sm" variant="outline">
+                <a href="/how-it-works#faq-heading">
+                  <CircleHelp aria-hidden="true" className="size-4" />
+                  {copy.faq}
                 </a>
               </Button>
               <Button asChild className="gap-2" size="sm" variant="outline">
