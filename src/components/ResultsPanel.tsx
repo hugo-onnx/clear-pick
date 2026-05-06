@@ -396,7 +396,7 @@ export function ResultsPanel({
                     {option.name}
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    {formatWholeWeightedScore(option.total)} {copy.weightedScore}
+                    {formatWeightedScore(option.total)} {copy.weightedScore}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {isTopOption
@@ -422,7 +422,7 @@ export function ResultsPanel({
             <div
               aria-label={copy.scoreBarAria(
                 option.name,
-                formatWholeWeightedScore(option.total),
+                formatWeightedScore(option.total),
               )}
               className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200/80"
               role="img"
