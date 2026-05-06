@@ -1,9 +1,16 @@
-import type { DecisionMatrix } from '../types';
+import type { DecisionMatrix, Option } from '../types';
 import { createStarterMatrix, normalizeDecisionMatrix } from './matrix';
+import {
+  createBlankQuickDecisionOptions,
+  createQuickDecisionOptionsFromNames,
+  serializeQuickDecisionOptions,
+} from './quickDecider';
 
 export const STORAGE_KEY = '60second-decisions:active-decision:v1';
 export const ONBOARDING_DISMISSAL_STORAGE_KEY =
   '60second-decisions:onboarding-dismissed:v1';
+export const QUICK_DECIDER_STORAGE_KEY =
+  '60second-decisions:quick-decider-options:v1';
 
 export function loadActiveDecision(): DecisionMatrix {
   if (typeof window === 'undefined') {
@@ -32,6 +39,39 @@ export function saveActiveDecision(matrix: DecisionMatrix): void {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(matrix));
   } catch {
     // Ignore storage errors and keep the in-memory session alive.
+  }
+}
+
+export function loadQuickDecisionOptions(): Option[] {
+  if (typeof window === 'undefined') {
+    return createBlankQuickDecisionOptions();
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(QUICK_DECIDER_STORAGE_KEY);
+
+    if (!rawValue) {
+      return createBlankQuickDecisionOptions();
+    }
+
+    return createQuickDecisionOptionsFromNames(JSON.parse(rawValue));
+  } catch {
+    return createBlankQuickDecisionOptions();
+  }
+}
+
+export function saveQuickDecisionOptions(options: Option[]): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      QUICK_DECIDER_STORAGE_KEY,
+      JSON.stringify(serializeQuickDecisionOptions(options)),
+    );
+  } catch {
+    // Ignore storage errors and keep the quick decider in-memory.
   }
 }
 
