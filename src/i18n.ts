@@ -327,7 +327,7 @@ export const translations: Record<Language, TranslationCopy> = {
       addOption: 'Add option',
       removeOption: (name) => `Remove ${name}`,
       decide: 'Decide for me',
-      loadWeightedOptions: 'Load weighted options',
+      loadWeightedOptions: 'Load options',
       loadWeightedOptionsHint: 'Name at least two weighted options to load.',
       reset: 'Reset',
       disabledHint: 'Name at least two options to decide.',
