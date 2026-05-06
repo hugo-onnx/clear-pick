@@ -8,12 +8,12 @@ Preview image: https://60second-decisions.pages.dev/social-card-whatsapp.jpg
 Primary language: English
 Additional interface language: Spanish
 Application type: Browser-only weighted decision matrix and weighted scoring model tool
-Title: 60-Second Decisions | Free Weighted Decision Tool
+Title: 60-Second Decisions | Weighted Decisions Tool
 
 60-Second Decisions helps people compare options by naming choices, weighting criteria, scoring each option, and reviewing the ranked result with transparent score contributions.
 
 Best description:
-Compare options with a private weighted decision matrix. Weight criteria, score choices, and get a clear recommendation in 60 seconds. No account required.
+Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.
 
 Privacy:
 - Runs entirely in the browser
