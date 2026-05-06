@@ -215,9 +215,9 @@ function joinSpanishLabels(labels: string[]): string {
 export const translations: Record<Language, TranslationCopy> = {
   en: {
     document: {
-      title: '60-Second Decisions | Free Weighted Decision Tool',
+      title: '60-Second Decisions | Weighted Decisions Tool',
       description:
-        'Compare options with a private weighted decision tool. Weight priorities, score choices, and get a clear recommendation in 60 seconds. No account required.',
+        'Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.',
       howItWorksTitle:
         'How 60-Second Decisions Works | Weighted Decision Guide',
       howItWorksDescription:
