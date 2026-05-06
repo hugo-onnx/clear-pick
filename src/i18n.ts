@@ -29,6 +29,26 @@ export interface TranslationCopy {
     localStorageNoticeBody: string;
   };
   workspaceLabel: string;
+  workspaceTabs: {
+    label: string;
+    matrix: string;
+    quickDecider: string;
+  };
+  quickDecider: {
+    sectionAria: string;
+    sectionLabel: string;
+    headline: string;
+    optionsGroupAria: string;
+    optionLabel: (index: number) => string;
+    optionPlaceholder: (index: number) => string;
+    addOption: string;
+    removeOption: (name: string) => string;
+    decide: string;
+    reset: string;
+    disabledHint: string;
+    limitHint: string;
+    result: (name: string) => string;
+  };
   matrix: {
     editorAria: string;
     title: string;
@@ -132,7 +152,7 @@ export interface TranslationCopy {
   footer: {
     productLabel: string;
     note: string;
-    contactLabel: string;
+    contactCta: string;
     contactEmail: string;
     backToTop: string;
   };
@@ -190,6 +210,26 @@ export const translations: Record<Language, TranslationCopy> = {
         'Your decision stays in this browser. We do not upload, store, or access it.',
     },
     workspaceLabel: 'Decision workspace',
+    workspaceTabs: {
+      label: 'Decision tools',
+      matrix: 'Weighted Matrix',
+      quickDecider: 'Quick Decider',
+    },
+    quickDecider: {
+      sectionAria: 'Quick random decider',
+      sectionLabel: 'Quick Decider',
+      headline: "I can't decide between",
+      optionsGroupAria: 'Quick decider options',
+      optionLabel: (index) => `Quick option ${index}`,
+      optionPlaceholder: (index) => `Option ${index}`,
+      addOption: 'Add option',
+      removeOption: (name) => `Remove ${name}`,
+      decide: 'Decide for me',
+      reset: 'Reset',
+      disabledHint: 'Name at least two options to decide.',
+      limitHint: 'Six options is the limit.',
+      result: (name) => `Go with: ${name}.`,
+    },
     matrix: {
       editorAria: 'Decision matrix editor',
       title: 'Weighted Scoring Model',
@@ -242,7 +282,7 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Tied',
       criteriaHeading: 'Criteria, weights, and scores',
       criteriaDescription:
-        'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then score every option by scale or yes/no.',
+        'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then score each option with a 0-10 rating or a yes/no answer.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
       scoringControls: 'Scoring controls',
       blindScoring: 'Blind scoring',
@@ -259,12 +299,12 @@ export const translations: Record<Language, TranslationCopy> = {
       importanceAria: (name) => `Importance for ${name}`,
       scoreMode: 'Scoring type',
       scoreModeAria: (optionName, criterionName) =>
-        `Scoring mode for ${optionName} on ${criterionName}`,
-      scoreModeScale: 'Quantitative',
-      scoreModeBoolean: 'Boolean',
+        `Scoring type for ${optionName} on ${criterionName}`,
+      scoreModeScale: 'Rate 0-10',
+      scoreModeBoolean: 'Yes / No',
       yes: 'Yes',
       no: 'No',
-      booleanScoreScale: 'Yes = 10 / No = 0',
+      booleanScoreScale: 'Yes, gives full credit. No, gives none.',
       optionScores: 'Option scores',
       optionScoresAria: (name) => `${name} option scores`,
       scoreAria: (optionName, criterionName) =>
@@ -321,7 +361,7 @@ export const translations: Record<Language, TranslationCopy> = {
       productLabel: 'Weighted Scoring Model',
       note:
         'Your data stays stored locally in this browser, so you can return to it without creating an account.',
-      contactLabel: 'Contact',
+      contactCta: 'Contact support',
       contactEmail: 'hugonzalezhuerta@gmail.com',
       backToTop: 'Back to top',
     },
@@ -353,6 +393,26 @@ export const translations: Record<Language, TranslationCopy> = {
         'Tu decisión queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
     },
     workspaceLabel: 'Espacio de decisión',
+    workspaceTabs: {
+      label: 'Herramientas de decisión',
+      matrix: 'Matriz ponderada',
+      quickDecider: 'Selector rápido',
+    },
+    quickDecider: {
+      sectionAria: 'Selector aleatorio rápido',
+      sectionLabel: 'Selector rápido',
+      headline: 'No puedo decidir entre',
+      optionsGroupAria: 'Opciones del selector rápido',
+      optionLabel: (index) => `Opción rápida ${index}`,
+      optionPlaceholder: (index) => `Opción ${index}`,
+      addOption: 'Añadir opción',
+      removeOption: (name) => `Eliminar ${name}`,
+      decide: 'Decide por mí',
+      reset: 'Reiniciar',
+      disabledHint: 'Nombra al menos dos opciones para decidir.',
+      limitHint: 'Seis opciones es el límite.',
+      result: (name) => `Quédate con: ${name}.`,
+    },
     matrix: {
       editorAria: 'Editor de matriz de decisión',
       title: 'Modelo de puntuación ponderada',
@@ -405,7 +465,7 @@ export const translations: Record<Language, TranslationCopy> = {
       tied: 'Empate',
       criteriaHeading: 'Criterios, pesos y puntuaciones',
       criteriaDescription:
-        'Nombra lo que importa, define la importancia de 0 a 10 (0 ignora el criterio, 10 lo convierte en prioridad máxima) y puntúa cada opción con escala o sí/no.',
+        'Nombra lo que importa, define la importancia de 0 a 10 (0 ignora el criterio, 10 lo convierte en prioridad máxima) y puntúa cada opción con una valoración de 0 a 10 o una respuesta sí/no.',
       criteriaCount: (count) => `${count} ${count === 1 ? 'criterio' : 'criterios'}`,
       scoringControls: 'Controles de puntuación',
       blindScoring: 'Puntuación a ciegas',
@@ -422,12 +482,12 @@ export const translations: Record<Language, TranslationCopy> = {
       importanceAria: (name) => `Importancia de ${name}`,
       scoreMode: 'Tipo de puntuación',
       scoreModeAria: (optionName, criterionName) =>
-        `Modo de puntuación para ${optionName} en ${criterionName}`,
-      scoreModeScale: 'Cuantitativa',
-      scoreModeBoolean: 'Booleana',
+        `Tipo de puntuación para ${optionName} en ${criterionName}`,
+      scoreModeScale: 'Valorar 0-10',
+      scoreModeBoolean: 'Sí / No',
       yes: 'Sí',
       no: 'No',
-      booleanScoreScale: 'Sí = 10 / No = 0',
+      booleanScoreScale: 'Si, da la puntuación completa. No, no suma.',
       optionScores: 'Puntuaciones de opciones',
       optionScoresAria: (name) => `Puntuaciones de opciones para ${name}`,
       scoreAria: (optionName, criterionName) =>
@@ -486,7 +546,7 @@ export const translations: Record<Language, TranslationCopy> = {
       productLabel: 'Modelo de puntuación ponderada',
       note:
         'Tu matriz queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
-      contactLabel: 'Contacto',
+      contactCta: 'Contactar soporte',
       contactEmail: 'hugonzalezhuerta@gmail.com',
       backToTop: 'Volver arriba',
     },
