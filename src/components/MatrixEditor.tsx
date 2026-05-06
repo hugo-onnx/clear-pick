@@ -1,11 +1,12 @@
 import { ChevronDown, CircleHelp, Plus, Sparkles, X } from 'lucide-react';
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type FormEvent,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,14 +101,12 @@ function getRangeStyle(
   if (progress <= 0) {
     return {
       background: 'var(--range-empty, rgba(255, 255, 255, 0.12))',
-      transition: 'background 180ms ease',
     };
   }
 
   if (progress >= 100) {
     return {
       background: 'linear-gradient(90deg, var(--range-start, #06b6d4) 0%, var(--range-end, #f97316) 100%)',
-      transition: 'background 180ms ease',
     };
   }
 
@@ -117,7 +116,6 @@ function getRangeStyle(
       var(--range-end, #f97316) ${progress}%,
       var(--range-empty, rgba(255, 255, 255, 0.12)) ${progress}%,
       var(--range-empty, rgba(255, 255, 255, 0.12)) 100%)`,
-    transition: 'background 180ms ease',
   };
 }
 
@@ -128,8 +126,19 @@ function formatSliderValue(
   return `${config.clamp(value)}/10`;
 }
 
+function formatDraftSliderValue(
+  value: number,
+  config: SliderConfig = scoreSliderConfig,
+): string {
+  return formatSliderValue(value, config);
+}
+
 function formatPoints(value: number): string {
   return `${value.toFixed(1)} pts`;
+}
+
+function getSliderOutputSelector(sliderId: string): string {
+  return `[data-slider-output="${sliderId.replace(/["\\]/g, '\\$&')}"]`;
 }
 
 function formatScoreValue(
@@ -144,10 +153,12 @@ function formatScoreValue(
   return formatSliderValue(value);
 }
 
-function selectInputText(input: HTMLInputElement) {
-  input.focus();
-  input.setSelectionRange(0, input.value.length);
-}
+type FocusInputOptions = {
+  reveal?: boolean;
+};
+
+const smBreakpointWidth = 640;
+const lgBreakpointWidth = 1024;
 
 function isElementInViewport(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
@@ -173,6 +184,167 @@ function isElementInViewport(element: HTMLElement) {
 
 const revealRetryDelays = [90, 240, 420];
 const visualViewportRevealMargin = 16;
+const programmaticCriterionWeightFocusTargets = new WeakSet<HTMLElement>();
+
+function getViewportWidth() {
+  const visualViewportWidth = window.visualViewport?.width;
+
+  return (
+    typeof visualViewportWidth === 'number' && visualViewportWidth > 0
+      ? visualViewportWidth
+      : (window.innerWidth ?? document.documentElement.clientWidth)
+  );
+}
+
+function getFocusRevealViewport() {
+  const viewportWidth = getViewportWidth();
+
+  if (viewportWidth < smBreakpointWidth) {
+    return 'mobile';
+  }
+
+  if (viewportWidth < lgBreakpointWidth) {
+    return 'tablet';
+  }
+
+  return 'desktop';
+}
+
+function getMotionSafeScrollBehavior(): ScrollBehavior {
+  if (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    return 'auto';
+  }
+
+  return 'smooth';
+}
+
+function getWindowScrollY() {
+  return (
+    window.scrollY ??
+    window.pageYOffset ??
+    document.documentElement.scrollTop ??
+    document.body.scrollTop ??
+    0
+  );
+}
+
+function getViewportBounds() {
+  const visualViewport = window.visualViewport;
+  const top = visualViewport?.offsetTop ?? 0;
+  const left = visualViewport?.offsetLeft ?? 0;
+  const height =
+    visualViewport?.height ??
+    window.innerHeight ??
+    document.documentElement.clientHeight;
+  const width =
+    visualViewport?.width ??
+    window.innerWidth ??
+    document.documentElement.clientWidth;
+
+  return {
+    bottom: top + height,
+    left,
+    right: left + width,
+    top,
+  };
+}
+
+function isElementComfortablyVisible(
+  element: HTMLElement,
+  margin = visualViewportRevealMargin,
+) {
+  const rect = element.getBoundingClientRect();
+  const viewport = getViewportBounds();
+
+  return (
+    rect.top >= viewport.top + margin &&
+    rect.left >= viewport.left &&
+    rect.bottom <= viewport.bottom - margin &&
+    rect.right <= viewport.right
+  );
+}
+
+function isElementVisible(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const viewport = getViewportBounds();
+
+  return (
+    rect.bottom > viewport.top &&
+    rect.top < viewport.bottom &&
+    rect.right > viewport.left &&
+    rect.left < viewport.right
+  );
+}
+
+function revealMobileFocusCard(element: HTMLElement) {
+  if (typeof window.scrollTo !== 'function') {
+    if (typeof element.scrollIntoView === 'function') {
+      element.scrollIntoView({
+        behavior: getMotionSafeScrollBehavior(),
+        block: 'start',
+        inline: 'nearest',
+      });
+    }
+
+    return;
+  }
+
+  const scrollTo = window.scrollTo.bind(window);
+  const behavior = getMotionSafeScrollBehavior();
+  const rect = element.getBoundingClientRect();
+  const viewportTop = window.visualViewport?.offsetTop ?? 0;
+  const top = Math.max(
+    0,
+    getWindowScrollY() + rect.top - viewportTop - visualViewportRevealMargin,
+  );
+
+  try {
+    scrollTo({
+      behavior,
+      top,
+    });
+  } catch {
+    element.scrollIntoView?.({
+      behavior,
+      block: 'start',
+      inline: 'nearest',
+    });
+  }
+}
+
+function revealFocusCard(
+  card: HTMLElement,
+  focusedControl?: HTMLElement | null,
+) {
+  const behavior = getMotionSafeScrollBehavior();
+  const viewport = getFocusRevealViewport();
+
+  if (viewport === 'mobile') {
+    revealMobileFocusCard(card);
+    return;
+  }
+
+  if (viewport === 'tablet' && isElementComfortablyVisible(card)) {
+    return;
+  }
+
+  if (
+    viewport === 'desktop' &&
+    (isElementInViewport(card) ||
+      (focusedControl && isElementVisible(focusedControl)))
+  ) {
+    return;
+  }
+
+  card.scrollIntoView?.({
+    behavior,
+    block: 'nearest',
+    inline: 'nearest',
+  });
+}
 
 function nudgeElementIntoVisualViewport(element: HTMLElement) {
   if (typeof window.scrollBy !== 'function' || !window.visualViewport) {
@@ -260,41 +432,92 @@ function revealInputIfNeeded(input: HTMLInputElement) {
   revealElementIfNeeded(input);
 }
 
-function focusElementAfterPaint(
-  element: HTMLInputElement,
+function getFocusCard(element: HTMLElement): HTMLElement | null {
+  const card = element.closest('[data-focus-card], [data-option-focus-card]');
+
+  return card instanceof HTMLElement ? card : null;
+}
+
+function focusInputWithoutScrolling(input: HTMLInputElement) {
+  try {
+    input.focus({ preventScroll: true });
+  } catch {
+    input.focus();
+  }
+}
+
+function focusCriterionWeightSlider(categoryId: string) {
+  const weightSlider = document.getElementById(`weight-${categoryId}`);
+  const criterionCard = document.getElementById(`criterion-card-${categoryId}`);
+
+  if (!(weightSlider instanceof HTMLInputElement)) {
+    return false;
+  }
+
+  programmaticCriterionWeightFocusTargets.add(weightSlider);
+
+  try {
+    weightSlider.focus({ preventScroll: true });
+  } catch {
+    weightSlider.focus();
+  }
+
+  if (criterionCard instanceof HTMLElement) {
+    revealFocusCard(criterionCard, weightSlider);
+  }
+
+  return true;
+}
+
+function focusEntryInput(
+  input: HTMLInputElement,
   options: {
-    onlyIfActiveElement?: HTMLElement | null;
-    onlyIfFocusWithin?: HTMLElement | null;
     reveal?: boolean;
+    revealTarget?: HTMLElement | null;
+    select?: boolean;
   } = {},
 ) {
-  const scheduleAfterPaint =
-    window.requestAnimationFrame?.bind(window) ??
-    ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+  const shouldSelect = options.select ?? false;
+  const shouldReveal = options.reveal ?? true;
+  const revealTarget = options.revealTarget ?? getFocusCard(input);
 
-  scheduleAfterPaint(() => {
-    if (
-      options.onlyIfActiveElement &&
-      document.activeElement !== options.onlyIfActiveElement
-    ) {
-      return;
-    }
+  focusInputWithoutScrolling(input);
 
-    if (
-      options.onlyIfFocusWithin &&
-      document.activeElement instanceof HTMLElement &&
-      !options.onlyIfFocusWithin.contains(document.activeElement)
-    ) {
-      return;
-    }
+  if (shouldSelect) {
+    input.setSelectionRange(0, input.value.length);
+  } else {
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
 
-    focusInputText(element, { reveal: options.reveal });
-  });
+  if (shouldReveal && revealTarget) {
+    revealFocusCard(revealTarget, input);
+  }
+}
+
+function revealClosestFocusCard(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  if (programmaticCriterionWeightFocusTargets.delete(target)) {
+    return;
+  }
+
+  if (target instanceof HTMLSelectElement && getFocusRevealViewport() === 'mobile') {
+    return;
+  }
+
+  const revealTarget = getFocusCard(target);
+
+  if (revealTarget) {
+    revealFocusCard(revealTarget, target);
+  }
 }
 
 function focusInputText(
   input: HTMLInputElement,
-  options: { reveal?: boolean } = {},
+  options: FocusInputOptions = {},
 ) {
   if (options.reveal) {
     revealInputIfNeeded(input);
@@ -316,7 +539,7 @@ const segmentedControlClass =
   'inline-flex rounded-md border border-border bg-white/80 p-1 shadow-sm';
 
 const segmentedButtonClass =
-  'min-h-9 flex-1 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition sm:flex-none';
+  'min-h-9 flex-1 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition md:min-w-16 md:flex-none';
 
 function getSegmentedButtonClass(isSelected: boolean): string {
   return cn(
@@ -355,20 +578,25 @@ export function MatrixEditor({
         matrix.options.map((option) => [option.id, option.name]),
       ),
   );
-  const [draftSliderValues, setDraftSliderValues] = useState<
-    Record<string, number>
-  >({});
+  const [isBlindScoringHelpOpen, setIsBlindScoringHelpOpen] = useState(false);
+  const [blindScoringHelpStyle, setBlindScoringHelpStyle] =
+    useState<CSSProperties>({});
   const pendingOptionFormRef = useRef<HTMLFormElement>(null);
   const pendingOptionInputRef = useRef<HTMLInputElement>(null);
-  const pendingOptionSubmitButtonRef = useRef<HTMLButtonElement>(null);
   const shouldFocusPendingOptionAfterAddRef = useRef(false);
+  const shouldFocusAddedOptionAfterAddRef = useRef(false);
+  const shouldBlurAddedOptionAfterAddRef = useRef(false);
+  const isKeyboardSubmittingOptionRef = useRef(false);
   const isPointerSubmittingOptionRef = useRef(false);
+  const pendingCategoryFormRef = useRef<HTMLFormElement>(null);
   const pendingCategoryInputRef = useRef<HTMLInputElement>(null);
   const shouldRevealNewOptionRef = useRef(false);
   const previousOptionCountRef = useRef(matrix.options.length);
   const shouldFocusNewCategoryRef = useRef(false);
-  const shouldRevealPendingCategoryRef = useRef(false);
+  const shouldFocusNewCategoryWeightRef = useRef(false);
   const previousCategoryCountRef = useRef(matrix.categories.length);
+  const blindScoringHelpRef = useRef<HTMLDivElement>(null);
+  const blindScoringHelpButtonRef = useRef<HTMLButtonElement>(null);
   const blindScoringHelpId = 'blind-scoring-help';
   const blindScoringToggleId = 'blind-scoring-toggle';
   const canRemoveOptions = matrix.options.length > MIN_OPTIONS;
@@ -387,25 +615,79 @@ export function MatrixEditor({
     event.preventDefault();
     if (!canAddOptions) {
       shouldFocusPendingOptionAfterAddRef.current = false;
+      shouldFocusAddedOptionAfterAddRef.current = false;
+      shouldBlurAddedOptionAfterAddRef.current = false;
+      isKeyboardSubmittingOptionRef.current = false;
       isPointerSubmittingOptionRef.current = false;
       return;
     }
 
+    const isPointerSubmit = isPointerSubmittingOptionRef.current;
     const isKeyboardSubmit =
-      !isPointerSubmittingOptionRef.current &&
-      document.activeElement === pendingOptionInputRef.current;
+      !isPointerSubmit &&
+      (isKeyboardSubmittingOptionRef.current ||
+        document.activeElement === pendingOptionInputRef.current);
+    const isAddingFinalOption = matrix.options.length + 1 >= MAX_OPTIONS;
+
     shouldFocusPendingOptionAfterAddRef.current =
       (shouldFocusPendingOptionAfterAddRef.current || isKeyboardSubmit) &&
-      matrix.options.length + 1 < MAX_OPTIONS;
+      !isAddingFinalOption;
+    shouldFocusAddedOptionAfterAddRef.current = isPointerSubmit;
+    shouldBlurAddedOptionAfterAddRef.current =
+      isKeyboardSubmit && isAddingFinalOption;
+    isKeyboardSubmittingOptionRef.current = false;
     isPointerSubmittingOptionRef.current = false;
+
+    if (isKeyboardSubmit && isAddingFinalOption) {
+      pendingOptionInputRef.current?.blur();
+    }
+
     shouldRevealNewOptionRef.current = true;
     onAddOption(pendingOptionName.trim());
     setPendingOptionName('');
   };
-  const handlePendingOptionKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handlePendingOptionKeyDown = (
+    event: ReactKeyboardEvent<HTMLInputElement>,
+  ) => {
     if (event.key === 'Enter') {
       shouldFocusPendingOptionAfterAddRef.current = true;
+      isKeyboardSubmittingOptionRef.current = true;
     }
+  };
+  const updateBlindScoringHelpPosition = () => {
+    const helpButton = blindScoringHelpButtonRef.current;
+
+    if (!helpButton) {
+      return;
+    }
+
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
+    const width = Math.min(288, Math.max(0, viewportWidth - 32));
+    const buttonRect = helpButton.getBoundingClientRect();
+    const rightSideLeft = buttonRect.right + 8;
+    const hasRightSideRoom = rightSideLeft + width <= viewportWidth - 16;
+
+    if (hasRightSideRoom) {
+      setBlindScoringHelpStyle({
+        '--blind-scoring-help-left': `${rightSideLeft}px`,
+        '--blind-scoring-help-top': `${buttonRect.top}px`,
+        '--blind-scoring-help-width': `${width}px`,
+      } as CSSProperties);
+      return;
+    }
+
+    const centeredLeft = buttonRect.left + buttonRect.width / 2 - width / 2;
+    const left = Math.min(
+      Math.max(centeredLeft, 16),
+      viewportWidth - width - 16,
+    );
+
+    setBlindScoringHelpStyle({
+      '--blind-scoring-help-left': `${left}px`,
+      '--blind-scoring-help-top': `${buttonRect.bottom + 8}px`,
+      '--blind-scoring-help-width': `${width}px`,
+    } as CSSProperties);
   };
   const handleAddCategorySubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -413,13 +695,12 @@ export function MatrixEditor({
     const nextCategoryName = pendingCategoryName.trim();
     const shouldFocusNewCategory = nextCategoryName.length === 0;
     shouldFocusNewCategoryRef.current = shouldFocusNewCategory;
-    shouldRevealPendingCategoryRef.current = !shouldFocusNewCategory;
+    shouldFocusNewCategoryWeightRef.current = !shouldFocusNewCategory;
     onAddCategory(nextCategoryName);
     setPendingCategoryName('');
-    pendingCategoryInputRef.current?.focus();
   };
   const handleOptionNameKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>,
+    event: ReactKeyboardEvent<HTMLInputElement>,
     optionId: string,
     optionIndex: number,
   ) => {
@@ -445,14 +726,12 @@ export function MatrixEditor({
     const nextInput = document.getElementById(nextInputId);
 
     if (nextInput instanceof HTMLInputElement) {
-      revealInputIfNeeded(nextInput);
-      selectInputText(nextInput);
+      focusEntryInput(nextInput, { select: true });
     }
   };
   const handleCategoryNameKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>,
+    event: ReactKeyboardEvent<HTMLInputElement>,
     categoryId: string,
-    categoryIndex: number,
   ) => {
     if (event.key !== 'Enter') {
       return;
@@ -461,72 +740,61 @@ export function MatrixEditor({
     event.preventDefault();
     onCategoryNameChange(categoryId, event.currentTarget.value);
 
-    const nextCategory = matrix.categories[categoryIndex + 1];
-
-    if (nextCategory) {
-      const nextInput = document.getElementById(`category-${nextCategory.id}`);
-
-      if (nextInput instanceof HTMLInputElement) {
-        focusInputText(nextInput);
-      }
-
-      return;
-    }
-
-    const nextInput = pendingCategoryInputRef.current;
-
-    if (nextInput instanceof HTMLInputElement) {
-      focusInputText(nextInput, { reveal: true });
+    if (focusCriterionWeightSlider(categoryId)) {
       return;
     }
 
     event.currentTarget.blur();
   };
-  const getSliderDisplayValue = (sliderId: string, value: number) => {
-    return draftSliderValues[sliderId] ?? value;
-  };
-  const setDraftSliderValue = (
+  const updateSliderDisplay = (
     sliderId: string,
     value: number,
     config: SliderConfig = scoreSliderConfig,
+    formatValue: (value: number) => string = (nextValue) =>
+      formatDraftSliderValue(nextValue, config),
+    input?: HTMLInputElement | null,
   ) => {
-    setDraftSliderValues((current) => ({
-      ...current,
-      [sliderId]: clampVisualValue(value, config),
-    }));
-  };
-  const clearDraftSliderValue = (sliderId: string) => {
-    setDraftSliderValues((current) => {
-      if (!(sliderId in current)) {
-        return current;
-      }
+    const visualValue = clampVisualValue(value, config);
 
-      const { [sliderId]: _removedValue, ...nextDraftValues } = current;
-      return nextDraftValues;
-    });
+    for (const output of document.querySelectorAll<HTMLOutputElement>(
+      getSliderOutputSelector(sliderId),
+    )) {
+      output.value = formatValue(visualValue);
+      output.textContent = formatValue(visualValue);
+    }
+
+    if (input) {
+      Object.assign(input.style, getRangeStyle(visualValue, config));
+    }
   };
   const handleSliderStart = (
     sliderId: string,
     value: number,
     config: SliderConfig = scoreSliderConfig,
+    formatValue?: (value: number) => string,
+    input?: HTMLInputElement | null,
   ) => {
-    setDraftSliderValue(sliderId, value, config);
+    updateSliderDisplay(sliderId, value, config, formatValue, input);
   };
   const handleSliderChange = (
     sliderId: string,
     value: number,
     config: SliderConfig = scoreSliderConfig,
+    formatValue?: (value: number) => string,
+    input?: HTMLInputElement | null,
   ) => {
-    setDraftSliderValue(sliderId, value, config);
+    updateSliderDisplay(sliderId, value, config, formatValue, input);
   };
   const handleSliderEnd = (
     sliderId: string,
     value: number,
     commit: (value: number) => void,
     config: SliderConfig = scoreSliderConfig,
+    formatValue?: (value: number) => string,
+    input?: HTMLInputElement | null,
   ) => {
+    updateSliderDisplay(sliderId, value, config, formatValue, input);
     commit(config.clamp(value));
-    clearDraftSliderValue(sliderId);
   };
 
   useEffect(() => {
@@ -541,7 +809,7 @@ export function MatrixEditor({
     });
   }, [matrix.options]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previousOptionCount = previousOptionCountRef.current;
     previousOptionCountRef.current = matrix.options.length;
 
@@ -559,35 +827,49 @@ export function MatrixEditor({
     const newOptionInput = document.getElementById(`option-${newOption.id}`);
     const pendingOptionForm = pendingOptionFormRef.current;
     const pendingOptionInput = pendingOptionInputRef.current;
-    const pendingOptionSubmitButton = pendingOptionSubmitButtonRef.current;
     const shouldFocusPendingOptionAfterAdd =
       shouldFocusPendingOptionAfterAddRef.current &&
       matrix.options.length < MAX_OPTIONS;
+    const shouldFocusAddedOptionAfterAdd =
+      shouldFocusAddedOptionAfterAddRef.current;
+    const shouldBlurAddedOptionAfterAdd =
+      shouldBlurAddedOptionAfterAddRef.current;
     shouldFocusPendingOptionAfterAddRef.current = false;
+    shouldFocusAddedOptionAfterAddRef.current = false;
+    shouldBlurAddedOptionAfterAddRef.current = false;
+
+    if (shouldBlurAddedOptionAfterAdd) {
+      if (newOptionInput instanceof HTMLInputElement) {
+        newOptionInput.blur();
+      }
+
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
+    }
 
     if (
       shouldFocusPendingOptionAfterAdd &&
       pendingOptionInput instanceof HTMLInputElement
     ) {
-      if (pendingOptionForm instanceof HTMLElement) {
-        revealElementIfNeeded(pendingOptionForm, { force: true });
-      }
-
-      focusElementAfterPaint(pendingOptionInput, {
-        onlyIfFocusWithin: pendingOptionForm,
-        reveal: true,
+      focusEntryInput(pendingOptionInput, {
+        revealTarget: pendingOptionForm,
       });
       return;
     }
 
-    if (newOptionInput instanceof HTMLInputElement) {
-      focusElementAfterPaint(newOptionInput, {
-        onlyIfActiveElement: pendingOptionSubmitButton,
-      });
+    if (
+      shouldFocusAddedOptionAfterAdd &&
+      newOptionInput instanceof HTMLInputElement
+    ) {
+      focusEntryInput(newOptionInput, { reveal: false });
     }
 
     if (newOptionCard instanceof HTMLElement) {
-      revealElementIfNeeded(newOptionCard, { force: true });
+      revealFocusCard(
+        newOptionCard,
+        newOptionInput instanceof HTMLInputElement ? newOptionInput : null,
+      );
     }
   }, [matrix.options]);
 
@@ -599,18 +881,14 @@ export function MatrixEditor({
       return;
     }
 
-    if (shouldRevealPendingCategoryRef.current) {
-      shouldRevealPendingCategoryRef.current = false;
-      const pendingCategoryInput = pendingCategoryInputRef.current;
-
-      if (pendingCategoryInput instanceof HTMLInputElement) {
-        focusInputText(pendingCategoryInput, { reveal: true });
+    if (!shouldFocusNewCategoryRef.current) {
+      if (shouldFocusNewCategoryWeightRef.current) {
+        shouldFocusNewCategoryWeightRef.current = false;
+        const newCategory = matrix.categories[matrix.categories.length - 1];
+        pendingCategoryInputRef.current?.blur();
+        focusCriterionWeightSlider(newCategory.id);
       }
 
-      return;
-    }
-
-    if (!shouldFocusNewCategoryRef.current) {
       return;
     }
 
@@ -620,11 +898,59 @@ export function MatrixEditor({
     const newCategoryInput = document.getElementById(
       `category-${newCategory.id}`,
     );
+    const newCategoryCard = document.getElementById(
+      `criterion-card-${newCategory.id}`,
+    );
 
     if (newCategoryInput instanceof HTMLInputElement) {
-      focusInputText(newCategoryInput);
+      focusEntryInput(newCategoryInput, {
+        revealTarget:
+          newCategoryCard instanceof HTMLElement ? newCategoryCard : null,
+        select: true,
+      });
     }
   }, [matrix.categories]);
+
+  useEffect(() => {
+    if (!isBlindScoringHelpOpen) {
+      return;
+    }
+
+    updateBlindScoringHelpPosition();
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const helpContainer = blindScoringHelpRef.current;
+      const target = event.target;
+
+      if (
+        helpContainer &&
+        target instanceof Node &&
+        !helpContainer.contains(target)
+      ) {
+        setIsBlindScoringHelpOpen(false);
+      }
+    };
+    const handleReposition = () => {
+      updateBlindScoringHelpPosition();
+    };
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsBlindScoringHelpOpen(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('resize', handleReposition);
+    window.addEventListener('scroll', handleReposition, true);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('resize', handleReposition);
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isBlindScoringHelpOpen]);
 
   const scoringControls = (
     <div
@@ -660,19 +986,38 @@ export function MatrixEditor({
           {copy.blindScoring}
         </span>
       </label>
-      <div className="group relative shrink-0">
+      <div
+        className="group relative shrink-0"
+        onFocusCapture={updateBlindScoringHelpPosition}
+        onMouseEnter={updateBlindScoringHelpPosition}
+        ref={blindScoringHelpRef}
+      >
         <button
+          aria-controls={blindScoringHelpId}
           aria-describedby={blindScoringHelpId}
+          aria-expanded={isBlindScoringHelpOpen}
           aria-label={copy.blindScoringHelpLabel}
           className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-cyan-700/20 bg-white/85 text-muted-foreground shadow-sm transition hover:border-cyan-700/35 hover:bg-white hover:text-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          onClick={() => {
+            if (!isBlindScoringHelpOpen) {
+              updateBlindScoringHelpPosition();
+            }
+
+            setIsBlindScoringHelpOpen((isCurrentlyOpen) => !isCurrentlyOpen);
+          }}
+          ref={blindScoringHelpButtonRef}
           type="button"
         >
           <CircleHelp aria-hidden="true" className="h-4 w-4" />
         </button>
         <p
-          className="pointer-events-none absolute right-0 top-full z-20 mt-2 w-72 rounded-md border border-border bg-white px-3 py-2 text-sm leading-5 text-muted-foreground opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100"
+          className={cn(
+            'pointer-events-none fixed left-[var(--blind-scoring-help-left,1rem)] top-[var(--blind-scoring-help-top,4rem)] z-20 w-[var(--blind-scoring-help-width,18rem)] rounded-md border border-border bg-white px-3 py-2 text-sm leading-5 text-muted-foreground opacity-0 shadow-lg transition group-hover:opacity-100',
+            isBlindScoringHelpOpen && 'opacity-100',
+          )}
           id={blindScoringHelpId}
           role="tooltip"
+          style={blindScoringHelpStyle}
         >
           {copy.blindScoringHelp}
         </p>
@@ -804,6 +1149,9 @@ export function MatrixEditor({
                   'relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-lg border bg-white/85 p-4 backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55',
                   isTopOption ? optionHighlightClassName : 'border-border',
                 )}
+                data-option-card=""
+                data-option-focus-card=""
+                data-focus-card=""
                 id={`option-card-${option.id}`}
                 key={option.id}
               >
@@ -910,6 +1258,9 @@ export function MatrixEditor({
             <form
               aria-label={copy.addOption}
               className="flex min-h-[12.5rem] flex-col justify-between rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80"
+              data-add-option-card=""
+              data-option-focus-card=""
+              data-focus-card=""
               onSubmit={handleAddOptionSubmit}
               ref={pendingOptionFormRef}
             >
@@ -941,7 +1292,6 @@ export function MatrixEditor({
                       isPointerSubmittingOptionRef.current = true;
                       shouldFocusPendingOptionAfterAddRef.current = false;
                     }}
-                    ref={pendingOptionSubmitButtonRef}
                     size="icon"
                     type="submit"
                   >
@@ -980,15 +1330,15 @@ export function MatrixEditor({
               criterionFallback,
             );
             const weightSliderId = `weight:${category.id}`;
-            const displayedWeight = getSliderDisplayValue(
-              weightSliderId,
-              category.weight,
-            );
+            const displayedWeight = category.weight;
 
             return (
               <article
                 aria-label={copy.criterionRowAria(criterionDisplayName)}
                 className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55 sm:p-5"
+                data-criterion-focus-card=""
+                data-focus-card=""
+                id={`criterion-card-${category.id}`}
                 key={category.id}
                 role="listitem"
               >
@@ -1018,7 +1368,7 @@ export function MatrixEditor({
                           onCategoryNameChange(category.id, event.target.value)
                         }
                         onKeyDown={(event) =>
-                          handleCategoryNameKeyDown(event, category.id, categoryIndex)
+                          handleCategoryNameKeyDown(event, category.id)
                         }
                         placeholder={criterionFallback}
                         value={category.name}
@@ -1026,19 +1376,31 @@ export function MatrixEditor({
 
                     </div>
 
-                    <div className="space-y-3 rounded-md bg-slate-950/[0.035] p-3 sm:p-4">
+                    <div
+                      className="space-y-3 rounded-md bg-slate-950/[0.035] p-3 sm:p-4"
+                      data-focus-card=""
+                      data-scoring-focus-card=""
+                      onFocusCapture={(event) =>
+                        revealClosestFocusCard(event.target)
+                      }
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <label className={labelClass} htmlFor={`weight-${category.id}`}>
                           {copy.importance}
                         </label>
-                        <output className="min-w-12 text-right text-sm font-semibold text-foreground">
+                        <output
+                          className="min-w-12 text-right text-sm font-semibold text-foreground"
+                          data-slider-output={weightSliderId}
+                        >
                           {formatSliderValue(displayedWeight, weightSliderConfig)}
                         </output>
                       </div>
                       <input
                         aria-label={copy.importanceAria(criterionDisplayName)}
                         className="matrix-range"
+                        defaultValue={displayedWeight}
                         id={`weight-${category.id}`}
+                        key={`${weightSliderId}:${displayedWeight}`}
                         max={MAX_WEIGHT}
                         min={MIN_WEIGHT}
                         onBlur={(event) =>
@@ -1047,6 +1409,8 @@ export function MatrixEditor({
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
                         onChange={(event) =>
@@ -1054,13 +1418,26 @@ export function MatrixEditor({
                             weightSliderId,
                             Number(event.currentTarget.value),
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
-                        onFocus={() =>
+                        onFocus={(event) =>
                           handleSliderStart(
                             weightSliderId,
                             displayedWeight,
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
+                          )
+                        }
+                        onInput={(event) =>
+                          handleSliderChange(
+                            weightSliderId,
+                            Number(event.currentTarget.value),
+                            weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
                         onKeyUp={(event) =>
@@ -1069,6 +1446,8 @@ export function MatrixEditor({
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
                         onPointerCancel={(event) =>
@@ -1077,13 +1456,17 @@ export function MatrixEditor({
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
-                        onPointerDown={() =>
+                        onPointerDown={(event) =>
                           handleSliderStart(
                             weightSliderId,
                             displayedWeight,
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
                         onPointerUp={(event) =>
@@ -1092,12 +1475,13 @@ export function MatrixEditor({
                             Number(event.currentTarget.value),
                             (value) => onCategoryWeightChange(category.id, value),
                             weightSliderConfig,
+                            undefined,
+                            event.currentTarget,
                           )
                         }
                         step="0.1"
                         style={getRangeStyle(displayedWeight, weightSliderConfig)}
                         type="range"
-                        value={displayedWeight}
                       />
                     </div>
                   </div>
@@ -1127,9 +1511,7 @@ export function MatrixEditor({
                           category.scoreMode;
                         const isBooleanScore = scoreMode === SCORE_MODE_BOOLEAN;
                         const scoreSliderId = `score:${option.id}:${category.id}`;
-                        const displayedScore = isBooleanScore
-                          ? score
-                          : getSliderDisplayValue(scoreSliderId, score);
+                        const displayedScore = score;
                         const displayedScoreLabel = formatScoreValue(
                           displayedScore,
                           scoreMode,
@@ -1148,17 +1530,25 @@ export function MatrixEditor({
                                 ? scoreRowHighlightClassName
                                 : null,
                             )}
+                            data-focus-card=""
+                            data-scoring-focus-card=""
                             key={`${option.id}-${category.id}`}
+                            onFocusCapture={(event) =>
+                              revealClosestFocusCard(event.target)
+                            }
                           >
                             <div className="flex min-w-0 items-center justify-between gap-3 md:block">
                               <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
                                 {optionDisplayName}
                               </span>
-                              <output className="text-sm font-semibold text-foreground md:hidden">
+                              <output
+                                className="text-sm font-semibold text-foreground md:hidden"
+                                data-slider-output={scoreSliderId}
+                              >
                                 {displayedScoreLabel}
                               </output>
                             </div>
-                            <div className="relative w-full md:w-36">
+                            <div className="relative w-full md:w-32">
                               <select
                                 aria-label={copy.scoreModeAria(
                                   optionDisplayName,
@@ -1243,7 +1633,9 @@ export function MatrixEditor({
                                   criterionDisplayName,
                                 )}
                                 className="matrix-range"
+                                defaultValue={displayedScore}
                                 id={`score-${option.id}-${category.id}`}
+                                key={`${scoreSliderId}:${displayedScore}`}
                                 max={MAX_SCORE}
                                 min={MIN_SCORE}
                                 onBlur={(event) =>
@@ -1252,16 +1644,41 @@ export function MatrixEditor({
                                     Number(event.currentTarget.value),
                                     (value) =>
                                       onScoreChange(option.id, category.id, value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
                                   )
                                 }
                                 onChange={(event) =>
                                   handleSliderChange(
                                     scoreSliderId,
                                     Number(event.currentTarget.value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
                                   )
                                 }
-                                onFocus={() =>
-                                  handleSliderStart(scoreSliderId, displayedScore)
+                                onFocus={(event) =>
+                                  handleSliderStart(
+                                    scoreSliderId,
+                                    displayedScore,
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
+                                  )
+                                }
+                                onInput={(event) =>
+                                  handleSliderChange(
+                                    scoreSliderId,
+                                    Number(event.currentTarget.value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
+                                  )
                                 }
                                 onKeyUp={(event) =>
                                   handleSliderEnd(
@@ -1269,6 +1686,10 @@ export function MatrixEditor({
                                     Number(event.currentTarget.value),
                                     (value) =>
                                       onScoreChange(option.id, category.id, value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
                                   )
                                 }
                                 onPointerCancel={(event) =>
@@ -1277,10 +1698,21 @@ export function MatrixEditor({
                                     Number(event.currentTarget.value),
                                     (value) =>
                                       onScoreChange(option.id, category.id, value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
                                   )
                                 }
-                                onPointerDown={() =>
-                                  handleSliderStart(scoreSliderId, displayedScore)
+                                onPointerDown={(event) =>
+                                  handleSliderStart(
+                                    scoreSliderId,
+                                    displayedScore,
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatDraftSliderValue(nextValue),
+                                    event.currentTarget,
+                                  )
                                 }
                                 onPointerUp={(event) =>
                                   handleSliderEnd(
@@ -1288,17 +1720,25 @@ export function MatrixEditor({
                                     Number(event.currentTarget.value),
                                     (value) =>
                                       onScoreChange(option.id, category.id, value),
+                                    scoreSliderConfig,
+                                    (nextValue) =>
+                                      formatScoreValue(nextValue, scoreMode, copy),
+                                    event.currentTarget,
                                   )
                                 }
                                 step="0.1"
                                 style={getRangeStyle(displayedScore)}
                                 type="range"
-                                value={displayedScore}
                               />
                             )}
-                            <output className="hidden text-right text-sm font-semibold text-foreground md:block">
-                              {displayedScoreLabel}
-                            </output>
+                            {!isBooleanScore ? (
+                              <output
+                                className="hidden text-right text-sm font-semibold text-foreground md:block"
+                                data-slider-output={scoreSliderId}
+                              >
+                                {displayedScoreLabel}
+                              </output>
+                            ) : null}
                           </div>
                         );
                       })}
@@ -1313,7 +1753,10 @@ export function MatrixEditor({
         <form
           aria-label={copy.addCriterion}
           className="rounded-lg border border-dashed border-primary/40 bg-white/55 p-4 shadow-sm backdrop-blur transition duration-200 hover:border-primary/55 hover:bg-white/75 focus-within:border-primary/60 focus-within:bg-white/80 sm:p-5"
+          data-criterion-focus-card=""
+          data-focus-card=""
           onSubmit={handleAddCategorySubmit}
+          ref={pendingCategoryFormRef}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-0 flex-1">
