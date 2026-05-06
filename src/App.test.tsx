@@ -5,6 +5,8 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
@@ -620,6 +622,21 @@ describe('App', () => {
     expect(
       screen.getAllByRole('link', { name: /volver a la herramienta/i })[0],
     ).toHaveAttribute('href', '/');
+  });
+
+  it('keeps launch metadata on the production domain', () => {
+    const root = process.cwd();
+    const files = [
+      'index.html',
+      'public/robots.txt',
+      'public/sitemap.xml',
+      'public/llms.txt',
+      'src/App.tsx',
+    ].map((file) => readFileSync(path.resolve(root, file), 'utf8'));
+    const combined = files.join('\n');
+
+    expect(combined).toContain('https://60second-decisions.pages.dev/');
+    expect(combined).not.toContain('weighted-decision-making.pages.dev');
   });
 
   it('picks a quick decider option immediately with every named option eligible', async () => {
