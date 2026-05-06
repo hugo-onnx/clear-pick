@@ -179,6 +179,7 @@ export interface TranslationCopy {
     productLabel: string;
     note: string;
     howItWorks: string;
+    faq: string;
     contactCta: string;
     contactEmail: string;
     backToTop: string;
@@ -212,13 +213,13 @@ function joinSpanishLabels(labels: string[]): string {
 export const translations: Record<Language, TranslationCopy> = {
   en: {
     document: {
-      title: '60-Second Decisions | Free Weighted Decision Matrix Tool',
+      title: '60-Second Decisions | Free Weighted Decision Tool',
       description:
-        'Compare options with a private weighted decision matrix. Weight criteria, score choices, and get a clear recommendation in 60 seconds. No account required.',
+        'Compare options with a private weighted decision tool. Weight priorities, score choices, and get a clear recommendation in 60 seconds. No account required.',
       howItWorksTitle:
-        'How 60-Second Decisions Works | Weighted Decision Matrix Guide',
+        'How 60-Second Decisions Works | Weighted Decision Guide',
       howItWorksDescription:
-        'Learn how 60-Second Decisions uses a private weighted decision matrix to compare options, weight criteria, score choices, and explain recommendations.',
+        'Learn how 60-Second Decisions helps you compare options, weight priorities, score choices, and explain recommendations privately.',
     },
     languageToggle: {
       label: 'Language',
@@ -248,9 +249,9 @@ export const translations: Record<Language, TranslationCopy> = {
     },
     seoContent: {
       eyebrow: 'How it works',
-      heading: 'A private weighted decision matrix for faster choices',
+      heading: 'A private weighted decision tool for faster choices',
       description:
-        '60-Second Decisions is a private browser-only tool that helps you compare options with a weighted decision matrix. Use a weighted scoring model to weight criteria, score choices, and see which option best fits what matters.',
+        '60-Second Decisions is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
       workflowHeading: 'Three-step workflow',
       workflow: [
         {
@@ -259,7 +260,7 @@ export const translations: Record<Language, TranslationCopy> = {
         },
         {
           title: 'Weight criteria',
-          body: 'Set importance from 0-10 so the decision matrix reflects your priorities instead of treating every factor equally.',
+          body: 'Set importance from 0-10 so the comparison reflects your priorities instead of treating every factor equally.',
         },
         {
           title: 'Score and compare',
@@ -287,25 +288,25 @@ export const translations: Record<Language, TranslationCopy> = {
       ],
       privacyHeading: 'Private by default',
       privacyBody:
-        'Your decision data is saved only in local browser storage on your device. 60-Second Decisions does not require an account, and your matrix is not uploaded to a server.',
+        'Your decision data is saved only in local browser storage on your device. 60-Second Decisions does not require an account, and your comparison is not uploaded to a server.',
       learnMore: 'Read the full guide',
       backToTool: 'Back to the decision tool',
-      faqHeading: 'Weighted decision matrix FAQ',
+      faqHeading: 'FAQ',
       faq: [
         {
           question: 'What is 60-Second Decisions?',
           answer:
-            '60-Second Decisions is a free private browser-only tool for comparing options with a weighted decision matrix and getting a clear recommendation quickly.',
+            '60-Second Decisions is a free private browser-only tool for comparing options and getting a clear recommendation quickly.',
         },
         {
-          question: 'How does a weighted decision matrix work?',
+          question: 'How does weighted scoring work?',
           answer:
-            'A weighted decision matrix lists options, assigns importance to each criterion, scores every option against those criteria, and calculates a weighted score for comparison.',
+            'Weighted scoring lists your options, assigns importance to each criterion, scores every option against those criteria, and calculates a final score for comparison.',
         },
         {
           question: 'Is my decision data private?',
           answer:
-            'Yes. Your matrix is stored locally in your browser, does not require an account, and is not uploaded or available to the site owner.',
+            'Yes. Your comparison is stored locally in your browser, does not require an account, and is not uploaded or available to the site owner.',
         },
         {
           question: 'When should I use a weighted scoring model?',
@@ -330,13 +331,13 @@ export const translations: Record<Language, TranslationCopy> = {
       result: (name) => `Go with: ${name}.`,
     },
     matrix: {
-      editorAria: 'Decision matrix editor',
+      editorAria: 'Decision editor',
       title: 'Weighted Scoring',
       intro:
         'Name options, weight criteria, and score each choice in one focused comparison.',
       localStorageNoticeTitle: 'Stored only on this device',
       localStorageNoticeBody:
-        'Your matrix stays in this browser. We do not upload, store, or access it.',
+        'Your decision stays in this browser. We do not upload, store, or access it.',
       onboardingGuideAria: 'Workflow guide',
       onboardingSteps: [
         'Name options',
@@ -461,6 +462,7 @@ export const translations: Record<Language, TranslationCopy> = {
       note:
         'Your data stays stored locally in this browser, so you can return to it without creating an account.',
       howItWorks: 'How it works',
+      faq: 'FAQ',
       contactCta: 'Contact support',
       contactEmail: 'hugonzalezhuerta@gmail.com',
       backToTop: 'Back to top',
@@ -468,13 +470,13 @@ export const translations: Record<Language, TranslationCopy> = {
   },
   es: {
     document: {
-      title: '60-Second Decisions | Free Weighted Decision Matrix Tool',
+      title: '60-Second Decisions | Herramienta gratuita de decisión ponderada',
       description:
-        'Compare options with a private weighted decision matrix. Weight criteria, score choices, and get a clear recommendation in 60 seconds. No account required.',
+        'Compara opciones con una herramienta privada de decisión ponderada. Pondera prioridades, puntúa alternativas y obtén una recomendación clara en 60 segundos. Sin cuenta.',
       howItWorksTitle:
-        'Cómo funciona 60-Second Decisions | Guía de matriz ponderada',
+        'Cómo funciona 60-Second Decisions | Guía de decisión ponderada',
       howItWorksDescription:
-        'Aprende cómo 60-Second Decisions usa una matriz de decisión ponderada privada para comparar opciones, ponderar criterios, puntuar alternativas y explicar recomendaciones.',
+        'Aprende cómo 60-Second Decisions te ayuda a comparar opciones, ponderar prioridades, puntuar alternativas y explicar recomendaciones de forma privada.',
     },
     languageToggle: {
       label: 'Idioma',
@@ -499,14 +501,14 @@ export const translations: Record<Language, TranslationCopy> = {
     workspaceLabel: 'Espacio de decisión',
     workspaceTabs: {
       label: 'Herramientas de decisión',
-      matrix: 'Matriz ponderada',
+      matrix: 'Puntuación ponderada',
       quickDecider: 'Selector rápido',
     },
     seoContent: {
       eyebrow: 'Cómo funciona',
-      heading: 'Una matriz de decisión ponderada privada para elegir más rápido',
+      heading: 'Una herramienta privada de decisión ponderada para elegir más rápido',
       description:
-        '60-Second Decisions es una herramienta privada que funciona solo en el navegador para comparar opciones con una matriz de decisión ponderada. Usa un modelo de puntuación ponderada para ponderar criterios, puntuar alternativas y ver qué opción encaja mejor con lo que importa.',
+        '60-Second Decisions es una herramienta privada que funciona solo en el navegador para comparar opciones con claridad. Pondera lo que importa, puntúa cada alternativa y ve qué opción encaja mejor con tus prioridades.',
       workflowHeading: 'Flujo en tres pasos',
       workflow: [
         {
@@ -515,7 +517,7 @@ export const translations: Record<Language, TranslationCopy> = {
         },
         {
           title: 'Pondera criterios',
-          body: 'Define la importancia de 0 a 10 para que la matriz refleje tus prioridades en vez de tratar todos los factores igual.',
+          body: 'Define la importancia de 0 a 10 para que la comparación refleje tus prioridades en vez de tratar todos los factores igual.',
         },
         {
           title: 'Puntúa y compara',
@@ -543,25 +545,25 @@ export const translations: Record<Language, TranslationCopy> = {
       ],
       privacyHeading: 'Privada por defecto',
       privacyBody:
-        'Tus datos de decisión se guardan solo en el almacenamiento local del navegador en tu dispositivo. 60-Second Decisions no requiere cuenta y tu matriz no se sube a un servidor.',
+        'Tus datos de decisión se guardan solo en el almacenamiento local del navegador en tu dispositivo. 60-Second Decisions no requiere cuenta y tu comparación no se sube a un servidor.',
       learnMore: 'Leer la guía completa',
       backToTool: 'Volver a la herramienta',
-      faqHeading: 'Preguntas sobre matrices ponderadas',
+      faqHeading: 'FAQ',
       faq: [
         {
           question: '¿Qué es 60-Second Decisions?',
           answer:
-            '60-Second Decisions es una herramienta gratuita y privada, solo en el navegador, para comparar opciones con una matriz de decisión ponderada y obtener una recomendación clara rápidamente.',
+            '60-Second Decisions es una herramienta gratuita y privada, solo en el navegador, para comparar opciones y obtener una recomendación clara rápidamente.',
         },
         {
-          question: '¿Cómo funciona una matriz de decisión ponderada?',
+          question: '¿Cómo funciona la puntuación ponderada?',
           answer:
-            'Una matriz de decisión ponderada lista opciones, asigna importancia a cada criterio, puntúa cada opción contra esos criterios y calcula una puntuación ponderada para comparar.',
+            'La puntuación ponderada lista opciones, asigna importancia a cada criterio, puntúa cada opción contra esos criterios y calcula una puntuación final para comparar.',
         },
         {
           question: '¿Mis datos de decisión son privados?',
           answer:
-            'Sí. Tu matriz se guarda localmente en tu navegador, no requiere cuenta y no se sube ni queda disponible para el propietario del sitio.',
+            'Sí. Tu comparación se guarda localmente en tu navegador, no requiere cuenta y no se sube ni queda disponible para el propietario del sitio.',
         },
         {
           question: '¿Cuándo debería usar un modelo de puntuación ponderada?',
@@ -586,13 +588,13 @@ export const translations: Record<Language, TranslationCopy> = {
       result: (name) => `Quédate con: ${name}.`,
     },
     matrix: {
-      editorAria: 'Editor de matriz de decisión',
+      editorAria: 'Editor de decisión',
       title: 'Modelo de puntuación ponderada',
       intro:
         'Nombra opciones, pondera criterios y puntúa cada alternativa en una comparación clara.',
       localStorageNoticeTitle: 'Guardado en este dispositivo',
       localStorageNoticeBody:
-        'Tu matriz queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
+        'Tu decisión queda en este navegador. No subimos, almacenamos ni accedemos a esos datos.',
       onboardingGuideAria: 'Guía de flujo de trabajo',
       onboardingSteps: [
         'Nombra opciones',
@@ -717,8 +719,9 @@ export const translations: Record<Language, TranslationCopy> = {
     footer: {
       productLabel: 'Modelo de puntuación ponderada',
       note:
-        'Tu matriz queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
+        'Tu decisión queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
       howItWorks: 'Cómo funciona',
+      faq: 'Preguntas frecuentes',
       contactCta: 'Contactar soporte',
       contactEmail: 'hugonzalezhuerta@gmail.com',
       backToTop: 'Volver arriba',
