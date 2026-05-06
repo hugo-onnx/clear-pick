@@ -47,7 +47,7 @@ export function AppFooter({ copy, homeLinkLabel }: AppFooterProps) {
           <div className="mt-3">
             <div className="flex flex-wrap gap-2">
               {homeLinkLabel ? (
-                <Button asChild className="gap-2" size="sm" variant="outline">
+                <Button asChild className="gap-2" size="sm">
                   <a href="/">
                     <ArrowLeft aria-hidden="true" className="size-4" />
                     {homeLinkLabel}
