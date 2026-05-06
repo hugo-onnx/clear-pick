@@ -225,7 +225,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
-        name: /a private weighted decision matrix for faster choices/i,
+        name: /a private weighted decision tool for faster choices/i,
       }),
     ).toBeInTheDocument();
     expect(
@@ -279,6 +279,9 @@ describe('App', () => {
     expect(
       within(footer).getByRole('link', { name: /how it works/i }),
     ).toHaveAttribute('href', '/how-it-works');
+    expect(
+      within(footer).getByRole('link', { name: /faq/i }),
+    ).toHaveAttribute('href', '/how-it-works#faq-heading');
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /templates/i }),
@@ -439,7 +442,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
-        name: /una matriz de decisión ponderada privada para elegir más rápido/i,
+        name: /una herramienta privada de decisión ponderada para elegir más rápido/i,
       }),
     ).toBeInTheDocument();
     expect(
@@ -476,7 +479,7 @@ describe('App', () => {
     render(<App />);
 
     expect(document.title).toBe(
-      'How 60-Second Decisions Works | Weighted Decision Matrix Guide',
+      'How 60-Second Decisions Works | Weighted Decision Guide',
     );
     expect(
       document.querySelector('meta[name="description"]'),
@@ -492,7 +495,7 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /a private weighted decision matrix for faster choices/i,
+        name: /a private weighted decision tool for faster choices/i,
       }),
     ).toBeInTheDocument();
     expect(
@@ -502,14 +505,14 @@ describe('App', () => {
       screen.getByRole('heading', { name: /product prioritization/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /weighted decision matrix faq/i }),
+      screen.getByRole('heading', { name: /^faq$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /what is 60-second decisions\?/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
-        name: /how does a weighted decision matrix work\?/i,
+        name: /how does weighted scoring work\?/i,
       }),
     ).toBeInTheDocument();
     expect(
@@ -528,6 +531,31 @@ describe('App', () => {
     );
   });
 
+  it('scrolls to the FAQ table when the how-it-works hash route loads', async () => {
+    window.history.pushState({}, '', '/how-it-works#faq-heading');
+    const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'auto',
+        block: 'start',
+      });
+    });
+
+    Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: originalScrollIntoView,
+    });
+  });
+
   it('renders the how-it-works page in Spanish after language toggle', async () => {
     const user = userEvent.setup();
     window.history.pushState({}, '', '/how-it-works');
@@ -539,19 +567,19 @@ describe('App', () => {
     );
 
     expect(document.title).toBe(
-      'Cómo funciona 60-Second Decisions | Guía de matriz ponderada',
+      'Cómo funciona 60-Second Decisions | Guía de decisión ponderada',
     );
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /una matriz de decisión ponderada privada para elegir más rápido/i,
+        name: /una herramienta privada de decisión ponderada para elegir más rápido/i,
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /cuándo usarla/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /preguntas sobre matrices ponderadas/i }),
+      screen.getByRole('heading', { name: /^faq$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
