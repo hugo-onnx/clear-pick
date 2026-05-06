@@ -87,70 +87,6 @@ function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
   }
 }
 
-function HomeSeoSummary({ copy }: { copy: typeof translations.en.seoContent }) {
-  return (
-    <section
-      aria-labelledby="seo-content-heading"
-      className=""
-    >
-      <div
-        aria-hidden="true"
-        className="mb-8 h-px w-full bg-gradient-to-r from-transparent via-cyan-700/35 to-transparent sm:mb-10"
-      />
-      <div className="overflow-hidden rounded-[2rem] border border-border bg-white/[0.74] px-5 py-7 shadow-soft sm:px-8 sm:py-9 lg:px-10 lg:py-11">
-        <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
-            {copy.eyebrow}
-          </p>
-          <h2
-            className="mt-3 font-display text-3xl font-semibold leading-tight text-foreground sm:text-4xl"
-            id="seo-content-heading"
-          >
-            {copy.heading}
-          </h2>
-          <p className="mt-5 text-lg leading-8 text-muted-foreground">
-            {copy.description}
-          </p>
-
-          <div className="mt-7 space-y-6 text-base leading-8 text-slate-700">
-            {copy.workflow.map((step, index) => (
-              <section aria-labelledby={`home-step-${index}`} key={step.title}>
-                <h3
-                  className="text-xl font-extrabold text-foreground"
-                  id={`home-step-${index}`}
-                >
-                  <span className="mr-2 text-orange-700">
-                    {String(index + 1).padStart(2, '0')}.
-                  </span>
-                  {step.title}
-                </h3>
-                <p className="mt-2">{step.body}</p>
-              </section>
-            ))}
-
-            <section aria-labelledby="home-privacy-heading">
-              <h3
-                className="text-xl font-extrabold text-cyan-950"
-                id="home-privacy-heading"
-              >
-                {copy.privacyHeading}
-              </h3>
-              <p className="mt-2 text-cyan-950/78">{copy.privacyBody}</p>
-            </section>
-          </div>
-
-          <a
-            className="mt-8 inline-flex rounded-full border border-cyan-900/15 bg-white px-4 py-2 text-sm font-bold text-cyan-800 shadow-sm transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            href="/how-it-works"
-          >
-            {copy.learnMore}
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function HowItWorksPage({
   copy,
   footerCopy,
@@ -198,17 +134,6 @@ function HowItWorksPage({
                 >
                   {copy.backToTool}
                 </a>
-                <nav
-                  aria-label={copy.eyebrow}
-                  className="flex flex-wrap gap-2 text-sm font-bold"
-                >
-                  <a
-                    className="rounded-full border border-cyan-900/10 bg-white/80 px-3 py-2 text-cyan-800 transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    href="#faq-heading"
-                  >
-                    {copy.faqHeading}
-                  </a>
-                </nav>
               </div>
             </header>
 
@@ -226,16 +151,16 @@ function HowItWorksPage({
                 >
                   {copy.workflowHeading}
                 </h2>
-                <div className="ml-4 mt-7 space-y-8 sm:ml-6">
+                <div className="ml-4 mt-7 space-y-7 sm:ml-6">
                   {copy.workflow.map((step, index) => (
                     <section
                       aria-labelledby={`workflow-step-${index}`}
-                      className="relative border-l border-cyan-900/15 pl-6 sm:pl-8"
+                      className="relative border-l border-cyan-900/10 pl-5 sm:pl-7"
                       key={step.title}
                     >
                       <div
                         aria-hidden="true"
-                        className="absolute -left-[0.9rem] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-background text-xs font-extrabold text-cyan-800 ring-1 ring-cyan-900/15"
+                        className="absolute -left-3 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-background text-[11px] font-bold text-cyan-800 ring-1 ring-cyan-900/12"
                       >
                         {index + 1}
                       </div>
@@ -300,7 +225,7 @@ function HowItWorksPage({
 
               <section
                 aria-labelledby="faq-heading"
-                className="relative -mx-4 border-t border-cyan-900/15 bg-cyan-50/45 px-4 py-10 sm:-mx-8 sm:px-8"
+                className="border-t border-cyan-900/15 pt-10"
               >
                 <h2
                   className="font-display text-3xl font-semibold text-foreground"
@@ -308,31 +233,23 @@ function HowItWorksPage({
                 >
                   {copy.faqHeading}
                 </h2>
-                <div className="mt-6 overflow-x-auto border-y border-cyan-900/15 bg-white/40">
-                  <table className="w-full border-collapse text-left">
-                    <tbody className="divide-y divide-cyan-900/10">
-                      {copy.faq.map((item) => (
-                        <tr key={item.question}>
-                          <td className="px-4 py-5 align-top sm:px-6">
-                            <details className="group">
-                              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 [&::-webkit-details-marker]:hidden">
-                                <h3 className="text-lg font-bold text-foreground">
-                                  {item.question}
-                                </h3>
-                                <ChevronDown
-                                  aria-hidden="true"
-                                  className="mt-1 size-5 shrink-0 text-cyan-800 transition group-open:rotate-180"
-                                />
-                              </summary>
-                              <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-                                {item.answer}
-                              </p>
-                            </details>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-6 divide-y divide-cyan-900/10 border-y border-cyan-900/10">
+                  {copy.faq.map((item) => (
+                    <details className="group py-5" key={item.question}>
+                      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 [&::-webkit-details-marker]:hidden">
+                        <h3 className="text-lg font-bold text-foreground">
+                          {item.question}
+                        </h3>
+                        <ChevronDown
+                          aria-hidden="true"
+                          className="mt-1 size-5 shrink-0 text-cyan-800 transition group-open:rotate-180"
+                        />
+                      </summary>
+                      <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
+                        {item.answer}
+                      </p>
+                    </details>
+                  ))}
                 </div>
               </section>
             </div>
@@ -792,8 +709,6 @@ function App() {
               <QuickDecider copy={copy.quickDecider} />
             </section>
           </main>
-
-          <HomeSeoSummary copy={copy.seoContent} />
 
           <AppFooter copy={copy.footer} />
         </div>
