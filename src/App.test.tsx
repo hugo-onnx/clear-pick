@@ -257,7 +257,9 @@ describe('App', () => {
     expect(footerLogo).toHaveAttribute('src', '/favicon.svg');
     expect(footerLogo).toHaveAttribute('alt', '');
     expect(footerLogo).toHaveAttribute('aria-hidden', 'true');
-    expect(within(footer).getByText('Weighted Scoring')).toBeInTheDocument();
+    expect(
+      within(footer).getByText('60-Second Decisions'),
+    ).toBeInTheDocument();
     expect(
       within(footer).getByText(
         /your data stays stored locally in this browser/i,
@@ -787,6 +789,101 @@ describe('App', () => {
     });
   });
 
+  it('loads weighted option names into the quick decider and clears stale results', async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, 'random');
+
+    render(<App />);
+
+    let quickDecider = await openQuickDeciderTab(user);
+    const loadButton = within(quickDecider).getByRole('button', {
+      name: /load weighted options/i,
+    });
+
+    expect(loadButton).toBeDisabled();
+    expect(
+      within(quickDecider).getByText(/name at least two weighted options to load/i),
+    ).toBeInTheDocument();
+
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 1$/i),
+      'Sushi',
+    );
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 2$/i),
+      'Pizza',
+    );
+
+    randomSpy.mockReturnValueOnce(0);
+    await user.click(
+      within(quickDecider).getByRole('button', { name: /decide for me/i }),
+    );
+    expect(
+      within(quickDecider).getByText('Go with: Sushi.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /weighted scoring/i }));
+    await user.type(screen.getByLabelText(/^option 1$/i), 'Remote role');
+
+    quickDecider = await openQuickDeciderTab(user);
+    expect(
+      within(quickDecider).getByRole('button', {
+        name: /load weighted options/i,
+      }),
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole('tab', { name: /weighted scoring/i }));
+    await user.type(screen.getByLabelText(/^option 2$/i), 'Office role');
+
+    quickDecider = await openQuickDeciderTab(user);
+    await user.click(
+      within(quickDecider).getByRole('button', {
+        name: /load weighted options/i,
+      }),
+    );
+
+    expect(within(quickDecider).getByLabelText(/^quick option 1$/i)).toHaveValue(
+      'Remote role',
+    );
+    expect(within(quickDecider).getByLabelText(/^quick option 2$/i)).toHaveValue(
+      'Office role',
+    );
+    expect(
+      within(quickDecider).queryByText(/go with:/i),
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        JSON.parse(window.localStorage.getItem(QUICK_DECIDER_STORAGE_KEY) ?? '[]'),
+      ).toEqual(['Remote role', 'Office role']);
+    });
+  });
+
+  it('loads only named weighted options into the quick decider', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(screen.getByLabelText(/^option 1$/i), 'First path');
+    await user.type(screen.getByLabelText(/new option/i), 'Third path');
+    await user.click(screen.getByRole('button', { name: /add option/i }));
+
+    const quickDecider = await openQuickDeciderTab(user);
+    await user.click(
+      within(quickDecider).getByRole('button', {
+        name: /load weighted options/i,
+      }),
+    );
+
+    expect(within(quickDecider).getAllByRole('textbox')).toHaveLength(2);
+    expect(within(quickDecider).getByLabelText(/^quick option 1$/i)).toHaveValue(
+      'First path',
+    );
+    expect(within(quickDecider).getByLabelText(/^quick option 2$/i)).toHaveValue(
+      'Third path',
+    );
+  });
+
   it('renders simplified quick decider copy in Spanish', async () => {
     const user = userEvent.setup();
 
@@ -813,7 +910,17 @@ describe('App', () => {
       within(quickDecider).getByRole('button', { name: /añadir opción/i }),
     ).toBeInTheDocument();
     expect(
+      within(quickDecider).getByRole('button', {
+        name: /cargar opciones ponderadas/i,
+      }),
+    ).toBeDisabled();
+    expect(
       within(quickDecider).getByText(/nombra al menos dos opciones para decidir/i),
+    ).toBeInTheDocument();
+    expect(
+      within(quickDecider).getByText(
+        /nombra al menos dos opciones ponderadas para cargarlas/i,
+      ),
     ).toBeInTheDocument();
   });
 
