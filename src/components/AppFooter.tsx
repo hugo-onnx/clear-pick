@@ -1,4 +1,4 @@
-import { ArrowUp, Mail } from 'lucide-react';
+import { ArrowUp, BookOpen, Mail } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import { Button } from './ui/button';
 
@@ -8,9 +8,19 @@ interface AppFooterProps {
 
 export function AppFooter({ copy }: AppFooterProps) {
   const handleBackToTop = () => {
-    document.getElementById('decision-matrix')?.scrollIntoView({
+    const decisionMatrix = document.getElementById('decision-matrix');
+
+    if (decisionMatrix) {
+      decisionMatrix.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      return;
+    }
+
+    window.scrollTo({
       behavior: 'smooth',
-      block: 'start',
+      top: 0,
     });
   };
 
@@ -34,12 +44,20 @@ export function AppFooter({ copy }: AppFooterProps) {
             {copy.note}
           </p>
           <div className="mt-3">
-            <Button asChild className="gap-2" size="sm" variant="outline">
-              <a href={`mailto:${copy.contactEmail}`}>
-                <Mail aria-hidden="true" className="size-4" />
-                {copy.contactCta}
-              </a>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="gap-2" size="sm" variant="outline">
+                <a href="/how-it-works">
+                  <BookOpen aria-hidden="true" className="size-4" />
+                  {copy.howItWorks}
+                </a>
+              </Button>
+              <Button asChild className="gap-2" size="sm" variant="outline">
+                <a href={`mailto:${copy.contactEmail}`}>
+                  <Mail aria-hidden="true" className="size-4" />
+                  {copy.contactCta}
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
 
