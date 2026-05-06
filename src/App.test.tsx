@@ -498,6 +498,25 @@ describe('App', () => {
         name: /a private weighted decision tool for faster choices/i,
       }),
     ).toBeInTheDocument();
+    const howItWorksNav = screen.getByRole('navigation', {
+      name: /how it works/i,
+    });
+    expect(
+      within(howItWorksNav).queryByRole('link', {
+        name: /three-step workflow/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(howItWorksNav).queryByRole('link', { name: /when to use it/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(howItWorksNav).queryByRole('link', {
+        name: /private by default/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(howItWorksNav).getByRole('link', { name: /^faq$/i }),
+    ).toHaveAttribute('href', '#faq-heading');
     expect(
       screen.getByRole('heading', { name: /when to use it/i }),
     ).toBeInTheDocument();
@@ -524,8 +543,20 @@ describe('App', () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /back to the decision tool/i }),
+      screen.getAllByRole('link', { name: /back to the decision tool/i })[0],
     ).toHaveAttribute('href', '/');
+    const footer = screen.getByRole('contentinfo');
+    expect(
+      within(footer).getByRole('link', {
+        name: /back to the decision tool/i,
+      }),
+    ).toHaveAttribute('href', '/');
+    expect(
+      within(footer).queryByRole('link', { name: /^how it works$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(footer).queryByRole('link', { name: /^faq$/i }),
+    ).not.toBeInTheDocument();
     expect(document.querySelector('script[type="application/ld+json"]')).toHaveTextContent(
       '"@type":"FAQPage"',
     );
@@ -585,7 +616,7 @@ describe('App', () => {
       screen.getByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /volver a la herramienta/i }),
+      screen.getAllByRole('link', { name: /volver a la herramienta/i })[0],
     ).toHaveAttribute('href', '/');
   });
 
