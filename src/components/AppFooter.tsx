@@ -1,12 +1,13 @@
-import { ArrowUp, BookOpen, CircleHelp, Mail } from 'lucide-react';
+import { ArrowLeft, ArrowUp, BookOpen, CircleHelp, Mail } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import { Button } from './ui/button';
 
 interface AppFooterProps {
   copy: TranslationCopy['footer'];
+  homeLinkLabel?: string;
 }
 
-export function AppFooter({ copy }: AppFooterProps) {
+export function AppFooter({ copy, homeLinkLabel }: AppFooterProps) {
   const handleBackToTop = () => {
     const decisionMatrix = document.getElementById('decision-matrix');
 
@@ -45,18 +46,29 @@ export function AppFooter({ copy }: AppFooterProps) {
           </p>
           <div className="mt-3">
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="gap-2" size="sm" variant="outline">
-                <a href="/how-it-works">
-                  <BookOpen aria-hidden="true" className="size-4" />
-                  {copy.howItWorks}
-                </a>
-              </Button>
-              <Button asChild className="gap-2" size="sm" variant="outline">
-                <a href="/how-it-works#faq-heading">
-                  <CircleHelp aria-hidden="true" className="size-4" />
-                  {copy.faq}
-                </a>
-              </Button>
+              {homeLinkLabel ? (
+                <Button asChild className="gap-2" size="sm" variant="outline">
+                  <a href="/">
+                    <ArrowLeft aria-hidden="true" className="size-4" />
+                    {homeLinkLabel}
+                  </a>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild className="gap-2" size="sm" variant="outline">
+                    <a href="/how-it-works">
+                      <BookOpen aria-hidden="true" className="size-4" />
+                      {copy.howItWorks}
+                    </a>
+                  </Button>
+                  <Button asChild className="gap-2" size="sm" variant="outline">
+                    <a href="/how-it-works#faq-heading">
+                      <CircleHelp aria-hidden="true" className="size-4" />
+                      {copy.faq}
+                    </a>
+                  </Button>
+                </>
+              )}
               <Button asChild className="gap-2" size="sm" variant="outline">
                 <a href={`mailto:${copy.contactEmail}`}>
                   <Mail aria-hidden="true" className="size-4" />
