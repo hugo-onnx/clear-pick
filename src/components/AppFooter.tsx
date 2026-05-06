@@ -1,4 +1,4 @@
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Mail } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import { Button } from './ui/button';
 
@@ -33,15 +33,14 @@ export function AppFooter({ copy }: AppFooterProps) {
           >
             {copy.note}
           </p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            {copy.contactLabel}:{' '}
-            <a
-              className="font-medium text-cyan-800 underline-offset-4 transition hover:text-orange-700 hover:underline"
-              href={`mailto:${copy.contactEmail}`}
-            >
-              {copy.contactEmail}
-            </a>
-          </p>
+          <div className="mt-3">
+            <Button asChild className="gap-2" size="sm" variant="outline">
+              <a href={`mailto:${copy.contactEmail}`}>
+                <Mail aria-hidden="true" className="size-4" />
+                {copy.contactCta}
+              </a>
+            </Button>
+          </div>
         </div>
 
         <div className="mt-5 sm:mt-0 sm:shrink-0">
