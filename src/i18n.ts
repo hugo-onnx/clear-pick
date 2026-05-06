@@ -248,7 +248,7 @@ export const translations: Record<Language, TranslationCopy> = {
       quickDecider: 'Quick Decider',
     },
     seoContent: {
-      eyebrow: 'How it works',
+      eyebrow: 'How it works?',
       heading: 'A private weighted decision tool for faster choices',
       description:
         '60-Second Decisions is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
@@ -505,7 +505,7 @@ export const translations: Record<Language, TranslationCopy> = {
       quickDecider: 'Selector rápido',
     },
     seoContent: {
-      eyebrow: 'Cómo funciona',
+      eyebrow: '¿Cómo funciona?',
       heading: 'Una herramienta privada de decisión ponderada para elegir más rápido',
       description:
         '60-Second Decisions es una herramienta privada que funciona solo en el navegador para comparar opciones con claridad. Pondera lo que importa, puntúa cada alternativa y ve qué opción encaja mejor con tus prioridades.',
