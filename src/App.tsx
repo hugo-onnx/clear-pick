@@ -158,25 +158,6 @@ function HowItWorksPage({
   copy: typeof translations.en.seoContent;
   footerCopy: typeof translations.en.footer;
 }) {
-  const guideLinks = [
-    {
-      href: '#workflow-heading',
-      label: copy.workflowHeading,
-    },
-    {
-      href: '#use-cases-heading',
-      label: copy.useCasesHeading,
-    },
-    {
-      href: '#privacy-heading',
-      label: copy.privacyHeading,
-    },
-    {
-      href: '#faq-heading',
-      label: copy.faqHeading,
-    },
-  ];
-
   return (
     <div className="matrix-theme relative min-h-screen overflow-hidden bg-background text-foreground">
       <div
@@ -221,15 +202,12 @@ function HowItWorksPage({
                   aria-label={copy.eyebrow}
                   className="flex flex-wrap gap-2 text-sm font-bold"
                 >
-                  {guideLinks.map((link) => (
-                    <a
-                      className="rounded-full border border-cyan-900/10 bg-white/80 px-3 py-2 text-cyan-800 transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      href={link.href}
-                      key={link.href}
-                    >
-                      {link.label}
-                    </a>
-                  ))}
+                  <a
+                    className="rounded-full border border-cyan-900/10 bg-white/80 px-3 py-2 text-cyan-800 transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    href="#faq-heading"
+                  >
+                    {copy.faqHeading}
+                  </a>
                 </nav>
               </div>
             </header>
@@ -239,7 +217,7 @@ function HowItWorksPage({
                 aria-labelledby="workflow-heading"
                 className="border-t border-cyan-900/15 pt-10"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-700">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-700">
                   01
                 </p>
                 <h2
@@ -248,7 +226,7 @@ function HowItWorksPage({
                 >
                   {copy.workflowHeading}
                 </h2>
-                <div className="mt-7 space-y-8">
+                <div className="ml-4 mt-7 space-y-8 sm:ml-6">
                   {copy.workflow.map((step, index) => (
                     <section
                       aria-labelledby={`workflow-step-${index}`}
@@ -262,12 +240,12 @@ function HowItWorksPage({
                         {index + 1}
                       </div>
                       <h3
-                        className="text-xl font-extrabold text-foreground"
+                        className="text-lg font-bold text-foreground"
                         id={`workflow-step-${index}`}
                       >
                         {step.title}
                       </h3>
-                      <p className="mt-2 text-base leading-8 text-muted-foreground">
+                      <p className="mt-2 text-base leading-7 text-muted-foreground">
                         {step.body}
                       </p>
                     </section>
@@ -279,7 +257,7 @@ function HowItWorksPage({
                 aria-labelledby="use-cases-heading"
                 className="border-t border-cyan-900/15 pt-10"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-700">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-700">
                   02
                 </p>
                 <h2
@@ -310,12 +288,12 @@ function HowItWorksPage({
                   03
                 </p>
                 <h2
-                  className="mt-2 font-display text-3xl font-semibold text-cyan-950"
+                  className="mt-2 font-display text-3xl font-semibold text-foreground"
                   id="privacy-heading"
                 >
                   {copy.privacyHeading}
                 </h2>
-                <p className="mt-3 text-base leading-8 text-cyan-950/78">
+                <p className="mt-3 text-base leading-7 text-muted-foreground">
                   {copy.privacyBody}
                 </p>
               </section>
@@ -361,7 +339,7 @@ function HowItWorksPage({
           </article>
         </main>
 
-        <AppFooter copy={footerCopy} />
+        <AppFooter copy={footerCopy} homeLinkLabel={copy.backToTool} />
       </div>
     </div>
   );
