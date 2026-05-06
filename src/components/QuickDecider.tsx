@@ -1,9 +1,10 @@
-import { Dices, Plus, RotateCcw, X } from 'lucide-react';
+import { Dices, ListPlus, Plus, RotateCcw, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { TranslationCopy } from '@/i18n';
 import { cn } from '@/lib/utils';
+import type { Option } from '@/types';
 import {
   MAX_OPTIONS,
   MIN_OPTIONS,
@@ -13,6 +14,7 @@ import {
 import {
   chooseQuickDecisionOption,
   createBlankQuickDecisionOptions,
+  createQuickDecisionOptionsFromMatrixOptions,
   getNamedQuickDecisionOptions,
 } from '../utils/quickDecider';
 import {
@@ -21,17 +23,23 @@ import {
 } from '../utils/storage';
 
 interface QuickDeciderProps {
+  availableSourceOptions: Option[];
   copy: TranslationCopy['quickDecider'];
 }
 
 const disabledHintId = 'quick-decider-disabled-hint';
 const limitHintId = 'quick-decider-limit-hint';
+const loadWeightedHintId = 'quick-decider-load-weighted-hint';
 
-export function QuickDecider({ copy }: QuickDeciderProps) {
+export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps) {
   const [options, setOptions] = useState(() => loadQuickDecisionOptions());
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const pendingFocusOptionIdRef = useRef<string | null>(null);
 
+  const weightedOptionsToLoad = useMemo(
+    () => createQuickDecisionOptionsFromMatrixOptions(availableSourceOptions),
+    [availableSourceOptions],
+  );
   const namedOptions = useMemo(
     () => getNamedQuickDecisionOptions(options),
     [options],
@@ -42,6 +50,7 @@ export function QuickDecider({ copy }: QuickDeciderProps) {
   const canAddOption = options.length < MAX_OPTIONS;
   const canRemoveOption = options.length > MIN_OPTIONS;
   const canDecide = namedOptions.length >= MIN_OPTIONS;
+  const canLoadWeightedOptions = weightedOptionsToLoad.length >= MIN_OPTIONS;
 
   useEffect(() => {
     saveQuickDecisionOptions(options);
@@ -112,6 +121,15 @@ export function QuickDecider({ copy }: QuickDeciderProps) {
 
   const handleReset = () => {
     setOptions(createBlankQuickDecisionOptions());
+    setSelectedOptionId(null);
+  };
+
+  const handleLoadWeightedOptions = () => {
+    if (!canLoadWeightedOptions) {
+      return;
+    }
+
+    setOptions(weightedOptionsToLoad);
     setSelectedOptionId(null);
   };
 
@@ -227,6 +245,19 @@ export function QuickDecider({ copy }: QuickDeciderProps) {
           <RotateCcw aria-hidden="true" className="h-4 w-4" />
           {copy.reset}
         </Button>
+        <Button
+          aria-describedby={
+            !canLoadWeightedOptions ? loadWeightedHintId : undefined
+          }
+          className="gap-2"
+          disabled={!canLoadWeightedOptions}
+          onClick={handleLoadWeightedOptions}
+          size="lg"
+          variant="outline"
+        >
+          <ListPlus aria-hidden="true" className="h-4 w-4" />
+          {copy.loadWeightedOptions}
+        </Button>
       </div>
 
       {!canDecide ? (
@@ -235,6 +266,15 @@ export function QuickDecider({ copy }: QuickDeciderProps) {
           id={disabledHintId}
         >
           {copy.disabledHint}
+        </p>
+      ) : null}
+
+      {!canLoadWeightedOptions ? (
+        <p
+          className="mt-2 text-center text-sm font-medium text-muted-foreground"
+          id={loadWeightedHintId}
+        >
+          {copy.loadWeightedOptionsHint}
         </p>
       ) : null}
 
