@@ -1,4 +1,4 @@
-import { Dices, ListOrdered } from 'lucide-react';
+import { ChevronDown, Dices, ListOrdered } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { LandingHero } from './components/LandingHero';
@@ -158,136 +158,207 @@ function HowItWorksPage({
   copy: typeof translations.en.seoContent;
   footerCopy: typeof translations.en.footer;
 }) {
+  const guideLinks = [
+    {
+      href: '#workflow-heading',
+      label: copy.workflowHeading,
+    },
+    {
+      href: '#use-cases-heading',
+      label: copy.useCasesHeading,
+    },
+    {
+      href: '#privacy-heading',
+      label: copy.privacyHeading,
+    },
+    {
+      href: '#faq-heading',
+      label: copy.faqHeading,
+    },
+  ];
+
   return (
-    <div className="matrix-theme relative min-h-screen bg-background text-foreground">
+    <div className="matrix-theme relative min-h-screen overflow-hidden bg-background text-foreground">
       <div
         aria-hidden="true"
         className="h-1 w-full bg-gradient-to-r from-cyan-600/80 via-white/60 to-orange-500/80"
       />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <main className="space-y-8">
-          <section
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-0 -z-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-cyan-200/28 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-32 right-[-12rem] -z-10 h-[30rem] w-[30rem] rounded-full bg-orange-200/28 blur-3xl"
+      />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <main>
+          <article
             aria-labelledby="how-it-works-heading"
-            className="rounded-[2rem] border border-border bg-white/[0.78] p-6 shadow-soft sm:p-8 lg:p-10"
+            className="mx-auto max-w-3xl px-1 py-4 sm:py-8"
           >
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
-              {copy.eyebrow}
-            </p>
-            <h1
-              className="mt-3 max-w-4xl font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl"
-              id="how-it-works-heading"
-            >
-              {copy.heading}
-            </h1>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-              {copy.description}
-            </p>
-            <a
-              className="mt-6 inline-flex rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              href="/"
-            >
-              {copy.backToTool}
-            </a>
-          </section>
-
-          <section
-            aria-labelledby="workflow-heading"
-            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
-          >
-            <h2
-              className="font-display text-3xl font-semibold text-foreground"
-              id="workflow-heading"
-            >
-              {copy.workflowHeading}
-            </h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {copy.workflow.map((step, index) => (
-                <article
-                  className="rounded-3xl border border-border bg-white/84 p-5"
-                  key={step.title}
+            <header className="pb-12">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
+                {copy.eyebrow}
+              </p>
+              <h1
+                className="mt-3 max-w-4xl font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl"
+                id="how-it-works-heading"
+              >
+                {copy.heading}
+              </h1>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+                {copy.description}
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  className="inline-flex justify-center rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  href="/"
                 >
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-700">
-                    {String(index + 1).padStart(2, '0')}
-                  </p>
-                  <h3 className="mt-3 text-lg font-bold text-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {step.body}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section
-            aria-labelledby="use-cases-heading"
-            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
-          >
-            <h2
-              className="font-display text-3xl font-semibold text-foreground"
-              id="use-cases-heading"
-            >
-              {copy.useCasesHeading}
-            </h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {copy.useCases.map((useCase) => (
-                <article
-                  className="rounded-3xl border border-border bg-gradient-to-br from-white/92 to-slate-50/80 p-5"
-                  key={useCase.title}
+                  {copy.backToTool}
+                </a>
+                <nav
+                  aria-label={copy.eyebrow}
+                  className="flex flex-wrap gap-2 text-sm font-bold"
                 >
-                  <h3 className="text-lg font-bold text-foreground">
-                    {useCase.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {useCase.body}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
+                  {guideLinks.map((link) => (
+                    <a
+                      className="rounded-full border border-cyan-900/10 bg-white/80 px-3 py-2 text-cyan-800 transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      href={link.href}
+                      key={link.href}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              </div>
+            </header>
 
-          <section
-            aria-labelledby="privacy-heading"
-            className="rounded-[2rem] border border-cyan-900/10 bg-cyan-50/70 p-6 shadow-soft sm:p-8"
-          >
-            <h2
-              className="font-display text-3xl font-semibold text-cyan-950"
-              id="privacy-heading"
-            >
-              {copy.privacyHeading}
-            </h2>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-cyan-950/75">
-              {copy.privacyBody}
-            </p>
-          </section>
-
-          <section
-            aria-labelledby="faq-heading"
-            className="rounded-[2rem] border border-border bg-white/[0.72] p-6 shadow-soft sm:p-8"
-          >
-            <h2
-              className="font-display text-3xl font-semibold text-foreground"
-              id="faq-heading"
-            >
-              {copy.faqHeading}
-            </h2>
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              {copy.faq.map((item) => (
-                <article
-                  className="rounded-3xl border border-border bg-white/82 p-5"
-                  key={item.question}
+            <div className="space-y-14">
+              <section
+                aria-labelledby="workflow-heading"
+                className="border-t border-cyan-900/15 pt-10"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-700">
+                  01
+                </p>
+                <h2
+                  className="mt-2 font-display text-3xl font-semibold text-foreground"
+                  id="workflow-heading"
                 >
-                  <h3 className="text-base font-bold text-foreground">
-                    {item.question}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {item.answer}
-                  </p>
-                </article>
-              ))}
+                  {copy.workflowHeading}
+                </h2>
+                <div className="mt-7 space-y-8">
+                  {copy.workflow.map((step, index) => (
+                    <section
+                      aria-labelledby={`workflow-step-${index}`}
+                      className="relative border-l border-cyan-900/15 pl-6 sm:pl-8"
+                      key={step.title}
+                    >
+                      <div
+                        aria-hidden="true"
+                        className="absolute -left-[0.9rem] top-0 flex h-7 w-7 items-center justify-center rounded-full bg-background text-xs font-extrabold text-cyan-800 ring-1 ring-cyan-900/15"
+                      >
+                        {index + 1}
+                      </div>
+                      <h3
+                        className="text-xl font-extrabold text-foreground"
+                        id={`workflow-step-${index}`}
+                      >
+                        {step.title}
+                      </h3>
+                      <p className="mt-2 text-base leading-8 text-muted-foreground">
+                        {step.body}
+                      </p>
+                    </section>
+                  ))}
+                </div>
+              </section>
+
+              <section
+                aria-labelledby="use-cases-heading"
+                className="border-t border-cyan-900/15 pt-10"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-700">
+                  02
+                </p>
+                <h2
+                  className="mt-2 font-display text-3xl font-semibold text-foreground"
+                  id="use-cases-heading"
+                >
+                  {copy.useCasesHeading}
+                </h2>
+                <div className="mt-6 divide-y divide-cyan-900/10">
+                  {copy.useCases.map((useCase) => (
+                    <section className="py-5 first:pt-0" key={useCase.title}>
+                      <h3 className="text-lg font-bold text-foreground">
+                        {useCase.title}
+                      </h3>
+                      <p className="mt-2 text-base leading-7 text-muted-foreground">
+                        {useCase.body}
+                      </p>
+                    </section>
+                  ))}
+                </div>
+              </section>
+
+              <section
+                aria-labelledby="privacy-heading"
+                className="border-t border-cyan-900/15 pt-10"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-700">
+                  03
+                </p>
+                <h2
+                  className="mt-2 font-display text-3xl font-semibold text-cyan-950"
+                  id="privacy-heading"
+                >
+                  {copy.privacyHeading}
+                </h2>
+                <p className="mt-3 text-base leading-8 text-cyan-950/78">
+                  {copy.privacyBody}
+                </p>
+              </section>
+
+              <section
+                aria-labelledby="faq-heading"
+                className="relative -mx-4 border-t border-cyan-900/15 bg-cyan-50/45 px-4 py-10 sm:-mx-8 sm:px-8"
+              >
+                <h2
+                  className="font-display text-3xl font-semibold text-foreground"
+                  id="faq-heading"
+                >
+                  {copy.faqHeading}
+                </h2>
+                <div className="mt-6 overflow-x-auto border-y border-cyan-900/15 bg-white/40">
+                  <table className="w-full border-collapse text-left">
+                    <tbody className="divide-y divide-cyan-900/10">
+                      {copy.faq.map((item) => (
+                        <tr key={item.question}>
+                          <td className="px-4 py-5 align-top sm:px-6">
+                            <details className="group">
+                              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 [&::-webkit-details-marker]:hidden">
+                                <h3 className="text-lg font-bold text-foreground">
+                                  {item.question}
+                                </h3>
+                                <ChevronDown
+                                  aria-hidden="true"
+                                  className="mt-1 size-5 shrink-0 text-cyan-800 transition group-open:rotate-180"
+                                />
+                              </summary>
+                              <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
+                                {item.answer}
+                              </p>
+                            </details>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             </div>
-          </section>
+          </article>
         </main>
 
         <AppFooter copy={footerCopy} />
@@ -306,6 +377,14 @@ function getCurrentPathname() {
 
 function isHowItWorksPath(pathname: string) {
   return pathname.replace(/\/+$/, '') === '/how-it-works';
+}
+
+function getCurrentHashTargetId() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return window.location.hash.replace(/^#/, '');
 }
 
 function getFaqStructuredData(copy: typeof translations.en.seoContent) {
@@ -384,6 +463,42 @@ function App() {
   }, []);
 
   useEffect(() => clearScheduledDecisionMatrixScrolls, []);
+
+  useEffect(() => {
+    if (!isHowItWorks) {
+      return undefined;
+    }
+
+    const targetId = getCurrentHashTargetId();
+
+    if (!targetId) {
+      return undefined;
+    }
+
+    const scrollToHashTarget = () => {
+      const target = document.getElementById(targetId);
+
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({
+          behavior: 'auto',
+          block: 'start',
+        });
+      }
+    };
+
+    scrollToHashTarget();
+
+    const animationFrameId = window.requestAnimationFrame?.(scrollToHashTarget);
+    const timeoutId = window.setTimeout(scrollToHashTarget, 120);
+
+    return () => {
+      if (animationFrameId !== undefined) {
+        window.cancelAnimationFrame?.(animationFrameId);
+      }
+
+      window.clearTimeout(timeoutId);
+    };
+  }, [isHowItWorks]);
 
   useEffect(() => {
     const updateMetaContent = (selector: string, content: string) => {
