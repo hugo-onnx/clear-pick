@@ -25,6 +25,7 @@ import {
 afterEach(() => {
   vi.useRealTimers();
   window.localStorage.clear();
+  window.history.pushState({}, '', '/');
   vi.restoreAllMocks();
 });
 
@@ -198,7 +199,7 @@ describe('App', () => {
       screen.getByRole('region', { name: /options to compare/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('tab', { name: /weighted matrix/i }),
+      screen.getByRole('tab', { name: /weighted scoring/i }),
     ).toHaveAttribute('aria-selected', 'true');
     expect(
       screen.getByRole('tab', { name: /quick decider/i }),
@@ -207,7 +208,7 @@ describe('App', () => {
       screen.queryByRole('region', { name: /quick random decider/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /weighted scoring model/i }),
+      screen.getByRole('heading', { name: /^weighted scoring$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -222,6 +223,29 @@ describe('App', () => {
         /your decision stays in this browser\. we do not upload, store, or access it\./i,
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /a private weighted decision matrix for faster choices/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/60-second decisions is a private browser-only tool/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /name options/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /weight criteria/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /score and compare/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /read the full guide/i }),
+    ).toHaveAttribute('href', '/how-it-works');
+    expect(
+      screen.queryByRole('heading', { name: /what is 60-second decisions\?/i }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
 
@@ -233,7 +257,7 @@ describe('App', () => {
     expect(footerLogo).toHaveAttribute('src', '/favicon.svg');
     expect(footerLogo).toHaveAttribute('alt', '');
     expect(footerLogo).toHaveAttribute('aria-hidden', 'true');
-    expect(within(footer).getByText('Weighted Scoring Model')).toBeInTheDocument();
+    expect(within(footer).getByText('Weighted Scoring')).toBeInTheDocument();
     expect(
       within(footer).getByText(
         /your data stays stored locally in this browser/i,
@@ -252,6 +276,9 @@ describe('App', () => {
       'mailto:hugonzalezhuerta@gmail.com',
     );
     expect(supportLink).not.toHaveTextContent(/hugonzalezhuerta@gmail\.com/i);
+    expect(
+      within(footer).getByRole('link', { name: /how it works/i }),
+    ).toHaveAttribute('href', '/how-it-works');
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /templates/i }),
@@ -294,7 +321,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /^start$/i }));
 
     expect(
-      screen.getByRole('tab', { name: /weighted matrix/i }),
+      screen.getByRole('tab', { name: /weighted scoring/i }),
     ).toHaveAttribute('aria-selected', 'true');
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
@@ -386,7 +413,7 @@ describe('App', () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /modelo de puntuación ponderada/i }),
+      screen.getByRole('heading', { name: /^modelo de puntuación ponderada$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /opciones para comparar/i }),
@@ -410,6 +437,20 @@ describe('App', () => {
         /tu decisión queda en este navegador\. no subimos, almacenamos ni accedemos a esos datos\./i,
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /una matriz de decisión ponderada privada para elegir más rápido/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/60-second decisions es una herramienta privada/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /leer la guía completa/i }),
+    ).toHaveAttribute('href', '/how-it-works');
+    expect(
+      screen.queryByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
     expect(
       screen.getByRole('region', { name: /selector aleatorio rápido/i }),
@@ -424,6 +465,100 @@ describe('App', () => {
     expect(
       screen.getByRole('button', { name: /^start$/i }),
     ).toBeInTheDocument();
+  });
+
+  it('renders the full how-it-works page with FAQ content and route metadata', () => {
+    window.history.pushState({}, '', '/how-it-works');
+    const descriptionMeta = document.createElement('meta');
+    descriptionMeta.setAttribute('name', 'description');
+    document.head.append(descriptionMeta);
+
+    render(<App />);
+
+    expect(document.title).toBe(
+      'How 60-Second Decisions Works | Weighted Decision Matrix Guide',
+    );
+    expect(
+      document.querySelector('meta[name="description"]'),
+    ).toHaveAttribute(
+      'content',
+      translations.en.document.howItWorksDescription,
+    );
+    expect(
+      screen.queryByRole('heading', {
+        name: /make your hardest decision in 60 seconds/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /a private weighted decision matrix for faster choices/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /when to use it/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /product prioritization/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /weighted decision matrix faq/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /what is 60-second decisions\?/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /how does a weighted decision matrix work\?/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /is my decision data private\?/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /when should i use a weighted scoring model\?/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /back to the decision tool/i }),
+    ).toHaveAttribute('href', '/');
+    expect(document.querySelector('script[type="application/ld+json"]')).toHaveTextContent(
+      '"@type":"FAQPage"',
+    );
+  });
+
+  it('renders the how-it-works page in Spanish after language toggle', async () => {
+    const user = userEvent.setup();
+    window.history.pushState({}, '', '/how-it-works');
+
+    render(<App />);
+
+    await user.click(
+      screen.getByRole('button', { name: /switch to spanish/i }),
+    );
+
+    expect(document.title).toBe(
+      'Cómo funciona 60-Second Decisions | Guía de matriz ponderada',
+    );
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /una matriz de decisión ponderada privada para elegir más rápido/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /cuándo usarla/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /preguntas sobre matrices ponderadas/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /volver a la herramienta/i }),
+    ).toHaveAttribute('href', '/');
   });
 
   it('picks a quick decider option immediately with every named option eligible', async () => {
@@ -471,7 +606,7 @@ describe('App', () => {
       ).toEqual(['Sushi', 'Pizza']);
     });
 
-    await user.click(screen.getByRole('tab', { name: /weighted matrix/i }));
+    await user.click(screen.getByRole('tab', { name: /weighted scoring/i }));
     expect(
       screen.queryByRole('region', { name: /quick random decider/i }),
     ).not.toBeInTheDocument();
