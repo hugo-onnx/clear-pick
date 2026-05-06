@@ -11,6 +11,10 @@
   Content-Type: image/png
   Cache-Control: public, max-age=86400
 
+/social-card.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400
+
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
