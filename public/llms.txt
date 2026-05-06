@@ -4,7 +4,7 @@ Canonical URL: https://60second-decisions.pages.dev/
 How it works guide: https://60second-decisions.pages.dev/how-it-works
 Sitemap: https://60second-decisions.pages.dev/sitemap.xml
 Robots policy: https://60second-decisions.pages.dev/robots.txt
-Preview image: https://60second-decisions.pages.dev/social-preview.png
+Preview image: https://60second-decisions.pages.dev/social-card.png
 Primary language: English
 Additional interface language: Spanish
 Application type: Browser-only weighted decision matrix and weighted scoring model tool
