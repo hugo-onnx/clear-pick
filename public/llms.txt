@@ -1,16 +1,16 @@
-# 60-Second Decisions
+# ClearPick
 
-Canonical URL: https://60second-decisions.pages.dev/
-How it works guide: https://60second-decisions.pages.dev/how-it-works
-Sitemap: https://60second-decisions.pages.dev/sitemap.xml
-Robots policy: https://60second-decisions.pages.dev/robots.txt
-Preview image: https://60second-decisions.pages.dev/social-card-whatsapp.jpg
+Canonical URL: https://clear-pick.pages.dev/
+How it works guide: https://clear-pick.pages.dev/how-it-works
+Sitemap: https://clear-pick.pages.dev/sitemap.xml
+Robots policy: https://clear-pick.pages.dev/robots.txt
+Preview image: https://clear-pick.pages.dev/social-card-whatsapp.jpg
 Primary language: English
 Additional interface language: Spanish
 Application type: Browser-only weighted decision matrix and weighted scoring model tool
-Title: 60-Second Decisions | Weighted Decisions Tool
+Title: ClearPick | Weighted Decisions Tool
 
-60-Second Decisions helps people compare options by naming choices, weighting criteria, scoring each option, and reviewing the ranked result with transparent score contributions.
+ClearPick helps people compare options by naming choices, weighting criteria, scoring each option, and reviewing the ranked result with transparent score contributions.
 
 Best description:
 Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.
@@ -33,7 +33,7 @@ Main use cases:
 
 FAQ summary:
 - The full FAQ and use-case guide is available at /how-it-works.
-- What is 60-Second Decisions? A free private browser-only tool for comparing options with a weighted decision matrix and getting a clear recommendation quickly.
+- What is ClearPick? A free private browser-only tool for comparing options with a weighted decision matrix and getting a clear recommendation quickly.
 - How does a weighted decision matrix work? It lists options, assigns importance to criteria, scores every option against those criteria, and calculates weighted scores for comparison.
 - Is decision data private? Yes. Decision matrices are stored locally in the user's browser, do not require an account, and are not uploaded or available to the site owner.
 - When should someone use a weighted scoring model? Use it when comparing options with several criteria, making tradeoffs explicit, and explaining why one choice ranks higher than another.
