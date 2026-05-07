@@ -3,7 +3,7 @@ import type { CareerMoveExampleLabels } from './utils/matrix';
 export const LANGUAGES = ['en', 'es'] as const;
 export type Language = (typeof LANGUAGES)[number];
 
-export const LANGUAGE_STORAGE_KEY = '60second-decisions:language:v1';
+export const LANGUAGE_STORAGE_KEY = 'clearpick:language:v1';
 
 export interface TranslationCopy {
   document: {
@@ -215,13 +215,13 @@ function joinSpanishLabels(labels: string[]): string {
 export const translations: Record<Language, TranslationCopy> = {
   en: {
     document: {
-      title: '60-Second Decisions | Weighted Decisions Tool',
+      title: 'ClearPick | Weighted Decisions Tool',
       description:
         'Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.',
       howItWorksTitle:
-        'How 60-Second Decisions Works | Weighted Decision Guide',
+        'How ClearPick Works | Weighted Decision Guide',
       howItWorksDescription:
-        'Learn how 60-Second Decisions helps you compare options, weight priorities, score choices, and explain recommendations privately.',
+        'Learn how ClearPick helps you compare options, weight priorities, score choices, and explain recommendations privately.',
     },
     languageToggle: {
       label: 'Language',
@@ -253,7 +253,7 @@ export const translations: Record<Language, TranslationCopy> = {
       eyebrow: 'How it works',
       heading: 'A private weighted decision tool for faster choices',
       description:
-        '60-Second Decisions is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
+        'ClearPick is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
       workflowHeading: 'Three-step workflow',
       workflow: [
         {
@@ -290,15 +290,15 @@ export const translations: Record<Language, TranslationCopy> = {
       ],
       privacyHeading: 'Private by default',
       privacyBody:
-        'Your decision data is saved only in local browser storage on your device. 60-Second Decisions does not require an account, and your comparison is not uploaded to a server.',
+        'Your decision data is saved only in local browser storage on your device. ClearPick does not require an account, and your comparison is not uploaded to a server.',
       learnMore: 'Read the full guide',
       backToTool: 'Back to the decision tool',
       faqHeading: 'FAQ',
       faq: [
         {
-          question: 'What is 60-Second Decisions?',
+          question: 'What is ClearPick?',
           answer:
-            '60-Second Decisions is a free private browser-only tool for comparing options and getting a clear recommendation quickly.',
+            'ClearPick is a free private browser-only tool for comparing options and getting a clear recommendation quickly.',
         },
         {
           question: 'How does weighted scoring work?',
@@ -462,7 +462,7 @@ export const translations: Record<Language, TranslationCopy> = {
       matrixCount: (options, categories) => `${options} options / ${categories} criteria`,
     },
     footer: {
-      productLabel: '60-Second Decisions',
+      productLabel: 'ClearPick',
       note:
         'Your data stays stored locally in this browser, so you can return to it without creating an account.',
       howItWorks: 'How it works',
@@ -474,13 +474,13 @@ export const translations: Record<Language, TranslationCopy> = {
   },
   es: {
     document: {
-      title: '60-Second Decisions | Herramienta gratuita de decisión ponderada',
+      title: 'ClearPick | Herramienta gratuita de decisión ponderada',
       description:
         'Compara opciones con una herramienta privada de decisión ponderada. Pondera prioridades, puntúa alternativas y obtén una recomendación clara en 60 segundos. Sin cuenta.',
       howItWorksTitle:
-        'Cómo funciona 60-Second Decisions | Guía de decisión ponderada',
+        'Cómo funciona ClearPick | Guía de decisión ponderada',
       howItWorksDescription:
-        'Aprende cómo 60-Second Decisions te ayuda a comparar opciones, ponderar prioridades, puntuar alternativas y explicar recomendaciones de forma privada.',
+        'Aprende cómo ClearPick te ayuda a comparar opciones, ponderar prioridades, puntuar alternativas y explicar recomendaciones de forma privada.',
     },
     languageToggle: {
       label: 'Idioma',
@@ -512,7 +512,7 @@ export const translations: Record<Language, TranslationCopy> = {
       eyebrow: '¿Cómo funciona?',
       heading: 'Una herramienta privada de decisión ponderada para elegir más rápido',
       description:
-        '60-Second Decisions es una herramienta privada que funciona solo en el navegador para comparar opciones con claridad. Pondera lo que importa, puntúa cada alternativa y ve qué opción encaja mejor con tus prioridades.',
+        'ClearPick es una herramienta privada que funciona solo en el navegador para comparar opciones con claridad. Pondera lo que importa, puntúa cada alternativa y ve qué opción encaja mejor con tus prioridades.',
       workflowHeading: 'Flujo en tres pasos',
       workflow: [
         {
@@ -549,15 +549,15 @@ export const translations: Record<Language, TranslationCopy> = {
       ],
       privacyHeading: 'Privada por defecto',
       privacyBody:
-        'Tus datos de decisión se guardan solo en el almacenamiento local del navegador en tu dispositivo. 60-Second Decisions no requiere cuenta y tu comparación no se sube a un servidor.',
+        'Tus datos de decisión se guardan solo en el almacenamiento local del navegador en tu dispositivo. ClearPick no requiere cuenta y tu comparación no se sube a un servidor.',
       learnMore: 'Leer la guía completa',
       backToTool: 'Volver a la herramienta',
       faqHeading: 'FAQ',
       faq: [
         {
-          question: '¿Qué es 60-Second Decisions?',
+          question: '¿Qué es ClearPick?',
           answer:
-            '60-Second Decisions es una herramienta gratuita y privada, solo en el navegador, para comparar opciones y obtener una recomendación clara rápidamente.',
+            'ClearPick es una herramienta gratuita y privada, solo en el navegador, para comparar opciones y obtener una recomendación clara rápidamente.',
         },
         {
           question: '¿Cómo funciona la puntuación ponderada?',
@@ -724,7 +724,7 @@ export const translations: Record<Language, TranslationCopy> = {
         `${options} opciones / ${categories} criterios`,
     },
     footer: {
-      productLabel: '60-Second Decisions',
+      productLabel: 'ClearPick',
       note:
         'Tu decisión queda guardada localmente en este navegador para que puedas volver sin crear una cuenta.',
       howItWorks: 'Cómo funciona',
