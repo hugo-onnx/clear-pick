@@ -286,7 +286,7 @@ function getFaqStructuredData(copy: typeof translations.en.seoContent) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    '@id': 'https://60second-decisions.pages.dev/how-it-works#faq',
+    '@id': 'https://clear-pick.pages.dev/how-it-works#faq',
     name: copy.faqHeading,
     mainEntity: copy.faq.map((item) => ({
       '@type': 'Question',
