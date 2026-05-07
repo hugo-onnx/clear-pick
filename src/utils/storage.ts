@@ -6,11 +6,11 @@ import {
   serializeQuickDecisionOptions,
 } from './quickDecider';
 
-export const STORAGE_KEY = '60second-decisions:active-decision:v1';
+export const STORAGE_KEY = 'clearpick:active-decision:v1';
 export const ONBOARDING_DISMISSAL_STORAGE_KEY =
-  '60second-decisions:onboarding-dismissed:v1';
+  'clearpick:onboarding-dismissed:v1';
 export const QUICK_DECIDER_STORAGE_KEY =
-  '60second-decisions:quick-decider-options:v1';
+  'clearpick:quick-decider-options:v1';
 
 export function loadActiveDecision(): DecisionMatrix {
   if (typeof window === 'undefined') {
