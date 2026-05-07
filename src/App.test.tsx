@@ -231,7 +231,7 @@ describe('App', () => {
       }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/60-second decisions is a private browser-only tool/i),
+      screen.queryByText(/clearpick is a private browser-only tool/i),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: /name options/i }),
@@ -246,7 +246,7 @@ describe('App', () => {
       screen.queryByRole('link', { name: /read the full guide/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: /what is 60-second decisions\?/i }),
+      screen.queryByRole('heading', { name: /what is clearpick\?/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/current decision/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/decision title/i)).not.toBeInTheDocument();
@@ -260,7 +260,7 @@ describe('App', () => {
     expect(footerLogo).toHaveAttribute('alt', '');
     expect(footerLogo).toHaveAttribute('aria-hidden', 'true');
     expect(
-      within(footer).getByText('60-Second Decisions'),
+      within(footer).getByText('ClearPick'),
     ).toBeInTheDocument();
     expect(
       within(footer).getByText(
@@ -450,13 +450,13 @@ describe('App', () => {
       }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText(/60-second decisions es una herramienta privada/i),
+      screen.queryByText(/clearpick es una herramienta privada/i),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /leer la guía completa/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
+      screen.queryByRole('heading', { name: /¿qué es clearpick\?/i }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
     expect(
@@ -483,7 +483,7 @@ describe('App', () => {
     render(<App />);
 
     expect(document.title).toBe(
-      'How 60-Second Decisions Works | Weighted Decision Guide',
+      'How ClearPick Works | Weighted Decision Guide',
     );
     expect(
       document.querySelector('meta[name="description"]'),
@@ -531,7 +531,7 @@ describe('App', () => {
       screen.getByRole('heading', { name: /^faq$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /what is 60-second decisions\?/i }),
+      screen.getByRole('heading', { name: /what is clearpick\?/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
@@ -602,7 +602,7 @@ describe('App', () => {
     );
 
     expect(document.title).toBe(
-      'Cómo funciona 60-Second Decisions | Guía de decisión ponderada',
+      'Cómo funciona ClearPick | Guía de decisión ponderada',
     );
     expect(
       screen.getByRole('heading', {
@@ -617,7 +617,7 @@ describe('App', () => {
       screen.getByRole('heading', { name: /^faq$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /¿qué es 60-second decisions\?/i }),
+      screen.getByRole('heading', { name: /¿qué es clearpick\?/i }),
     ).toBeInTheDocument();
     expect(
       screen.getAllByRole('link', { name: /volver a la herramienta/i })[0],
@@ -635,8 +635,9 @@ describe('App', () => {
     ].map((file) => readFileSync(path.resolve(root, file), 'utf8'));
     const combined = files.join('\n');
 
-    expect(combined).toContain('https://60second-decisions.pages.dev/');
+    expect(combined).toContain('https://clear-pick.pages.dev/');
     expect(combined).not.toContain('weighted-decision-making.pages.dev');
+
   });
 
   it('picks a quick decider option immediately with every named option eligible', async () => {
