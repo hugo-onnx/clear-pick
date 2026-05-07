@@ -4,17 +4,17 @@
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
 >
   <url>
-    <loc>https://60second-decisions.pages.dev/</loc>
+    <loc>https://clear-pick.pages.dev/</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://60second-decisions.pages.dev/social-card-whatsapp.jpg</image:loc>
-      <image:title>60-Second Decisions weighted decision matrix tool</image:title>
+      <image:loc>https://clear-pick.pages.dev/social-card-whatsapp.jpg</image:loc>
+      <image:title>ClearPick weighted decision matrix tool</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://60second-decisions.pages.dev/how-it-works</loc>
+    <loc>https://clear-pick.pages.dev/how-it-works</loc>
     <lastmod>2026-05-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
