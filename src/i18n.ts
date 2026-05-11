@@ -1,5 +1,3 @@
-import type { CareerMoveExampleLabels } from './utils/matrix';
-
 export interface TranslationCopy {
   document: {
     title: string;
@@ -73,11 +71,6 @@ export interface TranslationCopy {
     localStorageNoticeBody: string;
     onboardingGuideAria: string;
     onboardingSteps: string[];
-    loadExample: string;
-    firstRunHintTitle: string;
-    firstRunHintBody: string;
-    dismissFirstRunHint: string;
-    careerMoveExample: CareerMoveExampleLabels;
     optionsRegionAria: string;
     optionsHeading: string;
     optionsDescription: string;
@@ -316,24 +309,6 @@ export const copy: TranslationCopy = {
       'Weight criteria',
       'Score and compare',
     ],
-    loadExample: 'Load example',
-    firstRunHintTitle: 'Start with the shape of the decision',
-    firstRunHintBody:
-      'Name at least two options, add what matters, then move one importance slider above 0 to make the ranking meaningful.',
-    dismissFirstRunHint: 'Dismiss onboarding hint',
-    careerMoveExample: {
-      options: {
-        stayCurrentRole: 'Stay in current role',
-        acceptNewRole: 'Accept new role',
-        startFreelancing: 'Start freelancing',
-      },
-      criteria: {
-        growth: 'Growth',
-        compensation: 'Compensation',
-        workLifeBalance: 'Work-life balance',
-        risk: 'Risk',
-      },
-    },
     optionsRegionAria: 'Options to compare',
     optionsHeading: 'Options to compare',
     optionsDescription:
