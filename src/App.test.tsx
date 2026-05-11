@@ -700,6 +700,37 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('triggers a decision when Enter is pressed in an option input', async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, 'random');
+
+    render(<App />);
+
+    const quickDecider = await openQuickDeciderTab(user);
+
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 1$/i),
+      'Tea',
+    );
+    await user.type(
+      within(quickDecider).getByLabelText(/^quick option 2$/i),
+      'Coffee',
+    );
+
+    // Blur option 2 to commit it, then re-focus — now it has a name at focus time
+    await user.tab();
+    const option2Input = within(quickDecider).getByLabelText(/^quick option 2$/i);
+    await user.click(option2Input);
+
+    randomSpy.mockReturnValueOnce(0.1);
+    await user.keyboard('{Enter}');
+
+    expect(
+      within(quickDecider).getByText('Go with: Tea.'),
+    ).toBeInTheDocument();
+    expect(option2Input).not.toHaveFocus();
+  });
+
   it('restores persisted quick decider options', async () => {
     window.localStorage.setItem(
       QUICK_DECIDER_STORAGE_KEY,
