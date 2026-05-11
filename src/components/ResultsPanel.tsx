@@ -501,69 +501,70 @@ export function ResultsPanel({
               </section>
             ) : null}
 
-            <section className="flex flex-col gap-4 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
-              <p className="order-2 text-xs uppercase text-muted-foreground sm:order-1">
-                {copy.matrixCount(matrix.options.length, matrix.categories.length)}
-              </p>
-              <Button
-                className="order-1 w-full gap-2 text-muted-foreground active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
-                onClick={handleOpenResetDialog}
-                ref={resetTriggerRef}
-                size="sm"
-                variant="outline"
-              >
-                <RotateCcw aria-hidden="true" className="h-4 w-4" />
-                {copy.reset}
-              </Button>
-            </section>
-
-            {isResetDialogOpen ? (
-              <div
-                aria-labelledby={resetDialogTitleId}
-                aria-describedby={resetDialogDescriptionId}
-                aria-modal="true"
-                className="fixed inset-0 z-50 flex min-h-svh items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm"
-                role="alertdialog"
-              >
-                <div
-                  className="w-full max-w-md rounded-lg border border-border bg-white/[0.96] p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
-                  ref={resetDialogRef}
-                >
-                  <h3
-                    className="font-display text-2xl font-semibold tracking-normal text-foreground"
-                    id={resetDialogTitleId}
-                  >
-                    {copy.resetDialogTitle}
-                  </h3>
-                  <p
-                    className="mt-3 text-sm leading-6 text-muted-foreground"
-                    id={resetDialogDescriptionId}
-                  >
-                    {copy.resetDialogDescription}
-                  </p>
-                  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                    <Button
-                      className="w-full sm:w-auto"
-                      onClick={handleCloseResetDialog}
-                      ref={resetCancelButtonRef}
-                      size="sm"
-                      variant="outline"
-                    >
-                      {copy.resetDialogCancel}
-                    </Button>
-                    <Button
-                      className="w-full sm:w-auto"
-                      onClick={handleConfirmReset}
-                      size="sm"
-                    >
-                      {copy.resetDialogConfirm}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </>
         )}
+
+        <section className="flex flex-col gap-4 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
+          <p className="order-2 text-xs uppercase text-muted-foreground sm:order-1">
+            {copy.matrixCount(matrix.options.length, matrix.categories.length)}
+          </p>
+          <Button
+            className="order-1 w-full gap-2 text-muted-foreground active:translate-y-px active:border-primary/45 active:bg-white/85 sm:order-2 sm:w-auto"
+            onClick={handleOpenResetDialog}
+            ref={resetTriggerRef}
+            size="sm"
+            variant="outline"
+          >
+            <RotateCcw aria-hidden="true" className="h-4 w-4" />
+            {copy.reset}
+          </Button>
+        </section>
+
+        {isResetDialogOpen ? (
+          <div
+            aria-labelledby={resetDialogTitleId}
+            aria-describedby={resetDialogDescriptionId}
+            aria-modal="true"
+            className="fixed inset-0 z-50 flex min-h-svh items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm"
+            role="alertdialog"
+          >
+            <div
+              className="w-full max-w-md rounded-lg border border-border bg-white/[0.96] p-5 text-left shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
+              ref={resetDialogRef}
+            >
+              <h3
+                className="font-display text-2xl font-semibold tracking-normal text-foreground"
+                id={resetDialogTitleId}
+              >
+                {copy.resetDialogTitle}
+              </h3>
+              <p
+                className="mt-3 text-sm leading-6 text-muted-foreground"
+                id={resetDialogDescriptionId}
+              >
+                {copy.resetDialogDescription}
+              </p>
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={handleCloseResetDialog}
+                  ref={resetCancelButtonRef}
+                  size="sm"
+                  variant="outline"
+                >
+                  {copy.resetDialogCancel}
+                </Button>
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={handleConfirmReset}
+                  size="sm"
+                >
+                  {copy.resetDialogConfirm}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </aside>
   );
