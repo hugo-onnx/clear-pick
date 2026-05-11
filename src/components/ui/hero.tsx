@@ -232,7 +232,7 @@ export default function ShaderShowcase({
           aria-describedby="local-save-notice-body"
           aria-labelledby="local-save-notice-title"
           aria-expanded={isNoticeExpanded}
-          className="absolute inset-x-4 bottom-4 z-30 w-auto max-w-none text-left outline-none sm:inset-x-auto sm:bottom-6 sm:right-6 sm:mx-0 sm:w-[min(18rem,calc(100vw-2rem))]"
+          className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2 outline-none sm:left-auto sm:translate-x-0 sm:bottom-6 sm:right-6"
           role="note"
           tabIndex={0}
           id="local-save-notice"
@@ -247,7 +247,7 @@ export default function ShaderShowcase({
         >
           <div
             className={cn(
-              'pointer-events-none absolute bottom-full right-0 mb-2 w-full transform-gpu rounded-lg border border-white/15 bg-black/70 px-4 py-3 shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:w-[min(22rem,calc(100vw-2rem))]',
+              'pointer-events-none absolute bottom-full left-1/2 mb-2 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 transform-gpu rounded-lg border border-white/15 bg-black/70 px-4 py-3 shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:left-auto sm:translate-x-0 sm:right-0 sm:w-[min(22rem,calc(100vw-2rem))]',
               isNoticeExpanded
                 ? 'translate-y-0 scale-100 opacity-100'
                 : 'translate-y-1.5 scale-[0.98] opacity-0',
@@ -265,7 +265,7 @@ export default function ShaderShowcase({
             </p>
           </div>
 
-          <div className="relative overflow-hidden rounded-lg border border-white/15 bg-black/35 px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+          <div className="relative w-fit overflow-hidden rounded-lg border border-white/15 bg-black/35 px-3 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl">
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-[linear-gradient(135deg,rgba(6,182,212,0.16),transparent_50%),linear-gradient(315deg,rgba(249,115,22,0.12),transparent_58%)] opacity-90"
@@ -276,7 +276,7 @@ export default function ShaderShowcase({
                 className="h-5 w-5 shrink-0 text-cyan-200"
               />
               <h2
-                className="min-w-0 break-words text-xs font-semibold uppercase leading-4 text-white/95"
+                className="whitespace-nowrap text-xs font-semibold uppercase leading-4 text-white/95"
                 id="local-save-notice-title"
               >
                 {copy.localStorageNoticeTitle}
