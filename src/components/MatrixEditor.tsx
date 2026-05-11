@@ -711,8 +711,36 @@ export function MatrixEditor({
 
     const nextCategoryName = pendingCategoryName.trim();
     const shouldFocusNewCategory = nextCategoryName.length === 0;
+    const isKeyboardSubmit =
+      document.activeElement === pendingCategoryInputRef.current;
     shouldFocusNewCategoryRef.current = shouldFocusNewCategory;
     shouldFocusNewCategoryWeightRef.current = !shouldFocusNewCategory;
+
+    if (isKeyboardSubmit && !shouldFocusNewCategory) {
+      const pendingInput = pendingCategoryInputRef.current;
+      const pendingForm = pendingCategoryFormRef.current;
+
+      if (pendingInput) {
+        pendingInput.style.transition = 'none';
+        pendingInput.blur();
+      }
+      if (pendingForm) {
+        pendingForm.style.transition = 'none';
+      }
+
+      const requestNextFrame =
+        window.requestAnimationFrame?.bind(window) ??
+        ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+      requestNextFrame(() => {
+        if (pendingInput) {
+          pendingInput.style.transition = '';
+        }
+        if (pendingForm) {
+          pendingForm.style.transition = '';
+        }
+      });
+    }
+
     onAddCategory(nextCategoryName);
     setPendingCategoryName('');
   };
@@ -738,11 +766,6 @@ export function MatrixEditor({
 
     event.preventDefault();
     onCategoryNameChange(categoryId, event.currentTarget.value);
-
-    if (focusCriterionWeightSlider(categoryId)) {
-      return;
-    }
-
     event.currentTarget.blur();
   };
   const updateSliderDisplay = (
@@ -868,7 +891,7 @@ export function MatrixEditor({
     }
   }, [matrix.options]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previousCategoryCount = previousCategoryCountRef.current;
     previousCategoryCountRef.current = matrix.categories.length;
 
@@ -880,8 +903,13 @@ export function MatrixEditor({
       if (shouldFocusNewCategoryWeightRef.current) {
         shouldFocusNewCategoryWeightRef.current = false;
         const newCategory = matrix.categories[matrix.categories.length - 1];
+        const newCategoryInput = document.getElementById(
+          `category-${newCategory.id}`,
+        );
+        if (newCategoryInput instanceof HTMLInputElement) {
+          newCategoryInput.blur();
+        }
         pendingCategoryInputRef.current?.blur();
-        focusCriterionWeightSlider(newCategory.id);
       }
 
       return;
