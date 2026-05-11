@@ -1361,7 +1361,7 @@ describe('App', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /start over/i }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /hide results/i }),
     ).not.toBeInTheDocument();
