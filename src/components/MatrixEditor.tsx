@@ -28,7 +28,6 @@ import {
   clampScore,
   clampWeight,
   getDisplayName,
-  isBlankDecisionMatrix,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
 import {
@@ -605,8 +604,7 @@ export function MatrixEditor({
   const totalsByOptionId = new Map(
     summary.rankedOptions.map((option) => [option.id, option.total]),
   );
-  const shouldShowFirstRunHint =
-    isBlankDecisionMatrix(matrix) && !isFirstRunHintDismissed;
+  const shouldShowFirstRunHint = !isFirstRunHintDismissed;
   const handleDismissFirstRunHint = () => {
     setIsFirstRunHintDismissed(true);
     saveOnboardingDismissed();
@@ -622,24 +620,40 @@ export function MatrixEditor({
       return;
     }
 
-    const isPointerSubmit = isPointerSubmittingOptionRef.current;
     const isKeyboardSubmit =
-      !isPointerSubmit &&
+      !isPointerSubmittingOptionRef.current &&
       (isKeyboardSubmittingOptionRef.current ||
         document.activeElement === pendingOptionInputRef.current);
-    const isAddingFinalOption = matrix.options.length + 1 >= MAX_OPTIONS;
-
-    shouldFocusPendingOptionAfterAddRef.current =
-      (shouldFocusPendingOptionAfterAddRef.current || isKeyboardSubmit) &&
-      !isAddingFinalOption;
-    shouldFocusAddedOptionAfterAddRef.current = isPointerSubmit;
-    shouldBlurAddedOptionAfterAddRef.current =
-      isKeyboardSubmit && isAddingFinalOption;
+    shouldFocusPendingOptionAfterAddRef.current = false;
+    shouldFocusAddedOptionAfterAddRef.current = false;
+    shouldBlurAddedOptionAfterAddRef.current = isKeyboardSubmit;
     isKeyboardSubmittingOptionRef.current = false;
     isPointerSubmittingOptionRef.current = false;
 
-    if (isKeyboardSubmit && isAddingFinalOption) {
-      pendingOptionInputRef.current?.blur();
+    if (isKeyboardSubmit) {
+      const pendingInput = pendingOptionInputRef.current;
+      const pendingForm = pendingOptionFormRef.current;
+
+      if (pendingInput) {
+        pendingInput.style.transition = 'none';
+        pendingInput.blur();
+      }
+      if (pendingForm) {
+        pendingForm.style.transition = 'none';
+      }
+
+      const restorePendingTransitions = () => {
+        if (pendingInput) {
+          pendingInput.style.transition = '';
+        }
+        if (pendingForm) {
+          pendingForm.style.transition = '';
+        }
+      };
+      const requestNextFrame =
+        window.requestAnimationFrame?.bind(window) ??
+        ((callback: FrameRequestCallback) => window.setTimeout(callback, 0));
+      requestNextFrame(restorePendingTransitions);
     }
 
     shouldRevealNewOptionRef.current = true;
@@ -649,10 +663,13 @@ export function MatrixEditor({
   const handlePendingOptionKeyDown = (
     event: ReactKeyboardEvent<HTMLInputElement>,
   ) => {
-    if (event.key === 'Enter') {
-      shouldFocusPendingOptionAfterAddRef.current = true;
-      isKeyboardSubmittingOptionRef.current = true;
+    if (event.key !== 'Enter') {
+      return;
     }
+
+    isKeyboardSubmittingOptionRef.current = true;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
   };
   const updateBlindScoringHelpPosition = () => {
     const helpButton = blindScoringHelpButtonRef.current;
@@ -702,7 +719,6 @@ export function MatrixEditor({
   const handleOptionNameKeyDown = (
     event: ReactKeyboardEvent<HTMLInputElement>,
     optionId: string,
-    optionIndex: number,
   ) => {
     if (event.key !== 'Enter') {
       return;
@@ -710,24 +726,7 @@ export function MatrixEditor({
 
     event.preventDefault();
     onOptionNameChange(optionId, event.currentTarget.value);
-
-    const nextOption = matrix.options[optionIndex + 1];
-    const nextInputId = nextOption?.id
-      ? `option-${nextOption.id}`
-      : canAddOptions
-        ? 'new-option-name'
-        : null;
-
-    if (!nextInputId) {
-      event.currentTarget.blur();
-      return;
-    }
-
-    const nextInput = document.getElementById(nextInputId);
-
-    if (nextInput instanceof HTMLInputElement) {
-      focusEntryInput(nextInput, { select: true });
-    }
+    event.currentTarget.blur();
   };
   const handleCategoryNameKeyDown = (
     event: ReactKeyboardEvent<HTMLInputElement>,
@@ -830,8 +829,6 @@ export function MatrixEditor({
     const shouldFocusPendingOptionAfterAdd =
       shouldFocusPendingOptionAfterAddRef.current &&
       matrix.options.length < MAX_OPTIONS;
-    const shouldFocusAddedOptionAfterAdd =
-      shouldFocusAddedOptionAfterAddRef.current;
     const shouldBlurAddedOptionAfterAdd =
       shouldBlurAddedOptionAfterAddRef.current;
     shouldFocusPendingOptionAfterAddRef.current = false;
@@ -843,8 +840,16 @@ export function MatrixEditor({
         newOptionInput.blur();
       }
 
-      if (document.activeElement instanceof HTMLInputElement) {
-        document.activeElement.blur();
+      const activeElement = document.activeElement;
+
+      if (
+        activeElement instanceof HTMLElement &&
+        pendingOptionForm instanceof HTMLElement &&
+        pendingOptionForm.contains(activeElement)
+      ) {
+        activeElement.blur();
+      } else if (activeElement instanceof HTMLInputElement) {
+        activeElement.blur();
       }
     }
 
@@ -858,18 +863,8 @@ export function MatrixEditor({
       return;
     }
 
-    if (
-      shouldFocusAddedOptionAfterAdd &&
-      newOptionInput instanceof HTMLInputElement
-    ) {
-      focusEntryInput(newOptionInput, { reveal: false });
-    }
-
     if (newOptionCard instanceof HTMLElement) {
-      revealFocusCard(
-        newOptionCard,
-        newOptionInput instanceof HTMLInputElement ? newOptionInput : null,
-      );
+      revealFocusCard(newOptionCard, null);
     }
   }, [matrix.options]);
 
@@ -1191,14 +1186,10 @@ export function MatrixEditor({
 
                 <Input
                   className="mt-3 h-11 rounded-lg bg-white/90 text-base font-semibold shadow-sm placeholder:text-foreground/45"
-                  enterKeyHint={
-                    index < matrix.options.length - 1 || canAddOptions
-                      ? 'next'
-                      : 'done'
-                  }
+                  enterKeyHint={canAddOptions ? 'next' : 'done'}
                   id={`option-${option.id}`}
                   onKeyDown={(event) =>
-                    handleOptionNameKeyDown(event, option.id, index)
+                    handleOptionNameKeyDown(event, option.id)
                   }
                   onBlur={(event) =>
                     onOptionNameChange(option.id, event.currentTarget.value)
@@ -1216,8 +1207,8 @@ export function MatrixEditor({
 
                 <div
                   className={cn(
-                    'mt-auto rounded-md bg-slate-950/[0.035] p-3',
-                    hasOptionName ? 'min-h-[4.5rem] space-y-3' : 'py-2',
+                    'mt-auto min-h-[4.5rem] rounded-md bg-slate-950/[0.035] p-3',
+                    hasOptionName && !areResultsHidden ? 'space-y-3' : null,
                   )}
                 >
                   {hasOptionName && !areResultsHidden ? (
