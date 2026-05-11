@@ -1,9 +1,9 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { translations } from '@/i18n';
+import { copy } from '@/i18n';
 import ShaderShowcase from './hero';
 
-const heroCopy = translations.en.hero;
+const heroCopy = copy.hero;
 const originalIntersectionObserver = globalThis.IntersectionObserver;
 const originalWindowIntersectionObserver = window.IntersectionObserver;
 const originalMatchMedia = window.matchMedia;
