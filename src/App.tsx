@@ -305,7 +305,7 @@ function App() {
   const [pathname] = useState(() => getCurrentPathname());
   const isHowItWorks = isHowItWorksPath(pathname);
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
-  const [areResultsHidden, setAreResultsHidden] = useState(false);
+  const [areResultsHidden, setAreResultsHidden] = useState(true);
   const [activeWorkspaceTab, setActiveWorkspaceTab] =
     useState<WorkspaceTab>('matrix');
   const pendingMatrixRef = useRef(matrix);
@@ -434,7 +434,7 @@ function App() {
 
   const handleLoadExample = () => {
     setMatrix(createCareerMoveMatrix(copy.matrix.careerMoveExample));
-    setAreResultsHidden(false);
+    setAreResultsHidden(true);
   };
 
   const summary = useMemo(() => getDecisionSummary(matrix), [matrix]);
