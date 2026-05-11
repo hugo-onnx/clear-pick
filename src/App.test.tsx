@@ -380,6 +380,7 @@ describe('App', () => {
 
     render(<App />);
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /start over/i }));
     await user.click(
       within(
@@ -871,14 +872,11 @@ describe('App', () => {
 
     render(<App />);
 
-    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
-    expect(screen.getByRole('switch', { name: /blind scoring/i })).toBeChecked();
-
     await user.click(screen.getByRole('button', { name: /load example/i }));
 
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
-    ).not.toBeChecked();
+    ).toBeChecked();
     expect(screen.getByDisplayValue('Stay in current role')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Accept new role')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Start freelancing')).toBeInTheDocument();
@@ -894,6 +892,8 @@ describe('App', () => {
     expect(
       screen.getByLabelText(/score for start freelancing on risk/i),
     ).toHaveValue('3');
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
@@ -918,6 +918,8 @@ describe('App', () => {
     const user = userEvent.setup();
 
     render(<App />);
+
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
 
     const optionsRegion = screen.getByRole('region', {
       name: /options to compare/i,
@@ -1159,6 +1161,7 @@ describe('App', () => {
     fireEvent.change(weightSlider, { target: { value: '10' } });
     fireEvent.pointerUp(weightSlider);
 
+    await userEvent.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await userEvent.click(screen.getByRole('button', { name: /see full ranking/i }));
 
     const scoreSlider = screen.getByLabelText(
@@ -1310,6 +1313,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /see full ranking/i }));
 
     const ranking = screen.getByRole('region', { name: /weighted ranking/i });
@@ -1317,14 +1321,16 @@ describe('App', () => {
     expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
   });
 
-  it('shows the recommendation-first results by default', () => {
+  it('shows the recommendation-first results by default', async () => {
     saveScoredMatrix();
 
     render(<App />);
 
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
-    ).not.toBeChecked();
+    ).toBeChecked();
+
+    await userEvent.click(screen.getByRole('switch', { name: /blind scoring/i }));
     expect(
       screen.queryByRole('button', { name: /hide results/i }),
     ).not.toBeInTheDocument();
@@ -1362,6 +1368,8 @@ describe('App', () => {
 
     render(<App />);
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
+
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
@@ -1386,8 +1394,10 @@ describe('App', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows a neutral recommendation state when there are no positive weights', () => {
+  it('shows a neutral recommendation state when there are no positive weights', async () => {
     render(<App />);
+
+    await userEvent.click(screen.getByRole('switch', { name: /blind scoring/i }));
 
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
@@ -1406,8 +1416,6 @@ describe('App', () => {
     saveScoredMatrix();
 
     render(<App />);
-
-    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
 
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
@@ -1510,7 +1518,6 @@ describe('App', () => {
 
     render(<App />);
 
-    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /show results/i }));
 
     expect(
@@ -1532,13 +1539,6 @@ describe('App', () => {
       name: /options to compare/i,
     });
 
-    expect(within(optionsRegion).getByText(/^leading$/i)).toBeInTheDocument();
-    expect(
-      within(optionsRegion).getByLabelText(/live score for stay here/i),
-    ).toHaveTextContent('10.0 pts');
-
-    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
-
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
     expect(
       within(optionsRegion).queryByLabelText(/live score for stay here/i),
@@ -1546,6 +1546,13 @@ describe('App', () => {
     expect(
       within(optionsRegion).getAllByText(/results hidden while you score/i),
     ).toHaveLength(2);
+
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
+
+    expect(within(optionsRegion).getByText(/^leading$/i)).toBeInTheDocument();
+    expect(
+      within(optionsRegion).getByLabelText(/live score for stay here/i),
+    ).toHaveTextContent('10.0 pts');
   });
 
   it('allows each option score in each criterion to keep an independent scoring type', async () => {
@@ -1620,6 +1627,7 @@ describe('App', () => {
       }),
     ).toHaveValue('0');
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /start over/i }));
     const resetDialog = screen.getByRole('alertdialog', {
       name: /start over/i,
@@ -1657,9 +1665,12 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /^start$/i })).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: /blind scoring/i }),
-    ).not.toBeChecked();
+    ).toBeChecked();
     expect(screen.getByDisplayValue('Stay here')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Move abroad')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
+
     expect(screen.getByText(/current tie: stay here and move abroad/i)).toBeInTheDocument();
     expect(
       screen.getByText(/no score gap: stay here and move abroad are tied for first/i),
@@ -2129,6 +2140,7 @@ describe('App', () => {
       );
     });
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /start over/i }));
     await user.click(
       within(
@@ -2173,6 +2185,7 @@ describe('App', () => {
     await user.type(firstOption, 'Choosing a city');
     await user.tab();
 
+    await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     const resetButton = screen.getByRole('button', { name: /start over/i });
     await user.click(resetButton);
     const resetDialog = screen.getByRole('alertdialog', {
