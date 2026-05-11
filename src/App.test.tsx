@@ -1883,51 +1883,29 @@ describe('App', () => {
     expect(screen.queryByDisplayValue('Meaning')).not.toBeInTheDocument();
   });
 
-  it('focuses the new criterion importance slider after submitting named criteria', async () => {
+  it('blurs the add-criterion input after submitting named criteria', async () => {
     const user = userEvent.setup();
-    const reveal = installMobileOptionRevealMocks();
 
-    try {
-      render(<App />);
+    render(<App />);
 
-      const nextCriterionInput = screen.getByLabelText(
-        /new criterion/i,
-      ) as HTMLInputElement;
+    const nextCriterionInput = screen.getByLabelText(
+      /new criterion/i,
+    ) as HTMLInputElement;
 
-      await user.type(nextCriterionInput, 'Meaning');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
+    await user.type(nextCriterionInput, 'Meaning{Enter}');
 
-      expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
-      expect(nextCriterionInput).toHaveValue('');
-      expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
-      expect(nextCriterionInput).not.toHaveFocus();
-      expect(screen.getByLabelText(/importance for meaning/i)).toHaveFocus();
-      expect(reveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: reveal.expectedTopCorrection,
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('Meaning')).toBeInTheDocument();
+    expect(nextCriterionInput).toHaveValue('');
+    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+    expect(nextCriterionInput).not.toHaveFocus();
 
-      reveal.scrollTo.mockClear();
-      await user.type(nextCriterionInput, 'Purpose{Enter}');
+    await user.click(nextCriterionInput);
+    await user.type(nextCriterionInput, 'Purpose{Enter}');
 
-      expect(screen.getByDisplayValue('Purpose')).toBeInTheDocument();
-      expect(nextCriterionInput).toHaveValue('');
-      expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 4');
-      expect(nextCriterionInput).not.toHaveFocus();
-      expect(screen.getByLabelText(/importance for purpose/i)).toHaveFocus();
-      expect(reveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: reveal.expectedTopCorrection,
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-    } finally {
-      reveal.restore();
-    }
+    expect(screen.getByDisplayValue('Purpose')).toBeInTheDocument();
+    expect(nextCriterionInput).toHaveValue('');
+    expect(nextCriterionInput).toHaveAttribute('placeholder', 'Criterion 4');
+    expect(nextCriterionInput).not.toHaveFocus();
   });
 
   it('limits new options to six and re-enables adding after removal', async () => {
@@ -2090,63 +2068,44 @@ describe('App', () => {
     expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
   });
 
-  it('sets criterion names and focuses the same criterion importance slider when Enter is pressed', async () => {
+  it('sets criterion names and blurs the input when Enter is pressed', async () => {
     const user = userEvent.setup();
-    const reveal = installMobileOptionRevealMocks();
 
-    try {
-      render(<App />);
+    render(<App />);
 
-      await user.click(screen.getByRole('button', { name: /add criterion/i }));
+    await user.click(screen.getByRole('button', { name: /add criterion/i }));
 
-      const firstCriterion = screen.getByLabelText(
-        /^criterion 1$/i,
-      ) as HTMLInputElement;
-      const secondCriterion = screen.getByLabelText(
-        /^criterion 2$/i,
-      ) as HTMLInputElement;
-      const newCriterionInput = screen.getByLabelText(
-        /new criterion/i,
-      ) as HTMLInputElement;
+    const firstCriterion = screen.getByLabelText(
+      /^criterion 1$/i,
+    ) as HTMLInputElement;
+    const secondCriterion = screen.getByLabelText(
+      /^criterion 2$/i,
+    ) as HTMLInputElement;
+    const newCriterionInput = screen.getByLabelText(
+      /new criterion/i,
+    ) as HTMLInputElement;
 
-      expect(secondCriterion).toHaveValue('');
-      expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
+    expect(secondCriterion).toHaveValue('');
+    expect(secondCriterion).toHaveAttribute('placeholder', 'Criterion 2');
 
-      await user.type(firstCriterion, 'Cost');
-      reveal.scrollTo.mockClear();
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      await user.keyboard('{Enter}');
+    await user.type(firstCriterion, 'Cost');
+    await user.keyboard('{Enter}');
 
-      expect(firstCriterion).toHaveValue('Cost');
-      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
+    expect(firstCriterion).toHaveValue('Cost');
+    expect(firstCriterion).not.toHaveFocus();
 
-      await user.click(secondCriterion);
-      await user.type(secondCriterion, 'Long-term fit');
-      reveal.scrollTo.mockClear();
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      await user.keyboard('{Enter}');
+    await user.click(secondCriterion);
+    await user.type(secondCriterion, 'Long-term fit');
+    await user.keyboard('{Enter}');
 
-      expect(secondCriterion).toHaveValue('Long-term fit');
-      expect(newCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
-      expect(newCriterionInput).not.toHaveFocus();
-      expect(screen.getByLabelText(/importance for long-term fit/i)).toHaveFocus();
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: reveal.expectedTopCorrection,
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-      expect(screen.queryByLabelText(/^criterion 3$/i)).not.toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /remove long-term fit/i }),
-      ).toBeInTheDocument();
-    } finally {
-      reveal.restore();
-    }
+    expect(secondCriterion).toHaveValue('Long-term fit');
+    expect(secondCriterion).not.toHaveFocus();
+    expect(newCriterionInput).toHaveAttribute('placeholder', 'Criterion 3');
+    expect(newCriterionInput).not.toHaveFocus();
+    expect(screen.queryByLabelText(/^criterion 3$/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /remove long-term fit/i }),
+    ).toBeInTheDocument();
   });
 
   it('creates a blank criterion from a blank submit and focuses the new criterion input', async () => {
@@ -2180,103 +2139,6 @@ describe('App', () => {
     }
   });
 
-  it('keeps tablet criterion-entry focus stationary when the target card is comfortably visible', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 96,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 820,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      await user.click(screen.getByRole('button', { name: /add criterion/i }));
-      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
-
-      await user.type(firstCriterion, 'Cost');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('uses one nearest reveal for an offscreen desktop criterion-entry target', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 780,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 1280,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      await user.click(screen.getByRole('button', { name: /add criterion/i }));
-      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
-
-      await user.type(firstCriterion, 'Cost');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
-      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-      });
-      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('uses instant criterion-entry reveal when reduced motion is preferred', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({ reducedMotion: true });
-
-    try {
-      render(<App />);
-
-      const firstCriterion = screen.getByLabelText(/^criterion 1$/i);
-      await user.type(firstCriterion, 'Cost');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(screen.getByLabelText(/importance for cost/i)).toHaveFocus();
-      expect(reveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'auto',
-        top: reveal.expectedTopCorrection,
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
 
   it('reveals scoring widgets on focus without changing their values', async () => {
     const user = userEvent.setup();
