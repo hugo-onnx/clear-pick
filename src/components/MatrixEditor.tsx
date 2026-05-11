@@ -755,6 +755,13 @@ export function MatrixEditor({
     event.preventDefault();
     onOptionNameChange(optionId, event.currentTarget.value);
     event.currentTarget.blur();
+    const card = event.currentTarget.closest('[data-option-card]');
+    if (card instanceof HTMLElement) {
+      card.style.pointerEvents = 'none';
+      requestAnimationFrame(() => {
+        card.style.pointerEvents = '';
+      });
+    }
   };
   const handleCategoryNameKeyDown = (
     event: ReactKeyboardEvent<HTMLInputElement>,
