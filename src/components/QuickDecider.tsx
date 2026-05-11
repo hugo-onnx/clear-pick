@@ -34,7 +34,9 @@ const loadWeightedHintId = 'quick-decider-load-weighted-hint';
 export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps) {
   const [options, setOptions] = useState(() => loadQuickDecisionOptions());
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [focusedOptionId, setFocusedOptionId] = useState<string | null>(null);
   const pendingFocusOptionIdRef = useRef<string | null>(null);
+  const nameOnFocusRef = useRef<string>('');
 
   const weightedOptionsToLoad = useMemo(
     () => createQuickDecisionOptionsFromMatrixOptions(availableSourceOptions),
@@ -49,7 +51,11 @@ export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps
     : null;
   const canAddOption = options.length < MAX_OPTIONS;
   const canRemoveOption = options.length > MIN_OPTIONS;
-  const canDecide = namedOptions.length >= MIN_OPTIONS;
+  const canDecide =
+    namedOptions.filter(
+      (opt) =>
+        opt.id !== focusedOptionId || nameOnFocusRef.current.trim().length > 0,
+    ).length >= MIN_OPTIONS;
   const canLoadWeightedOptions = weightedOptionsToLoad.length >= MIN_OPTIONS;
 
   useEffect(() => {
@@ -159,7 +165,8 @@ export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps
 
           return (
             <div
-              className="relative flex aspect-[1.12/1] min-h-[5.25rem] cursor-text flex-col items-center justify-center rounded-lg border border-cyan-900/10 bg-white/78 p-2 shadow-sm transition duration-200 focus-within:border-cyan-600/50 focus-within:bg-white hover:-translate-y-0.5 hover:border-cyan-700/20 hover:bg-white sm:min-h-[6rem] sm:p-3"
+              className="relative flex aspect-[1.12/1] min-h-[5.25rem] cursor-text flex-col items-center justify-center rounded-lg border border-cyan-900/10 bg-white/78 p-2 shadow-sm transition duration-200 focus-within:border-primary/55 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/15 hover:-translate-y-0.5 hover:bg-white sm:min-h-[6rem] sm:p-3"
+              data-option-card
               key={option.id}
               onClick={(event) => {
                 const target = event.target as HTMLElement;
@@ -193,9 +200,27 @@ export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps
                   option.name.trim().length > 18 ? 'text-2xl' : undefined,
                 )}
                 id={`quick-option-${option.id}`}
+                onBlur={() => setFocusedOptionId(null)}
                 onChange={(event) =>
                   handleOptionNameChange(option.id, event.target.value)
                 }
+                onFocus={() => {
+                  nameOnFocusRef.current = option.name;
+                  setFocusedOptionId(option.id);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    handleDecide();
+                    event.currentTarget.blur();
+                    const card = event.currentTarget.closest('[data-option-card]');
+                    if (card instanceof HTMLElement) {
+                      card.style.pointerEvents = 'none';
+                      requestAnimationFrame(() => {
+                        card.style.pointerEvents = '';
+                      });
+                    }
+                  }
+                }}
                 placeholder={copy.optionPlaceholder(index + 1)}
                 value={option.name}
               />
@@ -269,14 +294,6 @@ export function QuickDecider({ availableSourceOptions, copy }: QuickDeciderProps
         </p>
       ) : null}
 
-      {!canLoadWeightedOptions ? (
-        <p
-          className="mt-2 text-center text-sm font-medium text-muted-foreground"
-          id={loadWeightedHintId}
-        >
-          {copy.loadWeightedOptionsHint}
-        </p>
-      ) : null}
 
       <p
         aria-live="polite"
