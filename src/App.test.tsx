@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { MatrixEditor } from './components/MatrixEditor';
-import { LANGUAGE_STORAGE_KEY, translations } from './i18n';
+import { copy } from './i18n';
 import {
   SCORE_MODE_BOOLEAN,
   SCORE_MODE_SCALE,
@@ -401,81 +401,6 @@ describe('App', () => {
     });
   });
 
-  it('toggles the interface between English and Spanish', async () => {
-    const user = userEvent.setup();
-
-    render(<App />);
-
-    expect(
-      screen.getByRole('tab', { name: /quick decider/i }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('button', { name: /switch to spanish/i }),
-    );
-
-    expect(document.documentElement).toHaveAttribute('lang', 'es');
-    expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('es');
-    expect(
-      screen.getByRole('heading', {
-        name: /toma tu decisión más difícil en 60 segundos/i,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /^modelo de puntuación ponderada$/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('region', { name: /opciones para comparar/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('tab', { name: /selector rápido/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /^empezar$/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('switch', { name: /puntuación a ciegas/i }),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText(/valorar 0-10/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/sí \/ no/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/guardado en este dispositivo/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /tu decisión queda en este navegador\. no subimos, almacenamos ni accedemos a esos datos\./i,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', {
-        name: /una herramienta privada de decisión ponderada para elegir más rápido/i,
-      }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(/clearpick es una herramienta privada/i),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('link', { name: /leer la guía completa/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /¿qué es clearpick\?/i }),
-    ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
-    expect(
-      screen.getByRole('region', { name: /selector aleatorio rápido/i }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('button', { name: /cambiar a inglés/i }),
-    );
-
-    expect(document.documentElement).toHaveAttribute('lang', 'en');
-    expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en');
-    expect(
-      screen.getByRole('button', { name: /^start$/i }),
-    ).toBeInTheDocument();
-  });
-
   it('renders the full how-it-works page with FAQ content and route metadata', () => {
     window.history.pushState({}, '', '/how-it-works');
     const descriptionMeta = document.createElement('meta');
@@ -491,7 +416,7 @@ describe('App', () => {
       document.querySelector('meta[name="description"]'),
     ).toHaveAttribute(
       'content',
-      translations.en.document.howItWorksDescription,
+      copy.document.howItWorksDescription,
     );
     expect(
       screen.queryByRole('heading', {
@@ -591,39 +516,6 @@ describe('App', () => {
       configurable: true,
       value: originalScrollIntoView,
     });
-  });
-
-  it('renders the how-it-works page in Spanish after language toggle', async () => {
-    const user = userEvent.setup();
-    window.history.pushState({}, '', '/how-it-works');
-
-    render(<App />);
-
-    await user.click(
-      screen.getByRole('button', { name: /switch to spanish/i }),
-    );
-
-    expect(document.title).toBe(
-      'Cómo funciona ClearPick | Guía de decisión ponderada',
-    );
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /una herramienta privada de decisión ponderada para elegir más rápido/i,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /cuándo usarla/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /^faq$/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /¿qué es clearpick\?/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('link', { name: /volver a la herramienta/i })[0],
-    ).toHaveAttribute('href', '/');
   });
 
   it('keeps launch metadata on the production domain', () => {
@@ -852,9 +744,6 @@ describe('App', () => {
     });
 
     expect(loadButton).toBeDisabled();
-    expect(
-      within(quickDecider).getByText(/name at least two weighted options to load/i),
-    ).toBeInTheDocument();
 
     await user.type(
       within(quickDecider).getByLabelText(/^quick option 1$/i),
@@ -935,83 +824,15 @@ describe('App', () => {
     );
   });
 
-  it('renders simplified quick decider copy in Spanish', async () => {
-    const user = userEvent.setup();
-
+  it('renders the onboarding strip', () => {
     render(<App />);
 
-    await user.click(
-      screen.getByRole('button', { name: /switch to spanish/i }),
-    );
-    await user.click(screen.getByRole('tab', { name: /selector rápido/i }));
-
-    const quickDecider = screen.getByRole('region', {
-      name: /selector aleatorio rápido/i,
-    });
-
+    const guide = screen.getByRole('region', { name: /workflow guide/i });
+    expect(within(guide).getByText('1. Name options')).toBeInTheDocument();
+    expect(within(guide).getByText('2. Weight criteria')).toBeInTheDocument();
+    expect(within(guide).getByText('3. Score and compare')).toBeInTheDocument();
     expect(
-      within(quickDecider).getByRole('heading', {
-        name: /no puedo decidir entre/i,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      within(quickDecider).getByRole('button', { name: /decide por mí/i }),
-    ).toBeDisabled();
-    expect(
-      within(quickDecider).getByRole('button', { name: /añadir opción/i }),
-    ).toBeInTheDocument();
-    expect(
-      within(quickDecider).getByRole('button', {
-        name: /cargar opciones ponderadas/i,
-      }),
-    ).toBeDisabled();
-    expect(
-      within(quickDecider).getByText(/nombra al menos dos opciones para decidir/i),
-    ).toBeInTheDocument();
-    expect(
-      within(quickDecider).getByText(
-        /nombra al menos dos opciones ponderadas para cargarlas/i,
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('renders the onboarding strip in English and Spanish', async () => {
-    const user = userEvent.setup();
-
-    render(<App />);
-
-    const englishGuide = screen.getByRole('region', {
-      name: /workflow guide/i,
-    });
-    expect(within(englishGuide).getByText('1. Name options')).toBeInTheDocument();
-    expect(
-      within(englishGuide).getByText('2. Weight criteria'),
-    ).toBeInTheDocument();
-    expect(
-      within(englishGuide).getByText('3. Score and compare'),
-    ).toBeInTheDocument();
-    expect(
-      within(englishGuide).getByRole('button', { name: /load example/i }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('button', { name: /switch to spanish/i }),
-    );
-
-    const spanishGuide = screen.getByRole('region', {
-      name: /guía de flujo de trabajo/i,
-    });
-    expect(
-      within(spanishGuide).getByText('1. Nombra opciones'),
-    ).toBeInTheDocument();
-    expect(
-      within(spanishGuide).getByText('2. Pondera criterios'),
-    ).toBeInTheDocument();
-    expect(
-      within(spanishGuide).getByText('3. Puntúa y compara'),
-    ).toBeInTheDocument();
-    expect(
-      within(spanishGuide).getByRole('button', { name: /cargar ejemplo/i }),
+      within(guide).getByRole('button', { name: /load example/i }),
     ).toBeInTheDocument();
   });
 
@@ -1374,7 +1195,7 @@ describe('App', () => {
     render(
       <MatrixEditor
         areResultsHidden={false}
-        copy={translations.en.matrix}
+        copy={copy.matrix}
         matrix={matrix}
         summary={getDecisionSummary(matrix)}
         onAddOption={vi.fn()}
