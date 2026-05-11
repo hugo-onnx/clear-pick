@@ -625,7 +625,7 @@ export function MatrixEditor({
       (isKeyboardSubmittingOptionRef.current ||
         document.activeElement === pendingOptionInputRef.current);
     shouldFocusPendingOptionAfterAddRef.current = false;
-    shouldFocusAddedOptionAfterAddRef.current = false;
+    shouldFocusAddedOptionAfterAddRef.current = !isKeyboardSubmit;
     shouldBlurAddedOptionAfterAddRef.current = isKeyboardSubmit;
     isKeyboardSubmittingOptionRef.current = false;
     isPointerSubmittingOptionRef.current = false;
@@ -861,6 +861,8 @@ export function MatrixEditor({
       matrix.options.length < MAX_OPTIONS;
     const shouldBlurAddedOptionAfterAdd =
       shouldBlurAddedOptionAfterAddRef.current;
+    const shouldFocusAddedOptionAfterAdd =
+      shouldFocusAddedOptionAfterAddRef.current;
     shouldFocusPendingOptionAfterAddRef.current = false;
     shouldFocusAddedOptionAfterAddRef.current = false;
     shouldBlurAddedOptionAfterAddRef.current = false;
@@ -889,6 +891,17 @@ export function MatrixEditor({
     ) {
       focusEntryInput(pendingOptionInput, {
         revealTarget: pendingOptionForm,
+      });
+      return;
+    }
+
+    if (
+      shouldFocusAddedOptionAfterAdd &&
+      newOptionInput instanceof HTMLInputElement
+    ) {
+      focusEntryInput(newOptionInput, {
+        revealTarget: newOptionCard instanceof HTMLElement ? newOptionCard : null,
+        select: true,
       });
       return;
     }
