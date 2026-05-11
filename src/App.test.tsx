@@ -1161,31 +1161,28 @@ describe('App', () => {
     ).toHaveLength(3);
   });
 
-  it('adds an option and focuses the next add card when Enter is pressed', async () => {
+  it('adds an option and blurs the pending input when Enter is pressed', async () => {
     const user = userEvent.setup();
     render(<App />);
+
+    const optionsRegion = screen.getByRole('region', {
+      name: /options to compare/i,
+    });
 
     await user.type(screen.getByLabelText(/new option/i), 'Start the business{Enter}');
 
     const newOptionCardInput = screen.getByLabelText(/^option 3$/i);
     const nextOptionInput = screen.getByLabelText(/new option/i);
+    const addOptionButton = within(optionsRegion).getByRole('button', {
+      name: /add option/i,
+    });
 
     expect(newOptionCardInput).toHaveValue('Start the business');
-    await waitFor(() => {
-      expect(nextOptionInput).toHaveFocus();
-    });
     expect(nextOptionInput).toHaveValue('');
-
-    await user.type(nextOptionInput, 'Hire a manager{Enter}');
-
-    const fourthOptionCardInput = screen.getByLabelText(/^option 4$/i);
-    const followingOptionInput = screen.getByLabelText(/new option/i);
-
-    expect(fourthOptionCardInput).toHaveValue('Hire a manager');
-    await waitFor(() => {
-      expect(followingOptionInput).toHaveFocus();
-    });
-    expect(followingOptionInput).toHaveValue('');
+    expect(nextOptionInput).not.toHaveFocus();
+    expect(newOptionCardInput).not.toHaveFocus();
+    expect(addOptionButton).not.toHaveFocus();
+    expect(document.activeElement).toBe(document.body);
   });
 
   it('scrolls each newly added option card into view', async () => {
@@ -1227,9 +1224,7 @@ describe('App', () => {
       expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
       expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
       expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
-      await waitFor(() => {
-        expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
-      });
+      expect(screen.getByLabelText(/^option 5$/i)).not.toHaveFocus();
     } finally {
       mobileReveal.restore();
     }
@@ -2054,352 +2049,18 @@ describe('App', () => {
     expect(screen.getByLabelText(/new option/i)).toBeEnabled();
   });
 
-  it('commits option names and focuses the next text box when Enter is pressed', async () => {
+  it('commits an option name and blurs the input when Enter is pressed', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     const firstOption = screen.getByLabelText(/^option 1$/i);
-    const secondOption = screen.getByLabelText(/^option 2$/i);
     await user.type(firstOption, 'Remote role');
     await user.keyboard('{Enter}');
 
     expect(firstOption).toHaveValue('Remote role');
-    expect(secondOption).toHaveFocus();
-
-    await user.type(secondOption, 'Office role');
-    await user.keyboard('{Enter}');
-
-    expect(secondOption).toHaveValue('Office role');
-    expect(screen.getByLabelText(/new option/i)).toHaveFocus();
-  });
-
-  it('scrolls the next option card to the mobile viewport top after Enter', async () => {
-    const user = userEvent.setup();
-    const mobileReveal = installMobileOptionRevealMocks();
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-      const secondOptionCard = secondOption.closest('[data-option-focus-card]');
-
-      await user.type(firstOption, 'Remote role');
-      mobileReveal.scrollIntoView.mockClear();
-      mobileReveal.scrollBy.mockClear();
-      mobileReveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(firstOption).toHaveValue('Remote role');
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(secondOptionCard).toBeInstanceOf(HTMLElement);
-      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: mobileReveal.expectedTopCorrection,
-      });
-      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      mobileReveal.restore();
-    }
-  });
-
-  it('scrolls the add-option card to the mobile viewport top after the last option input Enter', async () => {
-    const user = userEvent.setup();
-    const mobileReveal = installMobileOptionRevealMocks();
-
-    try {
-      render(<App />);
-
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-      const addOptionInput = screen.getByLabelText(/new option/i);
-      const addOptionCard = addOptionInput.closest('[data-option-focus-card]');
-
-      await user.type(secondOption, 'Office role');
-      mobileReveal.scrollIntoView.mockClear();
-      mobileReveal.scrollBy.mockClear();
-      mobileReveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(secondOption).toHaveValue('Office role');
-      await waitFor(() => {
-        expect(addOptionInput).toHaveFocus();
-      });
-      expect(addOptionCard).toBeInstanceOf(HTMLElement);
-      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: mobileReveal.expectedTopCorrection,
-      });
-      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      mobileReveal.restore();
-    }
-  });
-
-  it('keeps focus on the next blank add-option input and scrolls its mobile card after Enter', async () => {
-    const user = userEvent.setup();
-    const mobileReveal = installMobileOptionRevealMocks();
-
-    try {
-      render(<App />);
-
-      const addOptionInput = screen.getByLabelText(/new option/i);
-
-      await user.type(addOptionInput, 'Third path');
-      mobileReveal.scrollIntoView.mockClear();
-      mobileReveal.scrollBy.mockClear();
-      mobileReveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      expect(screen.getByLabelText(/^option 3$/i)).toHaveValue('Third path');
-
-      const nextAddOptionInput = screen.getByLabelText(/new option/i);
-      const nextAddOptionCard = nextAddOptionInput.closest(
-        '[data-option-focus-card]',
-      );
-
-      await waitFor(() => {
-        expect(nextAddOptionInput).toHaveFocus();
-      });
-      expect(nextAddOptionInput).toHaveValue('');
-      expect(nextAddOptionCard).toBeInstanceOf(HTMLElement);
-      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: mobileReveal.expectedTopCorrection,
-      });
-      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      mobileReveal.restore();
-    }
-  });
-
-  it('keeps tablet option-entry focus stationary when the target card is comfortably visible', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 96,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 820,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-
-      await user.type(firstOption, 'Remote role');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('keeps desktop option-entry focus stationary when the target card is visible', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 96,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 1280,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-
-      await user.type(firstOption, 'Remote role');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('uses one nearest reveal for an offscreen tablet option-entry target', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 780,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 820,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-
-      await user.type(firstOption, 'Remote role');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-      });
-      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('uses one nearest reveal for an offscreen desktop option-entry target', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({
-      cardTop: 780,
-      viewport: {
-        height: 720,
-        offsetLeft: 0,
-        offsetTop: 0,
-        width: 1280,
-      },
-    });
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-
-      await user.type(firstOption, 'Remote role');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(reveal.scrollIntoView).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'nearest',
-      });
-      expect(reveal.scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('uses instant option-entry reveal when reduced motion is preferred', async () => {
-    const user = userEvent.setup();
-    const reveal = installOptionRevealMocks({ reducedMotion: true });
-
-    try {
-      render(<App />);
-
-      const firstOption = screen.getByLabelText(/^option 1$/i);
-      const secondOption = screen.getByLabelText(/^option 2$/i);
-
-      await user.type(firstOption, 'Remote role');
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(secondOption).toHaveFocus();
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'auto',
-        top: reveal.expectedTopCorrection,
-      });
-      expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('reveals the final added option and moves focus out of option text boxes after Enter', async () => {
-    const user = userEvent.setup();
-    const mobileReveal = installMobileOptionRevealMocks();
-
-    try {
-      render(<App />);
-
-      for (const name of ['Third path', 'Fourth path', 'Fifth path']) {
-        const newOptionInput = screen.getByLabelText(/new option/i);
-        await user.clear(newOptionInput);
-        await user.type(newOptionInput, name);
-        await user.keyboard('{Enter}');
-
-        expect(screen.getByLabelText(/new option/i)).toHaveFocus();
-      }
-
-      const finalOptionInput = screen.getByLabelText(/new option/i);
-      await user.clear(finalOptionInput);
-      await user.type(finalOptionInput, 'Sixth path');
-      mobileReveal.scrollIntoView.mockClear();
-      mobileReveal.scrollBy.mockClear();
-      mobileReveal.scrollTo.mockClear();
-      await user.keyboard('{Enter}');
-
-      await waitFor(() => {
-        expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
-      });
-      expect(screen.getByDisplayValue('Sixth path')).not.toHaveFocus();
-      expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
-      expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(mobileReveal.scrollTo).toHaveBeenCalledWith({
-        behavior: 'smooth',
-        top: mobileReveal.expectedTopCorrection,
-      });
-      expect(mobileReveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      mobileReveal.restore();
-    }
+    expect(firstOption).not.toHaveFocus();
+    expect(screen.getByLabelText(/^option 2$/i)).not.toHaveFocus();
+    expect(screen.getByLabelText(/new option/i)).not.toHaveFocus();
   });
 
   it('commits and blurs the last option input when the option limit is already reached', async () => {
