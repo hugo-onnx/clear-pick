@@ -7,8 +7,7 @@ import {
 } from './quickDecider';
 
 export const STORAGE_KEY = 'clearpick:active-decision:v1';
-export const ONBOARDING_DISMISSAL_STORAGE_KEY =
-  'clearpick:onboarding-dismissed:v1';
+
 export const QUICK_DECIDER_STORAGE_KEY =
   'clearpick:quick-decider-options:v1';
 
@@ -72,29 +71,5 @@ export function saveQuickDecisionOptions(options: Option[]): void {
     );
   } catch {
     // Ignore storage errors and keep the quick decider in-memory.
-  }
-}
-
-export function loadOnboardingDismissed(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  try {
-    return window.localStorage.getItem(ONBOARDING_DISMISSAL_STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-export function saveOnboardingDismissed(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(ONBOARDING_DISMISSAL_STORAGE_KEY, 'true');
-  } catch {
-    // Ignore storage errors and keep the hint local to the in-memory session.
   }
 }
