@@ -12,7 +12,6 @@ import {
   clampScoreForMode,
   clampWeight,
   createCategory,
-  createCareerMoveMatrix,
   createOption,
   createStarterMatrix,
   DEFAULT_SCORE,
@@ -432,11 +431,6 @@ function App() {
     scrollToDecisionMatrix();
   };
 
-  const handleLoadExample = () => {
-    setMatrix(createCareerMoveMatrix(copy.matrix.careerMoveExample));
-    setAreResultsHidden(true);
-  };
-
   const summary = useMemo(() => getDecisionSummary(matrix), [matrix]);
   const workspaceTabs = [
     {
@@ -654,7 +648,6 @@ function App() {
                     };
                   })
                 }
-                onLoadExample={handleLoadExample}
                 onResultsHiddenChange={setAreResultsHidden}
               />
 
