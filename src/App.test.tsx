@@ -1255,7 +1255,7 @@ describe('App', () => {
       expect(mobileReveal.scrollIntoView).not.toHaveBeenCalled();
       expect(mobileReveal.scrollBy).not.toHaveBeenCalled();
       expect(screen.getByLabelText(/^option 5$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^option 5$/i)).not.toHaveFocus();
+      expect(screen.getByLabelText(/^option 5$/i)).toHaveFocus();
     } finally {
       mobileReveal.restore();
     }
