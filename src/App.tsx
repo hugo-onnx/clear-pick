@@ -27,11 +27,11 @@ import { getDecisionSummary } from './utils/scoring';
 import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
 const MATRIX_SAVE_DEBOUNCE_MS = 250;
-const MATRIX_SCROLL_RETRY_DELAYS_MS = [120, 320];
+const MATRIX_SCROLL_FALLBACK_DELAY_MS = 80;
 type WorkspaceTab = 'matrix' | 'quickDecider';
 
 let pendingMatrixScrollAnimationFrame: number | null = null;
-let pendingMatrixScrollTimeouts: number[] = [];
+let pendingMatrixScrollTimeout: number | null = null;
 
 function clearScheduledDecisionMatrixScrolls() {
   if (pendingMatrixScrollAnimationFrame !== null) {
@@ -39,51 +39,46 @@ function clearScheduledDecisionMatrixScrolls() {
     pendingMatrixScrollAnimationFrame = null;
   }
 
-  for (const timeoutId of pendingMatrixScrollTimeouts) {
-    window.clearTimeout(timeoutId);
+  if (pendingMatrixScrollTimeout !== null) {
+    window.clearTimeout(pendingMatrixScrollTimeout);
+    pendingMatrixScrollTimeout = null;
   }
-
-  pendingMatrixScrollTimeouts = [];
-}
-
-function scheduleDecisionMatrixScroll(scroll: () => void, delay: number) {
-  const timeoutId = window.setTimeout(() => {
-    pendingMatrixScrollTimeouts = pendingMatrixScrollTimeouts.filter(
-      (id) => id !== timeoutId,
-    );
-    scroll();
-  }, delay);
-
-  pendingMatrixScrollTimeouts.push(timeoutId);
 }
 
 function scrollToDecisionMatrix(behavior: ScrollBehavior = 'smooth') {
   clearScheduledDecisionMatrixScrolls();
 
-  const scroll = () => {
-    const decisionMatrix = document.getElementById('decision-matrix');
+  const tryScroll = (): boolean => {
+    const target = document.getElementById('decision-matrix');
 
-    if (typeof decisionMatrix?.scrollIntoView === 'function') {
-      decisionMatrix.scrollIntoView({
+    if (typeof target?.scrollIntoView === 'function') {
+      target.scrollIntoView({
         behavior,
         block: 'start',
       });
+      return true;
     }
+
+    return false;
   };
 
-  scroll();
+  const runOnce = () => {
+    pendingMatrixScrollAnimationFrame = null;
+
+    if (tryScroll()) {
+      return;
+    }
+
+    pendingMatrixScrollTimeout = window.setTimeout(() => {
+      pendingMatrixScrollTimeout = null;
+      tryScroll();
+    }, MATRIX_SCROLL_FALLBACK_DELAY_MS);
+  };
 
   if (typeof window.requestAnimationFrame === 'function') {
-    pendingMatrixScrollAnimationFrame = window.requestAnimationFrame(() => {
-      pendingMatrixScrollAnimationFrame = null;
-      scroll();
-    });
+    pendingMatrixScrollAnimationFrame = window.requestAnimationFrame(runOnce);
   } else {
-    scheduleDecisionMatrixScroll(scroll, 0);
-  }
-
-  for (const delay of MATRIX_SCROLL_RETRY_DELAYS_MS) {
-    scheduleDecisionMatrixScroll(scroll, delay);
+    runOnce();
   }
 }
 
