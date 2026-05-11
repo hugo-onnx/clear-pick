@@ -2,11 +2,10 @@ import { ChevronDown, Dices, ListOrdered } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { LandingHero } from './components/LandingHero';
-import { LanguageToggle } from './components/LanguageToggle';
 import { MatrixEditor } from './components/MatrixEditor';
 import { QuickDecider } from './components/QuickDecider';
 import { ResultsPanel } from './components/ResultsPanel';
-import { loadLanguage, saveLanguage, translations } from './i18n';
+import { copy, type TranslationCopy } from './i18n';
 import { cn } from './lib/utils';
 import type { DecisionMatrix, ScoreMode } from './types';
 import {
@@ -86,8 +85,8 @@ function HowItWorksPage({
   copy,
   footerCopy,
 }: {
-  copy: typeof translations.en.seoContent;
-  footerCopy: typeof translations.en.footer;
+  copy: TranslationCopy['seoContent'];
+  footerCopy: TranslationCopy['footer'];
 }) {
   return (
     <div className="matrix-theme relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -277,7 +276,7 @@ function getCurrentHashTargetId() {
   return window.location.hash.replace(/^#/, '');
 }
 
-function getFaqStructuredData(copy: typeof translations.en.seoContent) {
+function getFaqStructuredData(copy: TranslationCopy['seoContent']) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -294,7 +293,7 @@ function getFaqStructuredData(copy: typeof translations.en.seoContent) {
   };
 }
 
-function FaqStructuredData({ copy }: { copy: typeof translations.en.seoContent }) {
+function FaqStructuredData({ copy }: { copy: TranslationCopy['seoContent'] }) {
   return (
     <script type="application/ld+json">
       {JSON.stringify(getFaqStructuredData(copy))}
@@ -306,13 +305,11 @@ function App() {
   const [pathname] = useState(() => getCurrentPathname());
   const isHowItWorks = isHowItWorksPath(pathname);
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
-  const [language, setLanguage] = useState(() => loadLanguage());
   const [areResultsHidden, setAreResultsHidden] = useState(false);
   const [activeWorkspaceTab, setActiveWorkspaceTab] =
     useState<WorkspaceTab>('matrix');
   const pendingMatrixRef = useRef(matrix);
   const matrixSaveTimeoutRef = useRef<number | null>(null);
-  const copy = translations[language];
 
   useEffect(() => {
     pendingMatrixRef.current = matrix;
@@ -398,8 +395,6 @@ function App() {
       }
     };
 
-    saveLanguage(language);
-    document.documentElement.lang = language;
     const documentTitle = isHowItWorks
       ? copy.document.howItWorksTitle
       : copy.document.title;
@@ -420,18 +415,7 @@ function App() {
       'meta[name="twitter:description"]',
       documentDescription,
     );
-    updateMetaContent(
-      'meta[property="og:locale"]',
-      language === 'es' ? 'es_ES' : 'en_US',
-    );
-  }, [
-    copy.document.description,
-    copy.document.howItWorksDescription,
-    copy.document.howItWorksTitle,
-    copy.document.title,
-    isHowItWorks,
-    language,
-  ]);
+  }, [isHowItWorks]);
 
   const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
     setMatrix((current) => synchronizeScores(transform(current)));
@@ -481,11 +465,6 @@ function App() {
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
         <FaqStructuredData copy={copy.seoContent} />
-        <LanguageToggle
-          copy={copy.languageToggle}
-          language={language}
-          onLanguageChange={setLanguage}
-        />
         <HowItWorksPage copy={copy.seoContent} footerCopy={copy.footer} />
       </div>
     );
@@ -493,11 +472,6 @@ function App() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black text-foreground">
-      <LanguageToggle
-        copy={copy.languageToggle}
-        language={language}
-        onLanguageChange={setLanguage}
-      />
       <LandingHero copy={copy.hero} onPrimaryCtaClick={handleHeroStart} />
 
       <section
