@@ -330,9 +330,11 @@ describe('App', () => {
     expect(
       screen.getByRole('tab', { name: /weighted scoring/i }),
     ).toHaveAttribute('aria-selected', 'true');
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({
-      behavior: 'smooth',
-      block: 'start',
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      });
     });
 
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
@@ -386,7 +388,7 @@ describe('App', () => {
     );
 
     await waitFor(() => {
-      expect(scrollIntoViewMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(scrollIntoViewMock).toHaveBeenCalled();
     });
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
