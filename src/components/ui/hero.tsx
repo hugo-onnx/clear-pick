@@ -11,6 +11,7 @@ import {
 } from 'react';
 import type { TranslationCopy } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { GlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
 
 interface ShaderShowcaseProps {
   copy: TranslationCopy['hero'];
@@ -41,6 +42,16 @@ const PRIMARY_SHADER_IDLE_SPEED = 0.28;
 const PRIMARY_SHADER_ACTIVE_SPEED = 0.42;
 const HIGHLIGHT_SHADER_IDLE_SPEED = 0.2;
 const HIGHLIGHT_SHADER_ACTIVE_SPEED = 0.32;
+
+type CSSVariableStyle = CSSProperties & {
+  [key: `--${string}`]: string;
+};
+
+const HERO_GLASS_BUTTON_STYLE: CSSVariableStyle = {
+  color: 'white',
+  '--foreground': '#ffffff',
+  '--background': '#000000',
+};
 
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
@@ -217,14 +228,18 @@ export default function ShaderShowcase({
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <button
-              className="inline-flex min-h-12 w-full max-w-[13rem] cursor-pointer transform-gpu items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 px-7 py-3 text-base font-black text-white shadow-[0_18px_44px_rgba(0,0,0,0.28)] transition-all duration-300 [font-weight:900] hover:scale-[1.03] hover:from-cyan-400 hover:to-orange-400 hover:shadow-[0_20px_54px_rgba(0,0,0,0.34)] active:scale-[0.97] motion-reduce:hover:scale-100 motion-reduce:active:scale-100 sm:w-auto sm:max-w-none sm:px-9 sm:py-4"
+            <GlassButton
+              size="lg"
+              className="min-h-12 whitespace-nowrap"
+              displacementScale={0}
+              glassColor="rgba(255, 255, 255, 0.085)"
+              style={HERO_GLASS_BUTTON_STYLE}
               onClick={onPrimaryCtaClick}
               type="button"
             >
               {copy.start}
               <ArrowDown aria-hidden="true" className="h-4 w-4" />
-            </button>
+            </GlassButton>
           </div>
         </main>
 
