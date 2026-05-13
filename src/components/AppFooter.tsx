@@ -44,6 +44,9 @@ export function AppFooter({ copy, homeLinkLabel }: AppFooterProps) {
           >
             {copy.note}
           </p>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {copy.copyright}
+          </p>
           <div className="mt-3">
             <div className="flex flex-wrap gap-2">
               {homeLinkLabel ? (
