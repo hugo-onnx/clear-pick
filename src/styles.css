@@ -323,3 +323,36 @@ button:not(:disabled) {
     transform: none;
   }
 }
+
+@media (max-width: 639px), (pointer: coarse) {
+  .matrix-ranking-card {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .matrix-ranking-rank {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .matrix-ranking-label {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .matrix-ranking-score {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .matrix-ranking-drag-handle {
+    grid-column: 4;
+    grid-row: 1;
+    height: 2.5rem;
+    justify-self: end;
+    width: 2.5rem;
+  }
+
+  .matrix-ranking-arrows {
+    display: none;
+  }
+}
