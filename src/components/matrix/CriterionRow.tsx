@@ -220,6 +220,7 @@ export function CriterionRow({
                     optionDisplayName={optionDisplayName}
                     rankIndex={rankIndex}
                     rankedOptions={rankedOptions}
+                    value={option.id}
                   />
                 );
               })}
