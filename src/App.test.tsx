@@ -292,6 +292,11 @@ describe('App', () => {
         /your data stays stored locally in this browser/i,
       ),
     ).toBeInTheDocument();
+    expect(
+      within(footer).getByText(
+        'Copyright © 2026 ClearPick - All rights reserved.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /workflow/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /scoring/i })).not.toBeInTheDocument();
     expect(
