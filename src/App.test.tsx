@@ -1047,9 +1047,17 @@ describe('App', () => {
     const criteriaCount = within(criteriaRegion).getByText(/1 criterion/i);
     const rankingRows = rankingGroup.querySelector('.criteria-score-rows');
     const firstDragHandle = within(rankingGroup).getByText(/drag option 1/i).parentElement;
+    const firstRankingCard = firstDragHandle?.closest('[data-scoring-focus-card]');
+    const firstOptionLabel = within(rankingGroup).getByText('Option 1');
+    const firstScore = getInterpolatedScore('Option 1');
+    const firstArrowControls = getMoveOptionUpButton('Option 1').parentElement;
 
-    if (!(firstDragHandle instanceof HTMLElement)) {
-      throw new Error('Expected option ranking drag handle');
+    if (
+      !(firstDragHandle instanceof HTMLElement) ||
+      !(firstRankingCard instanceof HTMLElement) ||
+      !(firstArrowControls instanceof HTMLElement)
+    ) {
+      throw new Error('Expected option ranking row elements');
     }
 
     expect(criteriaHeading.parentElement).toContainElement(criteriaCount);
@@ -1067,10 +1075,14 @@ describe('App', () => {
     expect(
       within(criteriaRegion).getByLabelText(/importance for criterion 1/i),
     ).toHaveValue('0');
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(firstScore).toHaveTextContent('0/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(rankingRows).toHaveClass('criteria-score-rows');
     expect(Array.from(rankingRows?.children ?? [])).toHaveLength(2);
+    expect(firstRankingCard).toHaveClass('grid', 'grid-cols-[auto_minmax(0,1fr)_auto_auto]', 'items-center');
+    expect(firstOptionLabel).toHaveClass('truncate');
+    expect(firstScore).toHaveClass('whitespace-nowrap', 'text-right');
+    expect(firstArrowControls).toHaveClass('justify-self-end');
     expect(firstDragHandle).toHaveClass('touch-none', 'select-none', 'h-10', 'w-10', 'sm:h-8', 'sm:w-8');
     expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
     expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
