@@ -193,24 +193,23 @@ export const copy: TranslationCopy = {
   document: {
     title: 'ClearPick | Weighted Decisions Tool',
     description:
-      'Compare options with a weighted decision tool. Set priorities, rank options, and get a clear recommendation in 60 seconds.',
-    howItWorksTitle:
-      'How ClearPick Works | Weighted Decision Guide',
+      'Stop overthinking your decisions. ClearPick helps you compare options, weight what matters, and find a clear answer — privately, in your browser.',
+    howItWorksTitle: 'How ClearPick Works | Weighted Decision Guide',
     howItWorksDescription:
-      'Learn how ClearPick helps you compare options, set priorities, rank options, and explain recommendations privately.',
+      'Learn how ClearPick helps you compare options, set priorities, rank choices, and reach a clear recommendation — privately, without an account.',
   },
   hero: {
-    eyebrow: 'Interactive weighted decisions',
-    headingAria: 'Make your hardest decision in 60 seconds',
-    headingFirst: 'Make your hardest',
-    headingEmphasis: 'decision',
-    headingLast: 'in 60 seconds',
+    eyebrow: 'Weighted decisions, in your browser',
+    headingAria: 'Stop overthinking. Start deciding.',
+    headingFirst: 'Stop overthinking.',
+    headingEmphasis: 'Start deciding.',
+    headingLast: '',
     description:
-      'Set priorities, rank options, and see the strongest choice without sending data anywhere.',
-    start: 'Start',
-    localStorageNoticeTitle: 'Stored only on this device',
+      'Name what matters, rank your options, and find your answer — without sending your data anywhere.',
+    start: 'Start deciding',
+    localStorageNoticeTitle: 'Your decision stays on this device',
     localStorageNoticeBody:
-      'Your decision stays in this browser. We do not upload, store, or access it.',
+      'Nothing is uploaded. Nothing is shared. It lives in your browser until you clear it.',
   },
   workspaceLabel: 'Decision workspace',
   workspaceTabs: {
@@ -222,27 +221,27 @@ export const copy: TranslationCopy = {
     eyebrow: 'How it works',
     heading: 'A private weighted decision tool for faster choices',
     description:
-      'ClearPick is a private browser-only tool that helps you compare options clearly. Set what matters, rank each choice, and see which option fits your priorities best.',
-    workflowHeading: 'Three-step workflow',
+      'ClearPick is a private, browser-only tool that helps you compare options clearly. Name your choices, weight what matters, rank each one, and find the answer that fits your priorities.',
+    workflowHeading: 'Three steps',
     workflow: [
       {
-        title: 'Name options',
-        body: 'List the choices you need to compare, from two alternatives to a short ranked set.',
+        title: 'Name your choices',
+        body: 'List what you are deciding between — two options or up to six.',
       },
       {
-        title: 'Set priorities',
-        body: 'Set importance from 0-10 so the comparison reflects your priorities instead of treating every factor equally.',
+        title: 'Set what matters',
+        body: 'Assign importance from 0 to 10 so the comparison reflects your actual priorities, not equal weight across everything.',
       },
       {
         title: 'Rank and compare',
-        body: 'Rank options for each criterion, review the weighted score, and use the recommendation as a clear starting point.',
+        body: 'Rank each option against your criteria, review the weighted score, and use the recommendation as a clear starting point.',
       },
     ],
     useCasesHeading: 'When to use it',
     useCases: [
       {
         title: 'Personal decisions',
-        body: 'Compare apartments, schools, trips, purchases, or other choices with multiple tradeoffs.',
+        body: 'Compare apartments, schools, trips, purchases, or any choice with multiple tradeoffs you keep circling.',
       },
       {
         title: 'Career moves',
@@ -259,7 +258,7 @@ export const copy: TranslationCopy = {
     ],
     privacyHeading: 'Private by default',
     privacyBody:
-      'Your decision data is saved only in local browser storage on your device. ClearPick does not require an account, and your comparison is not uploaded to a server.',
+      'Your decision data is saved only in local browser storage on your device. ClearPick does not require an account, and your comparison is never uploaded to a server.',
     learnMore: 'Read the full guide',
     backToTool: 'Back to the decision tool',
     faqHeading: 'FAQ',
@@ -267,29 +266,29 @@ export const copy: TranslationCopy = {
       {
         question: 'What is ClearPick?',
         answer:
-          'ClearPick is a free private browser-only tool for comparing options and getting a clear recommendation quickly.',
+          'ClearPick is a free, private, browser-only tool for comparing options and reaching a clear recommendation without an account or server.',
       },
       {
         question: 'How does weighted scoring work?',
         answer:
-          'Weighted scoring lists your options, assigns importance to each criterion, scores every option against those criteria, and calculates a final score for comparison.',
+          'You list your options, assign importance to each criterion, rank every option against those criteria, and get a final weighted score to compare.',
       },
       {
         question: 'Is my decision data private?',
         answer:
-          'Yes. Your comparison is stored locally in your browser, does not require an account, and is not uploaded or available to the site owner.',
+          'Yes. Your comparison is stored locally in your browser, requires no account, and is never uploaded or available to the site owner.',
       },
       {
         question: 'When should I use a weighted scoring model?',
         answer:
-          'Use a weighted scoring model when you need to compare options with several criteria, make tradeoffs explicit, and explain why one choice ranks higher than another.',
+          'Use it when you need to compare options across several criteria, make tradeoffs explicit, and explain why one choice ranks higher than another.',
       },
     ],
   },
   quickDecider: {
     sectionAria: 'Quick random decider',
     sectionLabel: 'Quick Decider',
-    headline: "I can't decide between",
+    headline: 'I keep going back and forth between',
     optionsGroupAria: 'Quick decider options',
     optionLabel: (index) => `Quick option ${index}`,
     optionPlaceholder: (index) => `Option ${index}`,
@@ -299,51 +298,47 @@ export const copy: TranslationCopy = {
     loadWeightedOptions: 'Load options',
     loadWeightedOptionsHint: 'Name at least two weighted options to load.',
     reset: 'Reset',
-    disabledHint: 'Name at least two options to decide.',
-    limitHint: 'Six options is the limit.',
-    result: (name) => `Go with: ${name}.`,
+    disabledHint: 'Add two options first.',
+    limitHint: "That's the max — six options.",
+    result: (name) => `Go with ${name}.`,
   },
   matrix: {
     editorAria: 'Decision editor',
     title: 'Weighted Scoring',
-    intro:
-      'Name options, set priorities, and rank each choice in one focused comparison.',
+    intro: 'Name your choices, weight what matters, rank everything once.',
     localStorageNoticeTitle: 'Stored only on this device',
     localStorageNoticeBody:
       'Your decision stays in this browser. We do not upload, store, or access it.',
     onboardingGuideAria: 'Workflow guide',
-    onboardingSteps: [
-      'Name options',
-      'Set priorities',
-      'Rank and compare',
-    ],
+    onboardingSteps: ['Name your choices', 'Set what matters', 'Rank and compare'],
     optionsRegionAria: 'Options to compare',
-    optionsHeading: 'Options to compare',
+    optionsHeading: 'Your options',
     optionsDescription:
-      'Name the choices in play. Each option is ranked against the weighted criteria below.',
+      "These are the choices you're deciding between. Each one will be judged against your criteria.",
     optionsCount: (count) => `${count} ${count === 1 ? 'option' : 'options'}`,
     optionCards: 'Option cards',
     optionLabel: (index) => `Option ${index}`,
-    optionPlaceholder: (index) => `Option ${index}`,
+    optionPlaceholder: (index) =>
+      index === 1 ? 'Option 1' : index === 2 ? 'Option 2' : `Option ${index}`,
     newOption: 'New option',
     addOption: 'Add option',
-    addOptionToScore: 'Name this option to unlock meaningful scoring.',
+    addOptionToScore: 'Give this option a name to start ranking it.',
     liveTotal: 'Live total',
     liveScoreAria: (name) => `Live score for ${name}`,
-    resultsHiddenWhileScoring: 'Results hidden while you rank.',
-    limitReached: 'Limit reached: remove an option to add another.',
+    resultsHiddenWhileScoring: 'Scores are hidden — rank without bias.',
+    limitReached: 'Six options max. Remove one to add another.',
     removeOption: (name) => `Remove ${name}`,
     leading: 'Leading',
     tied: 'Tied',
-    criteriaHeading: 'Criteria, weights, and rankings',
+    criteriaHeading: 'What matters to you',
     criteriaDescription:
-      'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then rank each option for every criterion.',
+      'Name each criterion, set how much it matters (0 = ignore it, 10 = it\'s everything), then rank your options against it.',
     criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
     scoringControls: 'Ranking controls',
     blindScoring: 'Blind ranking',
-    blindScoringHelpLabel: 'Why this helps',
+    blindScoringHelpLabel: 'Why use this?',
     blindScoringHelp:
-      'Hides live totals and recommendations while you rank options, reducing bias as you compare choices.',
+      "Hides scores and results while you rank, so earlier rankings don't influence later ones.",
     criteriaList: 'Criteria list',
     criterionLabel: (index) => `Criterion ${index}`,
     newCriterion: 'New criterion',
@@ -359,7 +354,7 @@ export const copy: TranslationCopy = {
     scoreModeBoolean: 'Yes / No',
     yes: 'Yes',
     no: 'No',
-    booleanScoreScale: 'Yes, gives full credit. No, gives none.',
+    booleanScoreScale: 'Yes gives full credit. No gives none.',
     optionScores: 'Option scores',
     optionScoresAria: (name) => `${name} option scores`,
     scoreAria: (optionName, criterionName) =>
@@ -378,15 +373,15 @@ export const copy: TranslationCopy = {
   results: {
     title: 'Results',
     noWeightHeadline:
-      'Move at least one importance slider above 0 to surface a recommendation.',
+      'Raise at least one importance above 0 and a winner will appear.',
     tieHeadline: (names) =>
       `Current tie: ${joinEnglishLabels(names)} are evenly matched right now.`,
     showResults: 'Show results',
-    hiddenStatus: 'Results hidden while you rank.',
+    hiddenStatus: 'Scores are hidden while you rank.',
     recommendationAria: 'Recommendation preview',
     rankingAria: 'Weighted ranking',
-    recommendationEyebrow: 'Recommendation',
-    recommendationTitle: (name) => `${name} is the strongest option`,
+    recommendationEyebrow: 'The pick',
+    recommendationTitle: (name) => `${name} comes out ahead`,
     recommendationTieTitle: (names) => `${joinEnglishLabels(names)} are tied`,
     recommendationEmptyTitle: 'No recommendation yet',
     topScore: 'Top score',
@@ -396,10 +391,9 @@ export const copy: TranslationCopy = {
     topContributors: 'Top contributors',
     tiedGap: (names) =>
       `No score gap: ${joinEnglishLabels(names)} are tied for first.`,
-    noContributionDrivers:
-      'No criteria are adding points to this option yet.',
+    noContributionDrivers: 'No criteria are adding points to this option yet.',
     contributionValue: (value) => `${value} contribution`,
-    contributionDetail: (score, weight) => `${score} score x ${weight} weight`,
+    contributionDetail: (score, weight) => `${score} score × ${weight} weight`,
     contributionBarAria: (criterionName, optionName, contribution) =>
       `${criterionName} contributes ${contribution} to ${optionName}`,
     fullRankingTitle: 'Full ranking',
@@ -413,19 +407,19 @@ export const copy: TranslationCopy = {
     weightedScore: 'weighted score',
     scoreBarAria: (name, score) => `${name} has a weighted score of ${score}`,
     noPositiveWeights:
-      'Move an importance slider above 0 and the ranking will update.',
+      'Raise an importance slider above zero and the ranking will update.',
     reset: 'Start over',
     resetDialogTitle: 'Start over?',
     resetDialogDescription:
-      'This will clear your options, criteria, weights, and scores stored in this browser.',
+      'This clears everything — options, criteria, weights, and scores — from this browser.',
     resetDialogCancel: 'Keep editing',
     resetDialogConfirm: 'Start over',
-    matrixCount: (options, categories) => `${options} options / ${categories} criteria`,
+    matrixCount: (options, categories) =>
+      `${options} options / ${categories} criteria`,
   },
   footer: {
     productLabel: 'ClearPick',
-    note:
-      'Your data stays stored locally in this browser, so you can return to it without creating an account.',
+    note: 'Your data never leaves this browser. No account, no server, no tracking.',
     copyright: 'Copyright © 2026 ClearPick - All rights reserved.',
     howItWorks: 'How it works',
     faq: 'FAQ',
