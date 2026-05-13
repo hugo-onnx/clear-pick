@@ -10,10 +10,10 @@ Additional interface language: Spanish
 Application type: Browser-only weighted decision matrix and weighted scoring model tool
 Title: ClearPick | Weighted Decisions Tool
 
-ClearPick helps people compare options by naming choices, weighting criteria, scoring each option, and reviewing the ranked result with transparent score contributions.
+ClearPick helps people compare options by naming choices, setting criterion importance, ranking options for each criterion, and reviewing the ranked result with transparent score contributions.
 
 Best description:
-Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.
+Compare options with a weighted decision tool. Set priorities, rank options, and get a clear recommendation in 60 seconds.
 
 Privacy:
 - Runs entirely in the browser
@@ -27,22 +27,22 @@ Main use cases:
 - Evaluate career moves by weighting growth, compensation, flexibility, risk, and fit
 - Prioritize product ideas by customer impact, effort, revenue potential, confidence, or strategic value
 - Compare vendors, tools, agencies, or business options with repeatable criteria
-- Weight criteria and score options quickly
+- Set priorities and rank options quickly
 - Explain a recommendation with transparent scoring
 - Use the interface in English or Spanish
 
 FAQ summary:
 - The full FAQ and use-case guide is available at /how-it-works.
 - What is ClearPick? A free private browser-only tool for comparing options with a weighted decision matrix and getting a clear recommendation quickly.
-- How does a weighted decision matrix work? It lists options, assigns importance to criteria, scores every option against those criteria, and calculates weighted scores for comparison.
+- How does a weighted decision matrix work? It lists options, assigns importance to criteria, ranks every option against those criteria, and calculates weighted scores for comparison.
 - Is decision data private? Yes. Decision matrices are stored locally in the user's browser, do not require an account, and are not uploaded or available to the site owner.
 - When should someone use a weighted scoring model? Use it when comparing options with several criteria, making tradeoffs explicit, and explaining why one choice ranks higher than another.
 
 Core features:
 - Weighted decision matrix
 - Weighted scoring model
-- Scale and yes/no scoring
-- Blind scoring mode to reduce bias while scoring
+- Ranking-based option comparison
+- Blind ranking mode to reduce bias while comparing
 - Instant ranking and recommendation
 - Local browser persistence
 
