@@ -7,6 +7,7 @@ import type { Category, Option } from '@/types';
 import { formatSliderValue, moveRankedOption, revealClosestFocusCard } from '@/utils/matrixEditorUtils';
 
 interface RankingRowProps {
+  className?: string;
   option: Option;
   rankIndex: number;
   rankedOptions: Option[];
@@ -26,9 +27,11 @@ interface RankingRowProps {
     | 'moveOptionDown'
   >;
   onCategoryRankingChange: (categoryId: string, optionIds: string[]) => void;
+  value: string;
 }
 
 export function RankingRow({
+  className,
   option,
   rankIndex,
   rankedOptions,
@@ -41,6 +44,7 @@ export function RankingRow({
   criterionDisplayName,
   copy,
   onCategoryRankingChange,
+  value,
 }: RankingRowProps) {
   const displayedScoreLabel = formatSliderValue(displayedScore);
   const scoreRowHighlightClassName = isTie
@@ -48,7 +52,11 @@ export function RankingRow({
     : 'border-cyan-600/30 bg-cyan-600/[0.04]';
 
   return (
-    <SortableItem key={`${option.id}-${category.id}`} value={option.id}>
+    <SortableItem
+      className={className}
+      key={`${option.id}-${category.id}`}
+      value={value}
+    >
       <div
         className={cn(
           'matrix-ranking-card grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-border bg-white/70 p-2.5 sm:gap-3 sm:p-3 md:grid-cols-[auto_auto_minmax(8rem,1fr)_minmax(5.75rem,auto)_auto] md:gap-4',
