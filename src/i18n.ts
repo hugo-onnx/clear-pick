@@ -168,6 +168,7 @@ export interface TranslationCopy {
   footer: {
     productLabel: string;
     note: string;
+    copyright: string;
     howItWorks: string;
     faq: string;
     contactCta: string;
@@ -425,6 +426,7 @@ export const copy: TranslationCopy = {
     productLabel: 'ClearPick',
     note:
       'Your data stays stored locally in this browser, so you can return to it without creating an account.',
+    copyright: 'Copyright © 2026 ClearPick - All rights reserved.',
     howItWorks: 'How it works',
     faq: 'FAQ',
     contactCta: 'Contact support',
