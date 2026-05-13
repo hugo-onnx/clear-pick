@@ -14,7 +14,6 @@ import { MatrixEditor } from './components/MatrixEditor';
 import { copy } from './i18n';
 import {
   SCORE_MODE_BOOLEAN,
-  SCORE_MODE_SCALE,
   createStarterMatrix,
 } from './utils/matrix';
 import { getDecisionSummary } from './utils/scoring';
@@ -173,6 +172,33 @@ function installOptionRevealMocks({
 
 function installMobileOptionRevealMocks() {
   return installOptionRevealMocks();
+}
+
+function getInterpolatedScore(
+  optionName: string,
+  criterionName = 'Criterion 1',
+) {
+  return screen.getByLabelText(
+    `Interpolated score for ${optionName} on ${criterionName}`,
+  );
+}
+
+function getMoveOptionUpButton(
+  optionName: string,
+  criterionName = 'Criterion 1',
+) {
+  return screen.getByRole('button', {
+    name: `Move ${optionName} up in ${criterionName} ranking`,
+  });
+}
+
+function getMoveOptionDownButton(
+  optionName: string,
+  criterionName = 'Criterion 1',
+) {
+  return screen.getByRole('button', {
+    name: `Move ${optionName} down in ${criterionName} ranking`,
+  });
 }
 
 async function openQuickDeciderTab(user: { click: (element: Element) => Promise<void> }) {
@@ -1007,18 +1033,19 @@ describe('App', () => {
     render(<App />);
 
     const criteriaRegion = screen.getByRole('region', {
-      name: /criteria, weights, and scores/i,
+      name: /criteria, weights, and rankings/i,
     });
     const criteriaList = within(criteriaRegion).getByRole('list', {
       name: /criteria list/i,
     });
-    const scoreRows = within(criteriaRegion).getByRole('group', {
-      name: /criterion 1 option scores/i,
+    const rankingGroup = within(criteriaRegion).getByRole('group', {
+      name: /criterion 1 option ranking/i,
     });
     const criteriaHeading = within(criteriaRegion).getByRole('heading', {
-      name: /criteria, weights, and scores/i,
+      name: /criteria, weights, and rankings/i,
     });
     const criteriaCount = within(criteriaRegion).getByText(/1 criterion/i);
+    const rankingRows = rankingGroup.querySelector('.criteria-score-rows');
 
     expect(criteriaHeading.parentElement).toContainElement(criteriaCount);
     expect(within(criteriaList).getAllByRole('listitem')).toHaveLength(1);
@@ -1035,16 +1062,10 @@ describe('App', () => {
     expect(
       within(criteriaRegion).getByLabelText(/importance for criterion 1/i),
     ).toHaveValue('0');
-    expect(
-      within(criteriaRegion).getAllByLabelText(/score for option \d on criterion 1/i),
-    ).toHaveLength(2);
-    for (const scoreSlider of within(criteriaRegion).getAllByLabelText(
-      /score for option \d on criterion 1/i,
-    )) {
-      expect(scoreSlider).toHaveValue('0');
-    }
-    expect(scoreRows).toHaveClass('criteria-score-rows');
-    expect(Array.from(scoreRows.children)).toHaveLength(2);
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
+    expect(rankingRows).toHaveClass('criteria-score-rows');
+    expect(Array.from(rankingRows?.children ?? [])).toHaveLength(2);
     expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
     expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
     expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
@@ -1067,12 +1088,12 @@ describe('App', () => {
     });
 
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
-    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
-    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
   });
 
-  it('smooth snap moves in tenths and commits rounded integer scores on release', async () => {
+  it('ranks options with interpolated scores', async () => {
     render(<App />);
 
     const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
@@ -1083,36 +1104,24 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await userEvent.click(screen.getByRole('button', { name: /see full ranking/i }));
 
-    const scoreSlider = screen.getByLabelText(
-      /score for option 1 on criterion 1/i,
-    );
     const ranking = screen.getByRole('region', { name: /weighted ranking/i });
 
     expect(within(ranking).getAllByText(/^tied$/i)).toHaveLength(2);
 
-    fireEvent.pointerDown(scoreSlider);
-    fireEvent.change(scoreSlider, { target: { value: '4.6' } });
-    fireEvent.input(scoreSlider, { target: { value: '4.7' } });
-
-    expect(scoreSlider).toHaveValue('4.7');
-    expect(screen.getAllByText('5/10').length).toBeGreaterThan(0);
-    expect(screen.queryByText('4.7/10')).not.toBeInTheDocument();
-    expect(within(ranking).getAllByText(/^tied$/i)).toHaveLength(2);
-
-    fireEvent.pointerUp(scoreSlider);
+    await userEvent.click(getMoveOptionUpButton('Option 2'));
 
     await waitFor(() => {
-      expect(
-        screen.getByLabelText(/score for option 1 on criterion 1/i),
-      ).toHaveValue('5');
+      expect(getInterpolatedScore('Option 2')).toHaveTextContent('10/10');
     });
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
     expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
+    expect(within(ranking).getByText('Option 2')).toBeInTheDocument();
   });
 
-  it('does not commit score or weight slider changes until release', () => {
+  it('does not commit weight slider changes until release and reports rank moves', () => {
     const matrix = createStarterMatrix();
     const onCategoryWeightChange = vi.fn();
-    const onScoreChange = vi.fn();
+    const onCategoryRankingChange = vi.fn();
 
     render(
       <MatrixEditor
@@ -1127,8 +1136,7 @@ describe('App', () => {
         onRemoveCategory={vi.fn()}
         onCategoryNameChange={vi.fn()}
         onCategoryWeightChange={onCategoryWeightChange}
-        onScoreModeChange={vi.fn()}
-        onScoreChange={onScoreChange}
+        onCategoryRankingChange={onCategoryRankingChange}
         onResultsHiddenChange={vi.fn()}
       />,
     );
@@ -1149,27 +1157,16 @@ describe('App', () => {
       8,
     );
 
-    const scoreSlider = screen.getByLabelText(
-      /score for option 1 on criterion 1/i,
-    );
-    fireEvent.pointerDown(scoreSlider);
-    fireEvent.change(scoreSlider, { target: { value: '3.2' } });
-    fireEvent.change(scoreSlider, { target: { value: '3.4' } });
+    fireEvent.click(getMoveOptionUpButton('Option 2'));
 
-    expect(onScoreChange).not.toHaveBeenCalled();
-    expect(scoreSlider).toHaveValue('3.4');
-
-    fireEvent.pointerUp(scoreSlider);
-
-    expect(onScoreChange).toHaveBeenCalledTimes(1);
-    expect(onScoreChange).toHaveBeenCalledWith(
-      matrix.options[0].id,
+    expect(onCategoryRankingChange).toHaveBeenCalledTimes(1);
+    expect(onCategoryRankingChange).toHaveBeenCalledWith(
       matrix.categories[0].id,
-      3,
+      [matrix.options[1].id, matrix.options[0].id],
     );
   });
 
-  it('converts an option score to yes/no scoring with weighted binary values', async () => {
+  it('uses option ranking to update weighted results', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -1178,58 +1175,9 @@ describe('App', () => {
     fireEvent.change(weightSlider, { target: { value: '10' } });
     fireEvent.pointerUp(weightSlider);
 
-    const firstScoreSlider = screen.getByLabelText(
-      /score for option 1 on criterion 1/i,
-    );
-    const secondScoreSlider = screen.getByLabelText(
-      /score for option 2 on criterion 1/i,
-    );
-
-    fireEvent.pointerDown(firstScoreSlider);
-    fireEvent.change(firstScoreSlider, { target: { value: '4' } });
-    fireEvent.pointerUp(firstScoreSlider);
-    fireEvent.pointerDown(secondScoreSlider);
-    fireEvent.change(secondScoreSlider, { target: { value: '5' } });
-    fireEvent.pointerUp(secondScoreSlider);
-
-    await waitFor(() => {
-      expect(firstScoreSlider).toHaveValue('4');
-      expect(secondScoreSlider).toHaveValue('5');
-    });
-
-    const firstScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on criterion 1/i,
-    });
-    const secondScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring type for option 2 on criterion 1/i,
-    });
-
-    await user.selectOptions(firstScoreModeSelect, SCORE_MODE_BOOLEAN);
-
-    expect(
-      screen.queryByRole('slider', {
-        name: /score for option 1 on criterion 1/i,
-      }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('slider', {
-        name: /score for option 2 on criterion 1/i,
-      }),
-    ).toHaveValue('5');
-    expect(secondScoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
-
-    const firstBooleanScore = screen.getByRole('group', {
-      name: /score for option 1 on criterion 1/i,
-    });
-
-    expect(
-      within(firstBooleanScore).getByRole('button', { name: /^no$/i }),
-    ).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getAllByText(/yes \/ no/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/yes, gives full credit\. no, gives none\./i),
-    ).toBeInTheDocument();
-    expect(firstScoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
+    await user.click(getMoveOptionUpButton('Option 2'));
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('10/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
 
     await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /see full ranking/i }));
@@ -1473,49 +1421,26 @@ describe('App', () => {
     ).toHaveTextContent('10.0 pts');
   });
 
-  it('allows each option score in each criterion to keep an independent scoring type', async () => {
+  it('keeps option rankings independent for each criterion', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.type(screen.getByLabelText(/new criterion/i), 'Eligibility');
     await user.click(screen.getByRole('button', { name: /add criterion/i }));
 
-    const firstCriterionFirstOptionMode = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on criterion 1/i,
-    });
-    const secondCriterionFirstOptionMode = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on eligibility/i,
-    });
-    const secondCriterionSecondOptionMode = screen.getByRole('combobox', {
-      name: /scoring type for option 2 on eligibility/i,
-    });
+    await user.click(getMoveOptionUpButton('Option 2', 'Eligibility'));
 
-    await user.selectOptions(
-      secondCriterionFirstOptionMode,
-      SCORE_MODE_BOOLEAN,
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2', 'Eligibility')).toHaveTextContent(
+      '10/10',
     );
-
-    expect(firstCriterionFirstOptionMode).toHaveValue(SCORE_MODE_SCALE);
-    expect(secondCriterionFirstOptionMode).toHaveValue(SCORE_MODE_BOOLEAN);
-    expect(secondCriterionSecondOptionMode).toHaveValue(SCORE_MODE_SCALE);
-    expect(
-      screen.getByRole('slider', {
-        name: /score for option 1 on criterion 1/i,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('group', {
-        name: /score for option 1 on eligibility/i,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('slider', {
-        name: /score for option 2 on eligibility/i,
-      }),
-    ).toBeInTheDocument();
+    expect(getInterpolatedScore('Option 1', 'Eligibility')).toHaveTextContent(
+      '0/10',
+    );
   });
 
-  it('restores and resets saved yes/no option scores', async () => {
+  it('restores saved legacy yes/no scores as ranking scores and resets them', async () => {
     const user = userEvent.setup();
     const savedMatrix = createStarterMatrix();
     const categoryId = savedMatrix.categories[0].id;
@@ -1530,20 +1455,18 @@ describe('App', () => {
 
     render(<App />);
 
-    const scoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on criterion 1/i,
-    });
-    expect(scoreModeSelect).toHaveValue(SCORE_MODE_BOOLEAN);
+    expect(
+      screen.queryByRole('combobox', {
+        name: /scoring type for option 1 on criterion 1/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('slider', {
         name: /score for option 1 on criterion 1/i,
       }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('slider', {
-        name: /score for option 2 on criterion 1/i,
-      }),
-    ).toHaveValue('0');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
 
     await user.click(screen.getByRole('switch', { name: /blind scoring/i }));
     await user.click(screen.getByRole('button', { name: /start over/i }));
@@ -1557,15 +1480,12 @@ describe('App', () => {
       within(resetDialog).getByRole('button', { name: /start over/i }),
     );
 
-    const resetScoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on criterion 1/i,
-    });
-    expect(resetScoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
     expect(
-      screen.getByRole('slider', {
-        name: /score for option 1 on criterion 1/i,
+      screen.queryByRole('combobox', {
+        name: /scoring type for option 1 on criterion 1/i,
       }),
-    ).toHaveValue('0');
+    ).not.toBeInTheDocument();
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
   });
 
   it('restores the saved matrix and updates results live', async () => {
@@ -1607,17 +1527,13 @@ describe('App', () => {
       '5.0 pts',
     );
 
-    const scoreSlider = screen.getByLabelText(/score for stay here on criterion 1/i);
-
-    fireEvent.pointerDown(scoreSlider);
-    fireEvent.change(scoreSlider, { target: { value: '10' } });
-    fireEvent.pointerUp(scoreSlider);
+    await user.click(getMoveOptionUpButton('Move abroad'));
 
     await waitFor(() => {
       const ranking = screen.getByRole('region', { name: /weighted ranking/i });
-      expect(within(ranking).getByText('Stay here')).toBeInTheDocument();
+      expect(within(ranking).getByText('Move abroad')).toBeInTheDocument();
       expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/live score for stay here/i)).toHaveTextContent(
+      expect(screen.getByLabelText(/live score for move abroad/i)).toHaveTextContent(
         '10.0 pts',
       );
     });
@@ -1719,8 +1635,8 @@ describe('App', () => {
     expect(screen.getByDisplayValue('Sixth path')).toBeInTheDocument();
     expect(
       Array.from(
-        screen.getByRole('group', { name: /criterion 1 option scores/i })
-          .children,
+        screen.getByRole('group', { name: /criterion 1 option ranking/i })
+          .querySelector('.criteria-score-rows')?.children ?? [],
       ),
     ).toHaveLength(6);
     expect(
@@ -1782,8 +1698,8 @@ describe('App', () => {
     expect(screen.queryByLabelText(/new option/i)).not.toBeInTheDocument();
     expect(
       Array.from(
-        screen.getByRole('group', { name: /criterion 1 option scores/i })
-          .children,
+        screen.getByRole('group', { name: /criterion 1 option ranking/i })
+          .querySelector('.criteria-score-rows')?.children ?? [],
       ),
     ).toHaveLength(7);
 
@@ -1921,43 +1837,20 @@ describe('App', () => {
   });
 
 
-  it('reveals scoring widgets on focus without changing their values', async () => {
-    const user = userEvent.setup();
+  it('reveals ranking widgets on focus without changing their values', () => {
     render(<App />);
 
     const weightSlider = screen.getByLabelText(/importance for criterion 1/i);
-    const scoreModeSelect = screen.getByRole('combobox', {
-      name: /scoring type for option 1 on criterion 1/i,
-    });
-    const scoreSlider = screen.getByLabelText(/score for option 1 on criterion 1/i);
+    const moveButton = getMoveOptionDownButton('Option 1');
 
     fireEvent.focus(weightSlider);
     expect(weightSlider).toHaveValue('0');
-    fireEvent.focus(scoreModeSelect);
-    expect(scoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
-    fireEvent.focus(scoreSlider);
-    expect(scoreSlider).toHaveValue('0');
-
-    await user.selectOptions(scoreModeSelect, SCORE_MODE_BOOLEAN);
-    const booleanScoreGroup = screen.getByRole('group', {
-      name: /score for option 1 on criterion 1/i,
-    });
-    const yesButton = within(booleanScoreGroup).getByRole('button', {
-      name: /^yes$/i,
-    });
-    const noButton = within(booleanScoreGroup).getByRole('button', {
-      name: /^no$/i,
-    });
-
-    fireEvent.focus(yesButton);
-    expect(yesButton).toHaveAttribute('aria-pressed', 'false');
-    expect(noButton).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.focus(noButton);
-    expect(yesButton).toHaveAttribute('aria-pressed', 'false');
-    expect(noButton).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.focus(moveButton);
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
   });
 
-  it('uses one nearest reveal for an offscreen tablet scoring row focus', () => {
+  it('uses one nearest reveal for an offscreen tablet ranking row focus', () => {
     const reveal = installOptionRevealMocks({
       cardTop: 780,
       viewport: {
@@ -1971,13 +1864,11 @@ describe('App', () => {
     try {
       render(<App />);
 
-      const scoreModeSelect = screen.getByRole('combobox', {
-        name: /scoring type for option 1 on criterion 1/i,
-      });
+      const moveButton = getMoveOptionDownButton('Option 1');
       reveal.scrollIntoView.mockClear();
       reveal.scrollBy.mockClear();
       reveal.scrollTo.mockClear();
-      fireEvent.focus(scoreModeSelect);
+      fireEvent.focus(moveButton);
 
       expect(reveal.scrollIntoView).toHaveBeenCalledWith({
         behavior: 'smooth',
@@ -1992,17 +1883,17 @@ describe('App', () => {
     }
   });
 
-  it('uses one direct mobile reveal for scoring row focus', () => {
+  it('uses one direct mobile reveal for ranking row focus', () => {
     const reveal = installMobileOptionRevealMocks();
 
     try {
       render(<App />);
 
-      const scoreSlider = screen.getByLabelText(/score for option 1 on criterion 1/i);
+      const moveButton = getMoveOptionDownButton('Option 1');
       reveal.scrollIntoView.mockClear();
       reveal.scrollBy.mockClear();
       reveal.scrollTo.mockClear();
-      fireEvent.focus(scoreSlider);
+      fireEvent.focus(moveButton);
 
       expect(reveal.scrollIntoView).not.toHaveBeenCalled();
       expect(reveal.scrollTo).toHaveBeenCalledWith({
@@ -2010,29 +1901,6 @@ describe('App', () => {
         top: reveal.expectedTopCorrection,
       });
       expect(reveal.scrollTo).toHaveBeenCalledTimes(1);
-      expect(reveal.scrollBy).not.toHaveBeenCalled();
-    } finally {
-      reveal.restore();
-    }
-  });
-
-  it('keeps mobile score-mode select focus stationary', () => {
-    const reveal = installMobileOptionRevealMocks();
-
-    try {
-      render(<App />);
-
-      const scoreModeSelect = screen.getByRole('combobox', {
-        name: /scoring type for option 1 on criterion 1/i,
-      });
-      reveal.scrollIntoView.mockClear();
-      reveal.scrollBy.mockClear();
-      reveal.scrollTo.mockClear();
-      fireEvent.focus(scoreModeSelect);
-
-      expect(scoreModeSelect).toHaveValue(SCORE_MODE_SCALE);
-      expect(reveal.scrollIntoView).not.toHaveBeenCalled();
-      expect(reveal.scrollTo).not.toHaveBeenCalled();
       expect(reveal.scrollBy).not.toHaveBeenCalled();
     } finally {
       reveal.restore();
@@ -2070,8 +1938,8 @@ describe('App', () => {
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
-    expect(screen.getByLabelText(/score for option 1 on criterion 1/i)).toHaveValue('0');
-    expect(screen.getByLabelText(/score for option 2 on criterion 1/i)).toHaveValue('0');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
   });
 
   it('flushes pending matrix persistence on pagehide', () => {
