@@ -435,6 +435,7 @@ function App() {
 
   const handleReset = () => {
     setActiveWorkspaceTab('matrix');
+    setAreResultsHidden(true);
     setMatrix(createStarterMatrix());
     scrollToDecisionMatrix();
   };
