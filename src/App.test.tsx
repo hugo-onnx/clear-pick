@@ -1968,6 +1968,7 @@ describe('App', () => {
       ).getByRole('button', { name: /start over/i }),
     );
 
+    expect(screen.getByRole('switch', { name: /blind ranking/i })).toBeChecked();
     expect(screen.getByLabelText(/^option 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
