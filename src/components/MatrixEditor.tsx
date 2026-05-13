@@ -1526,7 +1526,7 @@ export function MatrixEditor({
                             >
                               <div
                                 className={cn(
-                                  'grid gap-3 rounded-md border border-border bg-white/70 p-3 md:grid-cols-[auto_minmax(8rem,1fr)_minmax(5.75rem,auto)_auto] md:items-center md:gap-4',
+                                  'grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-md border border-border bg-white/70 p-2.5 sm:gap-3 sm:p-3 md:grid-cols-[auto_minmax(8rem,1fr)_minmax(5.75rem,auto)_auto] md:gap-4',
                                   !areResultsHidden &&
                                     summary.leadingOptionIds.includes(option.id)
                                     ? scoreRowHighlightClassName
@@ -1538,7 +1538,7 @@ export function MatrixEditor({
                                   revealClosestFocusCard(event.target)
                                 }
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                                   <span
                                     aria-label={copy.rankPosition(
                                       rankIndex + 1,
@@ -1559,7 +1559,10 @@ export function MatrixEditor({
                                   </SortableItemHandle>
                                 </div>
 
-                                <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
+                                <span
+                                  className="min-w-0 truncate text-sm font-semibold leading-5 text-foreground/85"
+                                  title={optionDisplayName}
+                                >
                                   {optionDisplayName}
                                 </span>
 
@@ -1568,12 +1571,12 @@ export function MatrixEditor({
                                     optionDisplayName,
                                     criterionDisplayName,
                                   )}
-                                  className="text-sm font-semibold text-foreground md:text-right"
+                                  className="min-w-10 whitespace-nowrap text-right text-sm font-semibold text-foreground"
                                 >
                                   {displayedScoreLabel}
                                 </output>
 
-                                <div className="flex items-center gap-1 justify-self-start md:justify-self-end">
+                                <div className="flex items-center gap-1 justify-self-end">
                                   <Button
                                     aria-label={copy.moveOptionUp(
                                       optionDisplayName,
