@@ -1,4 +1,4 @@
-import { ChevronDown, CircleHelp, Plus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CircleHelp, GripVertical, Plus, X } from 'lucide-react';
 import {
   useEffect,
   useLayoutEffect,
@@ -10,9 +10,10 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sortable, SortableItem, SortableItemHandle } from '@/components/ui/sortable';
 import { cn } from '@/lib/utils';
 import type { TranslationCopy } from '../i18n';
-import type { DecisionMatrix, ScoreMode } from '../types';
+import type { DecisionMatrix, Option } from '../types';
 import {
   DEFAULT_SCORE,
   DEFAULT_WEIGHT,
@@ -23,11 +24,10 @@ import {
   MIN_OPTIONS,
   MIN_SCORE,
   MIN_WEIGHT,
-  SCORE_MODE_BOOLEAN,
-  SCORE_MODE_SCALE,
   clampScore,
   clampWeight,
   getDisplayName,
+  getRankedOptionsForCategory,
 } from '../utils/matrix';
 import type { DecisionSummary } from '../utils/scoring';
 
@@ -43,12 +43,7 @@ interface MatrixEditorProps {
   onRemoveCategory: (categoryId: string) => void;
   onCategoryNameChange: (categoryId: string, name: string) => void;
   onCategoryWeightChange: (categoryId: string, weight: number) => void;
-  onScoreModeChange: (
-    optionId: string,
-    categoryId: string,
-    scoreMode: ScoreMode,
-  ) => void;
-  onScoreChange: (optionId: string, categoryId: string, score: number) => void;
+  onCategoryRankingChange: (categoryId: string, optionIds: string[]) => void;
   onResultsHiddenChange: (areResultsHidden: boolean) => void;
 }
 
@@ -117,7 +112,13 @@ function formatSliderValue(
   value: number,
   config: SliderConfig = scoreSliderConfig,
 ): string {
-  return `${config.clamp(value)}/10`;
+  const clampedValue = config.clamp(value);
+  const roundedValue = Math.round(clampedValue * 10) / 10;
+  const displayValue = Number.isInteger(roundedValue)
+    ? String(roundedValue)
+    : roundedValue.toFixed(1);
+
+  return `${displayValue}/10`;
 }
 
 function formatDraftSliderValue(
@@ -131,20 +132,35 @@ function formatPoints(value: number): string {
   return `${value.toFixed(1)} pts`;
 }
 
-function getSliderOutputSelector(sliderId: string): string {
-  return `[data-slider-output="${sliderId.replace(/["\\]/g, '\\$&')}"]`;
+function getOptionId(option: Option): string {
+  return option.id;
 }
 
-function formatScoreValue(
-  value: number,
-  scoreMode: ScoreMode,
-  copy: TranslationCopy['matrix'],
-): string {
-  if (scoreMode === SCORE_MODE_BOOLEAN) {
-    return value >= 5 ? copy.yes : copy.no;
+function moveRankedOption(
+  rankedOptions: Option[],
+  optionId: string,
+  offset: -1 | 1,
+): string[] {
+  const currentIndex = rankedOptions.findIndex((option) => option.id === optionId);
+  const nextIndex = currentIndex + offset;
+
+  if (
+    currentIndex < 0 ||
+    nextIndex < 0 ||
+    nextIndex >= rankedOptions.length
+  ) {
+    return rankedOptions.map((option) => option.id);
   }
 
-  return formatSliderValue(value);
+  const nextOptions = [...rankedOptions];
+  const [movedOption] = nextOptions.splice(currentIndex, 1);
+  nextOptions.splice(nextIndex, 0, movedOption);
+
+  return nextOptions.map((option) => option.id);
+}
+
+function getSliderOutputSelector(sliderId: string): string {
+  return `[data-slider-output="${sliderId.replace(/["\\]/g, '\\$&')}"]`;
 }
 
 type FocusInputOptions = {
@@ -529,21 +545,6 @@ const minorButtonClass =
 const labelClass =
   'text-[11px] font-semibold uppercase text-muted-foreground';
 
-const segmentedControlClass =
-  'inline-flex rounded-md border border-border bg-white/80 p-1 shadow-sm';
-
-const segmentedButtonClass =
-  'min-h-9 flex-1 whitespace-nowrap rounded-[6px] px-3 text-xs font-semibold transition md:min-w-16 md:flex-none';
-
-function getSegmentedButtonClass(isSelected: boolean): string {
-  return cn(
-    segmentedButtonClass,
-    isSelected
-      ? 'bg-primary text-primary-foreground shadow-sm'
-      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-  );
-}
-
 export function MatrixEditor({
   areResultsHidden,
   copy,
@@ -556,8 +557,7 @@ export function MatrixEditor({
   onRemoveCategory,
   onCategoryNameChange,
   onCategoryWeightChange,
-  onScoreModeChange,
-  onScoreChange,
+  onCategoryRankingChange,
   onResultsHiddenChange,
 }: MatrixEditorProps) {
   const [pendingOptionName, setPendingOptionName] = useState('');
@@ -1323,11 +1323,12 @@ export function MatrixEditor({
             );
             const weightSliderId = `weight:${category.id}`;
             const displayedWeight = category.weight;
+            const rankedOptions = getRankedOptionsForCategory(matrix, category.id);
 
             return (
               <article
                 aria-label={copy.criterionRowAria(criterionDisplayName)}
-                className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-white focus-within:border-primary/55 sm:p-5"
+                className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition duration-200 hover:bg-white focus-within:border-primary/55 sm:p-5"
                 data-criterion-focus-card=""
                 data-focus-card=""
                 id={`criterion-card-${category.id}`}
@@ -1480,260 +1481,149 @@ export function MatrixEditor({
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className={labelClass}>{copy.optionScores}</p>
+                      <p className={labelClass}>{copy.optionRanking}</p>
                       <p className="text-sm font-medium text-muted-foreground">
                         {copy.optionsCount(matrix.options.length)}
                       </p>
                     </div>
 
                     <div
-                      aria-label={copy.optionScoresAria(criterionDisplayName)}
-                      className="criteria-score-rows space-y-2"
+                      aria-label={copy.optionRankingAria(criterionDisplayName)}
                       role="group"
                     >
-                      {matrix.options.map((option, optionIndex) => {
-                        const optionDisplayName = getDisplayName(
-                          option.name,
-                          copy.optionLabel(optionIndex + 1),
-                        );
-                        const score =
-                          matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
-                        const scoreMode =
-                          matrix.scoreModes?.[option.id]?.[category.id] ??
-                          category.scoreMode;
-                        const isBooleanScore = scoreMode === SCORE_MODE_BOOLEAN;
-                        const scoreSliderId = `score:${option.id}:${category.id}`;
-                        const displayedScore = score;
-                        const displayedScoreLabel = formatScoreValue(
-                          displayedScore,
-                          scoreMode,
-                          copy,
-                        );
-                        const scoreRowHighlightClassName = summary.isTie
-                          ? 'border-amber-400/50 bg-amber-50/75'
-                          : 'border-cyan-400/50 bg-cyan-50/70';
+                      <Sortable
+                        className="criteria-score-rows space-y-2"
+                        getItemValue={getOptionId}
+                        onValueChange={(nextRankedOptions) =>
+                          onCategoryRankingChange(
+                            category.id,
+                            nextRankedOptions.map((option) => option.id),
+                          )
+                        }
+                        strategy="vertical"
+                        value={rankedOptions}
+                      >
+                        {rankedOptions.map((option, rankIndex) => {
+                          const optionIndex = matrix.options.findIndex(
+                            (matrixOption) => matrixOption.id === option.id,
+                          );
+                          const optionDisplayName = getDisplayName(
+                            option.name,
+                            copy.optionLabel(optionIndex + 1),
+                          );
+                          const displayedScore =
+                            matrix.scores[option.id]?.[category.id] ?? DEFAULT_SCORE;
+                          const displayedScoreLabel =
+                            formatSliderValue(displayedScore);
+                          const scoreRowHighlightClassName = summary.isTie
+                            ? 'border-amber-400/50 bg-amber-50/75'
+                            : 'border-cyan-400/50 bg-cyan-50/70';
 
-                        return (
-                          <div
-                            className={cn(
-                              'grid gap-3 rounded-md border border-border bg-white/70 p-3 md:grid-cols-[minmax(8rem,0.85fr)_minmax(9.5rem,auto)_minmax(12rem,1.45fr)_minmax(5.75rem,auto)] md:items-center md:gap-4',
-                              !areResultsHidden &&
-                                summary.leadingOptionIds.includes(option.id)
-                                ? scoreRowHighlightClassName
-                                : null,
-                            )}
-                            data-focus-card=""
-                            data-scoring-focus-card=""
-                            key={`${option.id}-${category.id}`}
-                            onFocusCapture={(event) =>
-                              revealClosestFocusCard(event.target)
-                            }
-                          >
-                            <div className="flex min-w-0 items-center justify-between gap-3 md:block">
-                              <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
-                                {optionDisplayName}
-                              </span>
-                              <output
-                                className="text-sm font-semibold text-foreground md:hidden"
-                                data-slider-output={scoreSliderId}
-                              >
-                                {displayedScoreLabel}
-                              </output>
-                            </div>
-                            <div className="relative w-full md:w-32">
-                              <select
-                                aria-label={copy.scoreModeAria(
-                                  optionDisplayName,
-                                  criterionDisplayName,
+                          return (
+                            <SortableItem
+                              key={`${option.id}-${category.id}`}
+                              value={option.id}
+                            >
+                              <div
+                                className={cn(
+                                  'grid gap-3 rounded-md border border-border bg-white/70 p-3 md:grid-cols-[auto_minmax(8rem,1fr)_minmax(5.75rem,auto)_auto] md:items-center md:gap-4',
+                                  !areResultsHidden &&
+                                    summary.leadingOptionIds.includes(option.id)
+                                    ? scoreRowHighlightClassName
+                                    : null,
                                 )}
-                                className="h-10 w-full cursor-pointer appearance-none rounded-md border border-border bg-white/85 py-1 pl-3 pr-8 text-xs font-semibold text-muted-foreground shadow-sm transition hover:bg-white focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/15 md:h-8 md:py-0.5 md:pl-2 md:pr-6 md:text-[11px]"
-                                onChange={(event) =>
-                                  onScoreModeChange(
-                                    option.id,
-                                    category.id,
-                                    event.currentTarget.value as ScoreMode,
-                                  )
+                                data-focus-card=""
+                                data-scoring-focus-card=""
+                                onFocusCapture={(event) =>
+                                  revealClosestFocusCard(event.target)
                                 }
-                                value={scoreMode}
                               >
-                                <option value={SCORE_MODE_SCALE}>
-                                  {copy.scoreModeScale}
-                                </option>
-                                <option value={SCORE_MODE_BOOLEAN}>
-                                  {copy.scoreModeBoolean}
-                                </option>
-                              </select>
-                              <ChevronDown
-                                aria-hidden="true"
-                                className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground md:right-1.5 md:h-3 md:w-3"
-                              />
-                            </div>
-                            {isBooleanScore ? (
-                              <div className="flex flex-wrap items-center gap-2 justify-self-stretch md:justify-self-start">
-                                <div
-                                  aria-label={copy.scoreAria(
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    aria-label={copy.rankPosition(
+                                      rankIndex + 1,
+                                      optionDisplayName,
+                                    )}
+                                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950/[0.055] text-xs font-bold text-foreground"
+                                  >
+                                    {rankIndex + 1}
+                                  </span>
+                                  <SortableItemHandle
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-white hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    cursor
+                                  >
+                                    <GripVertical aria-hidden="true" className="h-4 w-4" />
+                                    <span className="sr-only">
+                                      {copy.dragOption(optionDisplayName)}
+                                    </span>
+                                  </SortableItemHandle>
+                                </div>
+
+                                <span className="min-w-0 break-words text-sm font-semibold leading-5 text-foreground/85">
+                                  {optionDisplayName}
+                                </span>
+
+                                <output
+                                  aria-label={copy.rankScoreAria(
                                     optionDisplayName,
                                     criterionDisplayName,
                                   )}
-                                  className={cn(segmentedControlClass, 'w-full md:w-fit')}
-                                  role="group"
+                                  className="text-sm font-semibold text-foreground md:text-right"
                                 >
-                                  <button
-                                    aria-pressed={displayedScore >= 5}
-                                    className={getSegmentedButtonClass(
-                                      displayedScore >= 5,
+                                  {displayedScoreLabel}
+                                </output>
+
+                                <div className="flex items-center gap-1 justify-self-start md:justify-self-end">
+                                  <Button
+                                    aria-label={copy.moveOptionUp(
+                                      optionDisplayName,
+                                      criterionDisplayName,
                                     )}
+                                    className="h-8 w-8 rounded-md"
+                                    disabled={rankIndex === 0}
                                     onClick={() =>
-                                      onScoreChange(
-                                        option.id,
+                                      onCategoryRankingChange(
                                         category.id,
-                                        MAX_SCORE,
+                                        moveRankedOption(
+                                          rankedOptions,
+                                          option.id,
+                                          -1,
+                                        ),
                                       )
                                     }
-                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
                                   >
-                                    {copy.yes}
-                                  </button>
-                                  <button
-                                    aria-pressed={displayedScore < 5}
-                                    className={getSegmentedButtonClass(
-                                      displayedScore < 5,
+                                    <ArrowUp aria-hidden="true" className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    aria-label={copy.moveOptionDown(
+                                      optionDisplayName,
+                                      criterionDisplayName,
                                     )}
+                                    className="h-8 w-8 rounded-md"
+                                    disabled={rankIndex === rankedOptions.length - 1}
                                     onClick={() =>
-                                      onScoreChange(
-                                        option.id,
+                                      onCategoryRankingChange(
                                         category.id,
-                                        MIN_SCORE,
+                                        moveRankedOption(
+                                          rankedOptions,
+                                          option.id,
+                                          1,
+                                        ),
                                       )
                                     }
-                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
                                   >
-                                    {copy.no}
-                                  </button>
+                                    <ArrowDown aria-hidden="true" className="h-4 w-4" />
+                                  </Button>
                                 </div>
-                                <span
-                                  aria-hidden="true"
-                                  className="whitespace-nowrap text-[11px] font-medium text-muted-foreground"
-                                >
-                                  {copy.booleanScoreScale}
-                                </span>
                               </div>
-                            ) : (
-                              <input
-                                aria-label={copy.scoreAria(
-                                  optionDisplayName,
-                                  criterionDisplayName,
-                                )}
-                                className="matrix-range"
-                                defaultValue={displayedScore}
-                                id={`score-${option.id}-${category.id}`}
-                                key={`${scoreSliderId}:${displayedScore}`}
-                                max={MAX_SCORE}
-                                min={MIN_SCORE}
-                                onBlur={(event) =>
-                                  handleSliderEnd(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    (value) =>
-                                      onScoreChange(option.id, category.id, value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onChange={(event) =>
-                                  handleSliderChange(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onFocus={(event) =>
-                                  handleSliderStart(
-                                    scoreSliderId,
-                                    displayedScore,
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onInput={(event) =>
-                                  handleSliderChange(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onKeyUp={(event) =>
-                                  handleSliderEnd(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    (value) =>
-                                      onScoreChange(option.id, category.id, value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onPointerCancel={(event) =>
-                                  handleSliderEnd(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    (value) =>
-                                      onScoreChange(option.id, category.id, value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onPointerDown={(event) =>
-                                  handleSliderStart(
-                                    scoreSliderId,
-                                    displayedScore,
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatDraftSliderValue(nextValue),
-                                    event.currentTarget,
-                                  )
-                                }
-                                onPointerUp={(event) =>
-                                  handleSliderEnd(
-                                    scoreSliderId,
-                                    Number(event.currentTarget.value),
-                                    (value) =>
-                                      onScoreChange(option.id, category.id, value),
-                                    scoreSliderConfig,
-                                    (nextValue) =>
-                                      formatScoreValue(nextValue, scoreMode, copy),
-                                    event.currentTarget,
-                                  )
-                                }
-                                step="0.1"
-                                style={getRangeStyle(displayedScore)}
-                                type="range"
-                              />
-                            )}
-                            {!isBooleanScore ? (
-                              <output
-                                className="hidden text-right text-sm font-semibold text-foreground md:block"
-                                data-slider-output={scoreSliderId}
-                              >
-                                {displayedScoreLabel}
-                              </output>
-                            ) : null}
-                          </div>
-                        );
-                      })}
+                            </SortableItem>
+                          );
+                        })}
+                      </Sortable>
                     </div>
                   </div>
                 </div>
