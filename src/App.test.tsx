@@ -215,11 +215,11 @@ describe('App', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /make your hardest decision in 60 seconds/i,
+        name: /stop overthinking/i,
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /^start$/i }),
+      screen.getByRole('button', { name: /start deciding/i }),
     ).toBeInTheDocument();
 
     expect(
@@ -239,15 +239,15 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /name options, set priorities, and rank each choice in one focused comparison/i,
+        /name your choices, weight what matters, rank everything once/i,
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/stored only on this device/i),
+      screen.getByText(/your decision stays on this device/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /your decision stays in this browser\. we do not upload, store, or access it\./i,
+        /nothing is uploaded\. nothing is shared\./i,
       ),
     ).toBeInTheDocument();
     expect(
@@ -289,7 +289,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       within(footer).getByText(
-        /your data stays stored locally in this browser/i,
+        /your data never leaves this browser/i,
       ),
     ).toBeInTheDocument();
     expect(
@@ -326,10 +326,10 @@ describe('App', () => {
     expect(
       document.getElementById('site-footer-note'),
     ).toHaveTextContent(
-      /your data stays stored locally in this browser/i,
+      /your data never leaves this browser/i,
     );
     expect(document.getElementById('local-save-notice')).toHaveTextContent(
-      /your decision stays in this browser/i,
+      /your decision stays on this device/i,
     );
     expect(
       within(footer).getByRole('button', { name: /back to top/i }),
@@ -355,7 +355,7 @@ describe('App', () => {
 
     expect(document.getElementById('decision-matrix')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^start$/i }));
+    await user.click(screen.getByRole('button', { name: /start deciding/i }));
 
     expect(
       screen.getByRole('tab', { name: /weighted scoring/i }),
@@ -451,7 +451,7 @@ describe('App', () => {
     );
     expect(
       screen.queryByRole('heading', {
-        name: /make your hardest decision in 60 seconds/i,
+        name: /stop overthinking/i,
       }),
     ).not.toBeInTheDocument();
     expect(
@@ -578,7 +578,7 @@ describe('App', () => {
 
     expect(decideButton).toBeDisabled();
     expect(
-      within(quickDecider).getByText(/name at least two options to decide/i),
+      within(quickDecider).getByText(/add two options first/i),
     ).toBeInTheDocument();
 
     await user.type(
@@ -594,14 +594,14 @@ describe('App', () => {
     await user.click(decideButton);
 
     expect(
-      within(quickDecider).getByText('Go with: Pizza.'),
+      within(quickDecider).getByText('Go with Pizza.'),
     ).toBeInTheDocument();
 
     randomSpy.mockReturnValueOnce(0.75);
     await user.click(decideButton);
 
     expect(
-      within(quickDecider).getByText('Go with: Pizza.'),
+      within(quickDecider).getByText('Go with Pizza.'),
     ).toBeInTheDocument();
 
     await waitFor(() => {
@@ -619,7 +619,7 @@ describe('App', () => {
       'Sushi',
     );
     expect(
-      within(quickDecider).getByText('Go with: Pizza.'),
+      within(quickDecider).getByText('Go with Pizza.'),
     ).toBeInTheDocument();
   });
 
@@ -649,7 +649,7 @@ describe('App', () => {
     await user.keyboard('{Enter}');
 
     expect(
-      within(quickDecider).getByText('Go with: Tea.'),
+      within(quickDecider).getByText('Go with Tea.'),
     ).toBeInTheDocument();
     expect(option2Input).not.toHaveFocus();
   });
@@ -702,7 +702,7 @@ describe('App', () => {
       within(quickDecider).queryByRole('button', { name: /add option/i }),
     ).not.toBeInTheDocument();
     expect(
-      within(quickDecider).getByText(/six options is the limit/i),
+      within(quickDecider).getByText(/that's the max/i),
     ).toBeInTheDocument();
 
     await user.click(
@@ -740,7 +740,7 @@ describe('App', () => {
       within(quickDecider).getByRole('button', { name: /decide for me/i }),
     );
     expect(
-      within(quickDecider).getByText('Go with: Tea.'),
+      within(quickDecider).getByText('Go with Tea.'),
     ).toBeInTheDocument();
 
     await user.click(within(quickDecider).getByRole('button', { name: /reset/i }));
@@ -790,7 +790,7 @@ describe('App', () => {
       within(quickDecider).getByRole('button', { name: /decide for me/i }),
     );
     expect(
-      within(quickDecider).getByText('Go with: Sushi.'),
+      within(quickDecider).getByText('Go with Sushi.'),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: /weighted scoring/i }));
@@ -859,8 +859,8 @@ describe('App', () => {
     render(<App />);
 
     const guide = screen.getByRole('region', { name: /workflow guide/i });
-    expect(within(guide).getByText('1. Name options')).toBeInTheDocument();
-    expect(within(guide).getByText('2. Set priorities')).toBeInTheDocument();
+    expect(within(guide).getByText('1. Name your choices')).toBeInTheDocument();
+    expect(within(guide).getByText('2. Set what matters')).toBeInTheDocument();
     expect(within(guide).getByText('3. Rank and compare')).toBeInTheDocument();
   });
 
@@ -880,7 +880,7 @@ describe('App', () => {
       within(optionsRegion).queryByLabelText(/live score for option 1/i),
     ).not.toBeInTheDocument();
     expect(
-      within(optionsRegion).getAllByText(/name this option to unlock meaningful scoring/i),
+      within(optionsRegion).getAllByText(/give this option a name to start ranking it/i),
     ).toHaveLength(2);
 
     const firstOption = screen.getByLabelText(/^option 1$/i) as HTMLInputElement;
@@ -927,7 +927,7 @@ describe('App', () => {
     expect(within(optionsRegion).getByText(/2 options/i)).toBeInTheDocument();
     expect(
       within(optionsRegion).getByText(
-        'Name the choices in play. Each option is ranked against the weighted criteria below.',
+        "These are the choices you're deciding between. Each one will be judged against your criteria.",
       ),
     ).toBeInTheDocument();
     expect(Array.from(optionCardsGrid.children)).toHaveLength(3);
@@ -961,7 +961,7 @@ describe('App', () => {
       within(optionsRegion).queryByLabelText(/live score for option 3/i),
     ).not.toBeInTheDocument();
     expect(
-      within(optionsRegion).getAllByText(/name this option to unlock meaningful scoring/i),
+      within(optionsRegion).getAllByText(/give this option a name to start ranking it/i),
     ).toHaveLength(3);
   });
 
@@ -1038,7 +1038,7 @@ describe('App', () => {
     render(<App />);
 
     const criteriaRegion = screen.getByRole('region', {
-      name: /criteria, weights, and rankings/i,
+      name: /what matters to you/i,
     });
     const criteriaList = within(criteriaRegion).getByRole('list', {
       name: /criteria list/i,
@@ -1047,7 +1047,7 @@ describe('App', () => {
       name: /criterion 1 option ranking/i,
     });
     const criteriaHeading = within(criteriaRegion).getByRole('heading', {
-      name: /criteria, weights, and rankings/i,
+      name: /what matters to you/i,
     });
     const criteriaCount = within(criteriaRegion).getByText(/1 criterion/i);
     const rankingRows = rankingGroup.querySelector('.criteria-score-rows');
@@ -1243,7 +1243,7 @@ describe('App', () => {
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/stay here is the strongest option/i),
+      screen.getByText(/stay here comes out ahead/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/ahead by 6\.0 pts/i)).toBeInTheDocument();
     expect(screen.getByText('10.0/10')).toBeInTheDocument();
@@ -1252,9 +1252,9 @@ describe('App', () => {
     expect(screen.queryByText(/runner-up/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^leader$/i)).not.toBeInTheDocument();
     expect(screen.getByText(/top contributors/i)).toBeInTheDocument();
-    expect(screen.getByText(/10\/10 score x 100% weight/i)).toBeInTheDocument();
+    expect(screen.getByText(/10\/10 score × 100% weight/i)).toBeInTheDocument();
     expect(
-      screen.queryByText(/10\.0\/10 score x 100\.0% weight/i),
+      screen.queryByText(/10\.0\/10 score × 100\.0% weight/i),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /see full ranking/i }),
@@ -1309,7 +1309,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/no recommendation yet/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/move an importance slider above 0/i),
+      screen.getByText(/raise at least one importance above 0/i),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /see full ranking/i }),
@@ -1329,9 +1329,9 @@ describe('App', () => {
       screen.getByRole('button', { name: /show results/i }),
     ).toHaveAttribute('aria-expanded', 'false');
     expect(
-      screen.getByRole('button', { name: /why this helps/i }),
+      screen.getByRole('button', { name: /why use this/i }),
     ).toHaveAccessibleDescription(
-      /hides live totals and recommendations while you rank options/i,
+      /hides scores and results while you rank/i,
     );
     expect(
       screen.queryByRole('region', { name: /recommendation preview/i }),
@@ -1352,7 +1352,7 @@ describe('App', () => {
     expect(
       screen.queryByRole('button', { name: /hide results/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getAllByText(/results hidden while you rank/i).length).toBeGreaterThan(
+    expect(screen.getAllByText(/scores are hidden while you rank/i).length).toBeGreaterThan(
       0,
     );
   });
@@ -1362,7 +1362,7 @@ describe('App', () => {
 
     render(<App />);
 
-    const helpButton = screen.getByRole('button', { name: /why this helps/i });
+    const helpButton = screen.getByRole('button', { name: /why use this/i });
     const helpText = screen.getByRole('tooltip');
     const innerWidthSpy = vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
     vi.spyOn(helpButton, 'getBoundingClientRect').mockReturnValue({
@@ -1385,7 +1385,7 @@ describe('App', () => {
     expect(helpButton).toHaveAttribute('aria-expanded', 'true');
     expect(helpText).toHaveClass('opacity-100');
     expect(helpText).toHaveTextContent(
-      /hides live totals and recommendations while you rank options/i,
+      /hides scores and results while you rank/i,
     );
     expect(
       helpText.style.getPropertyValue('--blind-scoring-help-left'),
@@ -1431,7 +1431,7 @@ describe('App', () => {
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/stay here is the strongest option/i)).toBeInTheDocument();
+    expect(screen.getByText(/stay here comes out ahead/i)).toBeInTheDocument();
   });
 
   it('suppresses matrix-side live score and leader cues while results are hidden', async () => {
@@ -1449,7 +1449,7 @@ describe('App', () => {
       within(optionsRegion).queryByLabelText(/live score for stay here/i),
     ).not.toBeInTheDocument();
     expect(
-      within(optionsRegion).getAllByText(/results hidden while you rank/i),
+      within(optionsRegion).getAllByText(/scores are hidden — rank without bias/i),
     ).toHaveLength(2);
 
     await user.click(screen.getByRole('switch', { name: /blind ranking/i }));
@@ -1513,7 +1513,7 @@ describe('App', () => {
       name: /start over/i,
     });
     expect(
-      within(resetDialog).getByText(/clear your options, criteria, weights, and scores/i),
+      within(resetDialog).getByText(/this clears everything/i),
     ).toBeInTheDocument();
     await user.click(
       within(resetDialog).getByRole('button', { name: /start over/i }),
@@ -1539,7 +1539,7 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(screen.getByRole('button', { name: /^start$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start deciding/i })).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: /blind ranking/i }),
     ).toBeChecked();
@@ -1584,7 +1584,7 @@ describe('App', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /make your hardest decision in 60 seconds/i,
+        name: /stop overthinking/i,
       }),
     ).toBeInTheDocument();
 
@@ -1686,7 +1686,7 @@ describe('App', () => {
       screen.queryByRole('button', { name: /add option/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/limit reached: remove an option to add another/i),
+      screen.getByText(/six options max/i),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /remove third path/i }));
@@ -1698,7 +1698,7 @@ describe('App', () => {
     expect(screen.getByLabelText(/new option/i)).toBeEnabled();
     expect(screen.getByRole('button', { name: /add option/i })).toBeEnabled();
     expect(
-      screen.queryByText(/limit reached: remove an option to add another/i),
+      screen.queryByText(/six options max/i),
     ).not.toBeInTheDocument();
 
     await addOption('Replacement path');
