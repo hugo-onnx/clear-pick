@@ -3,10 +3,14 @@ import type { DecisionMatrix } from '../types';
 import {
   SCORE_MODE_BOOLEAN,
   SCORE_MODE_SCALE,
+  applyRankingScores,
   clampScoreForMode,
   createStarterMatrix,
+  getInterpolatedRankScore,
+  getRankedOptionsForCategory,
   isBlankDecisionMatrix,
   normalizeDecisionMatrix,
+  refreshRankedCategoryScores,
   synchronizeScores,
 } from './matrix';
 
@@ -116,5 +120,55 @@ describe('matrix normalization', () => {
     expect(synchronized.scores.go?.eligible).toBe(8);
     expect(synchronized.scoreModes.stay?.eligible).toBe(SCORE_MODE_BOOLEAN);
     expect(synchronized.scoreModes.go?.eligible).toBe(SCORE_MODE_SCALE);
+  });
+
+  it('interpolates ranking scores linearly across option counts', () => {
+    expect([0, 1].map((rank) => getInterpolatedRankScore(rank, 2))).toEqual([
+      10,
+      0,
+    ]);
+    expect([0, 1, 2].map((rank) => getInterpolatedRankScore(rank, 3))).toEqual([
+      10,
+      5,
+      0,
+    ]);
+    expect(getInterpolatedRankScore(0, 4)).toBeCloseTo(10);
+    expect(getInterpolatedRankScore(1, 4)).toBeCloseTo(6.6666666667);
+    expect(getInterpolatedRankScore(2, 4)).toBeCloseTo(3.3333333333);
+    expect(getInterpolatedRankScore(3, 4)).toBeCloseTo(0);
+  });
+
+  it('applies ranked option order as interpolated criterion scores', () => {
+    const matrix = createStarterMatrix();
+    const categoryId = matrix.categories[0].id;
+    const [firstOption, secondOption] = matrix.options;
+
+    const ranked = applyRankingScores(matrix, categoryId, [
+      secondOption.id,
+      firstOption.id,
+    ]);
+
+    expect(ranked.scores[secondOption.id]?.[categoryId]).toBe(10);
+    expect(ranked.scores[firstOption.id]?.[categoryId]).toBe(0);
+    expect(ranked.scoreModes[secondOption.id]?.[categoryId]).toBe(
+      SCORE_MODE_SCALE,
+    );
+  });
+
+  it('orders saved score rankings without rewriting until refreshed', () => {
+    const matrix = createStarterMatrix();
+    const categoryId = matrix.categories[0].id;
+    matrix.scores[matrix.options[0].id][categoryId] = 4;
+    matrix.scores[matrix.options[1].id][categoryId] = 9;
+
+    expect(
+      getRankedOptionsForCategory(matrix, categoryId).map((option) => option.id),
+    ).toEqual([matrix.options[1].id, matrix.options[0].id]);
+    expect(matrix.scores[matrix.options[0].id]?.[categoryId]).toBe(4);
+    expect(matrix.scores[matrix.options[1].id]?.[categoryId]).toBe(9);
+
+    const refreshed = refreshRankedCategoryScores(matrix);
+    expect(refreshed.scores[matrix.options[1].id]?.[categoryId]).toBe(10);
+    expect(refreshed.scores[matrix.options[0].id]?.[categoryId]).toBe(0);
   });
 });
