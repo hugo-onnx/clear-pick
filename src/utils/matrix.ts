@@ -34,7 +34,7 @@ export function clampScore(value: number): number {
     return DEFAULT_SCORE;
   }
 
-  return Math.min(MAX_SCORE, Math.max(MIN_SCORE, Math.round(value)));
+  return Math.min(MAX_SCORE, Math.max(MIN_SCORE, value));
 }
 
 export function normalizeScoreMode(value: unknown): ScoreMode {
@@ -90,6 +90,124 @@ export function createCategory(
 
 export function getDisplayName(name: string, fallback: string): string {
   return name.trim() || fallback;
+}
+
+export function getInterpolatedRankScore(
+  rankIndex: number,
+  optionCount: number,
+): number {
+  if (optionCount <= 1) {
+    return MAX_SCORE;
+  }
+
+  return clampScore(
+    MAX_SCORE -
+      ((MAX_SCORE - MIN_SCORE) * Math.max(0, rankIndex)) /
+        (optionCount - 1),
+  );
+}
+
+function getScoreForCategory(
+  matrix: DecisionMatrix,
+  optionId: string,
+  categoryId: string,
+): number {
+  return clampScore(matrix.scores[optionId]?.[categoryId] ?? DEFAULT_SCORE);
+}
+
+function hasCategoryScoreSpread(
+  matrix: DecisionMatrix,
+  categoryId: string,
+): boolean {
+  const scores = matrix.options.map((option) =>
+    getScoreForCategory(matrix, option.id, categoryId),
+  );
+  const firstScore = scores[0] ?? DEFAULT_SCORE;
+
+  return scores.some((score) => score !== firstScore);
+}
+
+export function getRankedOptionsForCategory(
+  matrix: DecisionMatrix,
+  categoryId: string,
+): Option[] {
+  const optionIndexes = new Map(
+    matrix.options.map((option, index) => [option.id, index]),
+  );
+
+  return [...matrix.options].sort((left, right) => {
+    const scoreDifference =
+      getScoreForCategory(matrix, right.id, categoryId) -
+      getScoreForCategory(matrix, left.id, categoryId);
+
+    if (scoreDifference !== 0) {
+      return scoreDifference;
+    }
+
+    return (optionIndexes.get(left.id) ?? 0) - (optionIndexes.get(right.id) ?? 0);
+  });
+}
+
+export function applyRankingScores(
+  matrix: DecisionMatrix,
+  categoryId: string,
+  rankedOptionIds: string[],
+): DecisionMatrix {
+  const knownOptionIds = new Set(matrix.options.map((option) => option.id));
+  const orderedOptionIds = [
+    ...rankedOptionIds.filter((optionId) => knownOptionIds.has(optionId)),
+    ...matrix.options
+      .map((option) => option.id)
+      .filter((optionId) => !rankedOptionIds.includes(optionId)),
+  ];
+  const scoresByOptionId = new Map(
+    orderedOptionIds.map((optionId, index) => [
+      optionId,
+      getInterpolatedRankScore(index, orderedOptionIds.length),
+    ]),
+  );
+
+  return {
+    ...matrix,
+    categories: matrix.categories.map((category) =>
+      category.id === categoryId
+        ? { ...category, scoreMode: SCORE_MODE_SCALE }
+        : category,
+    ),
+    scoreModes: matrix.options.reduce<ScoreModesByOption>((scoreModes, option) => {
+      scoreModes[option.id] = {
+        ...(matrix.scoreModes[option.id] ?? {}),
+        [categoryId]: SCORE_MODE_SCALE,
+      };
+
+      return scoreModes;
+    }, { ...matrix.scoreModes }),
+    scores: matrix.options.reduce<ScoresByOption>((scores, option) => {
+      scores[option.id] = {
+        ...(matrix.scores[option.id] ?? {}),
+        [categoryId]: scoresByOptionId.get(option.id) ?? DEFAULT_SCORE,
+      };
+
+      return scores;
+    }, { ...matrix.scores }),
+  };
+}
+
+export function refreshRankedCategoryScores(
+  matrix: DecisionMatrix,
+  categoryIds = matrix.categories.map((category) => category.id),
+): DecisionMatrix {
+  return categoryIds.reduce((current, categoryId) => {
+    if (!hasCategoryScoreSpread(current, categoryId)) {
+      return current;
+    }
+
+    return applyRankingScores(
+      current,
+      categoryId,
+      getRankedOptionsForCategory(current, categoryId).map((option) => option.id),
+    );
+  }, matrix);
 }
 
 export function getScoreModeForCell(
