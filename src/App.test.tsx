@@ -1048,6 +1048,7 @@ describe('App', () => {
     const rankingRows = rankingGroup.querySelector('.criteria-score-rows');
     const firstDragHandle = within(rankingGroup).getByText(/drag option 1/i).parentElement;
     const firstRankingCard = firstDragHandle?.closest('[data-scoring-focus-card]');
+    const firstRank = firstRankingCard?.querySelector('.matrix-ranking-rank');
     const firstOptionLabel = within(rankingGroup).getByText('Option 1');
     const firstScore = getInterpolatedScore('Option 1');
     const firstArrowControls = getMoveOptionUpButton('Option 1').parentElement;
@@ -1055,6 +1056,7 @@ describe('App', () => {
     if (
       !(firstDragHandle instanceof HTMLElement) ||
       !(firstRankingCard instanceof HTMLElement) ||
+      !(firstRank instanceof HTMLElement) ||
       !(firstArrowControls instanceof HTMLElement)
     ) {
       throw new Error('Expected option ranking row elements');
@@ -1079,11 +1081,25 @@ describe('App', () => {
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(rankingRows).toHaveClass('criteria-score-rows');
     expect(Array.from(rankingRows?.children ?? [])).toHaveLength(2);
-    expect(firstRankingCard).toHaveClass('grid', 'grid-cols-[auto_minmax(0,1fr)_auto_auto]', 'items-center');
-    expect(firstOptionLabel).toHaveClass('truncate');
-    expect(firstScore).toHaveClass('whitespace-nowrap', 'text-right');
-    expect(firstArrowControls).toHaveClass('justify-self-end');
-    expect(firstDragHandle).toHaveClass('touch-none', 'select-none', 'h-10', 'w-10', 'sm:h-8', 'sm:w-8');
+    expect(firstRankingCard).toHaveClass(
+      'matrix-ranking-card',
+      'grid',
+      'grid-cols-[auto_auto_minmax(0,1fr)_auto_auto]',
+      'items-center',
+    );
+    expect(firstRank).toHaveClass('matrix-ranking-rank');
+    expect(firstOptionLabel).toHaveClass('matrix-ranking-label', 'truncate');
+    expect(firstScore).toHaveClass('matrix-ranking-score', 'whitespace-nowrap', 'text-right');
+    expect(firstArrowControls).toHaveClass('matrix-ranking-arrows', 'justify-self-end');
+    expect(firstDragHandle).toHaveClass(
+      'matrix-ranking-drag-handle',
+      'touch-none',
+      'select-none',
+      'h-10',
+      'w-10',
+      'sm:h-8',
+      'sm:w-8',
+    );
     expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
     expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
     expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
