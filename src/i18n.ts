@@ -193,7 +193,7 @@ export const copy: TranslationCopy = {
   document: {
     title: 'ClearPick | Weighted Decisions Tool',
     description:
-      'Stop overthinking your decisions. ClearPick helps you compare options, weight what matters, and find a clear answer — privately, in your browser.',
+      'Stop overthinking your decisions. ClearPick helps you compare options, weight your options, and find a clear answer — privately, in your browser.',
     howItWorksTitle: 'How ClearPick Works | Weighted Decision Guide',
     howItWorksDescription:
       'Learn how ClearPick helps you compare options, set priorities, rank choices, and reach a clear recommendation — privately, without an account.',
@@ -205,7 +205,7 @@ export const copy: TranslationCopy = {
     headingEmphasis: 'Start deciding.',
     headingLast: '',
     description:
-      'Name what matters, rank your options, and find your answer — without sending your data anywhere.',
+      'Name your options, rank your choices, and find your answer.',
     start: 'Start deciding',
     localStorageNoticeTitle: 'Your decision stays on this device',
     localStorageNoticeBody:
