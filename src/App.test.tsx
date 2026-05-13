@@ -1046,6 +1046,11 @@ describe('App', () => {
     });
     const criteriaCount = within(criteriaRegion).getByText(/1 criterion/i);
     const rankingRows = rankingGroup.querySelector('.criteria-score-rows');
+    const firstDragHandle = within(rankingGroup).getByText(/drag option 1/i).parentElement;
+
+    if (!(firstDragHandle instanceof HTMLElement)) {
+      throw new Error('Expected option ranking drag handle');
+    }
 
     expect(criteriaHeading.parentElement).toContainElement(criteriaCount);
     expect(within(criteriaList).getAllByRole('listitem')).toHaveLength(1);
@@ -1066,6 +1071,7 @@ describe('App', () => {
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(rankingRows).toHaveClass('criteria-score-rows');
     expect(Array.from(rankingRows?.children ?? [])).toHaveLength(2);
+    expect(firstDragHandle).toHaveClass('touch-none', 'select-none', 'h-10', 'w-10', 'sm:h-8', 'sm:w-8');
     expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
     expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
     expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
