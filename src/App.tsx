@@ -7,18 +7,17 @@ import { QuickDecider } from './components/QuickDecider';
 import { ResultsPanel } from './components/ResultsPanel';
 import { copy, type TranslationCopy } from './i18n';
 import { cn } from './lib/utils';
-import type { DecisionMatrix, ScoreMode } from './types';
+import type { DecisionMatrix } from './types';
 import {
-  clampScoreForMode,
   clampWeight,
   createCategory,
   createOption,
   createStarterMatrix,
-  DEFAULT_SCORE,
   MAX_OPTIONS,
   MIN_CATEGORIES,
   MIN_OPTIONS,
-  getScoreModeForCell,
+  applyRankingScores,
+  refreshRankedCategoryScores,
   synchronizeScores,
 } from './utils/matrix';
 import { getDecisionSummary } from './utils/scoring';
@@ -416,8 +415,17 @@ function App() {
     );
   }, [isHowItWorks]);
 
-  const applyChange = (transform: (current: DecisionMatrix) => DecisionMatrix) => {
-    setMatrix((current) => synchronizeScores(transform(current)));
+  const applyChange = (
+    transform: (current: DecisionMatrix) => DecisionMatrix,
+    options: { refreshRankedScores?: boolean } = {},
+  ) => {
+    setMatrix((current) => {
+      const synchronizedMatrix = synchronizeScores(transform(current));
+
+      return options.refreshRankedScores
+        ? refreshRankedCategoryScores(synchronizedMatrix)
+        : synchronizedMatrix;
+    });
   };
 
   const handleHeroStart = () => {
@@ -527,33 +535,39 @@ function App() {
                 matrix={matrix}
                 summary={summary}
                 onAddOption={(name) =>
-                  applyChange((current) => {
-                    if (current.options.length >= MAX_OPTIONS) {
-                      return current;
-                    }
+                  applyChange(
+                    (current) => {
+                      if (current.options.length >= MAX_OPTIONS) {
+                        return current;
+                      }
 
-                    return {
-                      ...current,
-                      options: [
-                        ...current.options,
-                        createOption(name ?? ''),
-                      ],
-                    };
-                  })
+                      return {
+                        ...current,
+                        options: [
+                          ...current.options,
+                          createOption(name ?? ''),
+                        ],
+                      };
+                    },
+                    { refreshRankedScores: true },
+                  )
                 }
                 onRemoveOption={(optionId) =>
-                  applyChange((current) => {
-                    if (current.options.length <= MIN_OPTIONS) {
-                      return current;
-                    }
+                  applyChange(
+                    (current) => {
+                      if (current.options.length <= MIN_OPTIONS) {
+                        return current;
+                      }
 
-                    return {
-                      ...current,
-                      options: current.options.filter(
-                        (option) => option.id !== optionId,
-                      ),
-                    };
-                  })
+                      return {
+                        ...current,
+                        options: current.options.filter(
+                          (option) => option.id !== optionId,
+                        ),
+                      };
+                    },
+                    { refreshRankedScores: true },
+                  )
                 }
                 onOptionNameChange={(optionId, name) =>
                   applyChange((current) => ({
@@ -604,49 +618,10 @@ function App() {
                     ),
                   }))
                 }
-                onScoreModeChange={(optionId, categoryId, scoreMode: ScoreMode) =>
-                  applyChange((current) => {
-                    const optionScores = current.scores[optionId] ?? {};
-                    const score = optionScores[categoryId] ?? DEFAULT_SCORE;
-
-                    return {
-                      ...current,
-                      scoreModes: {
-                        ...(current.scoreModes ?? {}),
-                        [optionId]: {
-                          ...(current.scoreModes?.[optionId] ?? {}),
-                          [categoryId]: scoreMode,
-                        },
-                      },
-                      scores: {
-                        ...current.scores,
-                        [optionId]: {
-                          ...optionScores,
-                          [categoryId]: clampScoreForMode(score, scoreMode),
-                        },
-                      },
-                    };
-                  })
-                }
-                onScoreChange={(optionId, categoryId, score) =>
-                  applyChange((current) => {
-                    const scoreMode = getScoreModeForCell(
-                      current,
-                      optionId,
-                      categoryId,
-                    );
-
-                    return {
-                      ...current,
-                      scores: {
-                        ...current.scores,
-                        [optionId]: {
-                          ...current.scores[optionId],
-                          [categoryId]: clampScoreForMode(score, scoreMode),
-                        },
-                      },
-                    };
-                  })
+                onCategoryRankingChange={(categoryId, optionIds) =>
+                  applyChange((current) =>
+                    applyRankingScores(current, categoryId, optionIds),
+                  )
                 }
                 onResultsHiddenChange={setAreResultsHidden}
               />
