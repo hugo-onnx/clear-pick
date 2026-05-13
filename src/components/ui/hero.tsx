@@ -47,6 +47,24 @@ type CSSVariableStyle = CSSProperties & {
   [key: `--${string}`]: string;
 };
 
+function renderStartDecidingHeadline(text: string) {
+  const rtIndex = text.indexOf('rt');
+
+  if (rtIndex === -1) {
+    return text;
+  }
+
+  return (
+    <>
+      <span className="whitespace-nowrap">
+        {text.slice(0, rtIndex + 1)}
+        <span className="inline-block translate-x-[0.03em]">t</span>
+      </span>
+      {text.slice(rtIndex + 2)}
+    </>
+  );
+}
+
 const HERO_GLASS_BUTTON_STYLE: CSSVariableStyle = {
   color: 'white',
   '--foreground': '#ffffff',
@@ -213,8 +231,8 @@ export default function ShaderShowcase({
             <span className="mx-auto mb-2 block max-w-[18rem] pb-1 text-[clamp(1.75rem,8vw,3rem)] font-normal leading-[1.16] tracking-normal text-white sm:max-w-none sm:text-6xl lg:text-7xl">
               {copy.headingFirst}
             </span>
-            <span className="block font-black text-white drop-shadow-2xl">
-              {copy.headingEmphasis}
+            <span className="block font-black tracking-[0.03em] text-white drop-shadow-2xl">
+              {renderStartDecidingHeadline(copy.headingEmphasis)}
             </span>
             <span className="block font-light italic text-white/90">
               {copy.headingLast}

@@ -11,6 +11,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { MatrixEditor } from './components/MatrixEditor';
+import { RankingRow } from './components/matrix/RankingRow';
+import { Sortable } from './components/ui/sortable';
 import { copy } from './i18n';
 import {
   SCORE_MODE_BOOLEAN,
@@ -1108,6 +1110,45 @@ describe('App', () => {
     expect(within(criteriaRegion).queryByRole('tablist')).not.toBeInTheDocument();
     expect(within(criteriaRegion).queryByRole('table')).not.toBeInTheDocument();
     expect(criteriaRegion.querySelector('.overflow-x-auto')).not.toBeInTheDocument();
+  });
+
+  it('forwards sortable overlay classes through extracted ranking rows', () => {
+    const option = { id: 'option-1', name: 'Option 1' };
+    const category = {
+      id: 'category-1',
+      name: 'Criterion 1',
+      scoreMode: 'scale' as const,
+      weight: 10,
+    };
+
+    render(
+      <Sortable
+        getItemValue={(item) => item.id}
+        onValueChange={vi.fn()}
+        value={[option]}
+      >
+        <RankingRow
+          areResultsHidden={false}
+          category={category}
+          className="z-50 shadow-lg"
+          copy={copy.matrix}
+          criterionDisplayName="Criterion 1"
+          displayedScore={10}
+          isLeading={true}
+          isTie={false}
+          onCategoryRankingChange={vi.fn()}
+          option={option}
+          optionDisplayName="Option 1"
+          rankedOptions={[option]}
+          rankIndex={0}
+          value={option.id}
+        />
+      </Sortable>,
+    );
+
+    expect(
+      screen.getByText('Option 1').closest('[data-slot="sortable-item"]'),
+    ).toHaveClass('z-50', 'shadow-lg');
   });
 
   it('migrates a saved blank default card from old 50 sliders to current defaults', () => {
