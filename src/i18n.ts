@@ -113,6 +113,13 @@ export interface TranslationCopy {
     optionScores: string;
     optionScoresAria: (name: string) => string;
     scoreAria: (optionName: string, criterionName: string) => string;
+    optionRanking: string;
+    optionRankingAria: (name: string) => string;
+    rankPosition: (rank: number, optionName: string) => string;
+    rankScoreAria: (optionName: string, criterionName: string) => string;
+    dragOption: (optionName: string) => string;
+    moveOptionUp: (optionName: string, criterionName: string) => string;
+    moveOptionDown: (optionName: string, criterionName: string) => string;
   };
   results: {
     title: string;
@@ -327,9 +334,9 @@ export const copy: TranslationCopy = {
     removeOption: (name) => `Remove ${name}`,
     leading: 'Leading',
     tied: 'Tied',
-    criteriaHeading: 'Criteria, weights, and scores',
+    criteriaHeading: 'Criteria, weights, and rankings',
     criteriaDescription:
-      'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then score each option with a 0-10 rating or a yes/no answer.',
+      'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then rank each option for every criterion.',
     criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
     scoringControls: 'Scoring controls',
     blindScoring: 'Blind scoring',
@@ -356,6 +363,16 @@ export const copy: TranslationCopy = {
     optionScoresAria: (name) => `${name} option scores`,
     scoreAria: (optionName, criterionName) =>
       `Score for ${optionName} on ${criterionName}`,
+    optionRanking: 'Option ranking',
+    optionRankingAria: (name) => `${name} option ranking`,
+    rankPosition: (rank, optionName) => `${optionName} is ranked ${rank}`,
+    rankScoreAria: (optionName, criterionName) =>
+      `Interpolated score for ${optionName} on ${criterionName}`,
+    dragOption: (optionName) => `Drag ${optionName}`,
+    moveOptionUp: (optionName, criterionName) =>
+      `Move ${optionName} up in ${criterionName} ranking`,
+    moveOptionDown: (optionName, criterionName) =>
+      `Move ${optionName} down in ${criterionName} ranking`,
   },
   results: {
     title: 'Results',
