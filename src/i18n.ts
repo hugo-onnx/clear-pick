@@ -192,11 +192,11 @@ export const copy: TranslationCopy = {
   document: {
     title: 'ClearPick | Weighted Decisions Tool',
     description:
-      'Compare options with a weighted decision tool. Weight criteria, score choices, and get a clear recommendation in 60 seconds.',
+      'Compare options with a weighted decision tool. Set priorities, rank options, and get a clear recommendation in 60 seconds.',
     howItWorksTitle:
       'How ClearPick Works | Weighted Decision Guide',
     howItWorksDescription:
-      'Learn how ClearPick helps you compare options, weight priorities, score choices, and explain recommendations privately.',
+      'Learn how ClearPick helps you compare options, set priorities, rank options, and explain recommendations privately.',
   },
   hero: {
     eyebrow: 'Interactive weighted decisions',
@@ -205,7 +205,7 @@ export const copy: TranslationCopy = {
     headingEmphasis: 'decision',
     headingLast: 'in 60 seconds',
     description:
-      'Weight priorities, score options, and see the strongest choice without sending data anywhere.',
+      'Set priorities, rank options, and see the strongest choice without sending data anywhere.',
     start: 'Start',
     localStorageNoticeTitle: 'Stored only on this device',
     localStorageNoticeBody:
@@ -221,7 +221,7 @@ export const copy: TranslationCopy = {
     eyebrow: 'How it works',
     heading: 'A private weighted decision tool for faster choices',
     description:
-      'ClearPick is a private browser-only tool that helps you compare options clearly. Weight what matters, score each choice, and see which option fits your priorities best.',
+      'ClearPick is a private browser-only tool that helps you compare options clearly. Set what matters, rank each choice, and see which option fits your priorities best.',
     workflowHeading: 'Three-step workflow',
     workflow: [
       {
@@ -229,12 +229,12 @@ export const copy: TranslationCopy = {
         body: 'List the choices you need to compare, from two alternatives to a short ranked set.',
       },
       {
-        title: 'Weight criteria',
+        title: 'Set priorities',
         body: 'Set importance from 0-10 so the comparison reflects your priorities instead of treating every factor equally.',
       },
       {
-        title: 'Score and compare',
-        body: 'Rate each option, review the weighted score, and use the recommendation as a clear starting point.',
+        title: 'Rank and compare',
+        body: 'Rank options for each criterion, review the weighted score, and use the recommendation as a clear starting point.',
       },
     ],
     useCasesHeading: 'When to use it',
@@ -306,20 +306,20 @@ export const copy: TranslationCopy = {
     editorAria: 'Decision editor',
     title: 'Weighted Scoring',
     intro:
-      'Name options, weight criteria, and score each choice in one focused comparison.',
+      'Name options, set priorities, and rank each choice in one focused comparison.',
     localStorageNoticeTitle: 'Stored only on this device',
     localStorageNoticeBody:
       'Your decision stays in this browser. We do not upload, store, or access it.',
     onboardingGuideAria: 'Workflow guide',
     onboardingSteps: [
       'Name options',
-      'Weight criteria',
-      'Score and compare',
+      'Set priorities',
+      'Rank and compare',
     ],
     optionsRegionAria: 'Options to compare',
     optionsHeading: 'Options to compare',
     optionsDescription:
-      'Name the choices in play. Each option is scored against the weighted criteria below.',
+      'Name the choices in play. Each option is ranked against the weighted criteria below.',
     optionsCount: (count) => `${count} ${count === 1 ? 'option' : 'options'}`,
     optionCards: 'Option cards',
     optionLabel: (index) => `Option ${index}`,
@@ -329,7 +329,7 @@ export const copy: TranslationCopy = {
     addOptionToScore: 'Name this option to unlock meaningful scoring.',
     liveTotal: 'Live total',
     liveScoreAria: (name) => `Live score for ${name}`,
-    resultsHiddenWhileScoring: 'Results hidden while you score.',
+    resultsHiddenWhileScoring: 'Results hidden while you rank.',
     limitReached: 'Limit reached: remove an option to add another.',
     removeOption: (name) => `Remove ${name}`,
     leading: 'Leading',
@@ -338,11 +338,11 @@ export const copy: TranslationCopy = {
     criteriaDescription:
       'Name what matters, set importance from 0-10 (0 ignores a criterion, 10 makes it a top priority), then rank each option for every criterion.',
     criteriaCount: (count) => `${count} ${count === 1 ? 'criterion' : 'criteria'}`,
-    scoringControls: 'Scoring controls',
-    blindScoring: 'Blind scoring',
+    scoringControls: 'Ranking controls',
+    blindScoring: 'Blind ranking',
     blindScoringHelpLabel: 'Why this helps',
     blindScoringHelp:
-      'Hides live totals and recommendations while you score, reducing bias as you compare options.',
+      'Hides live totals and recommendations while you rank options, reducing bias as you compare choices.',
     criteriaList: 'Criteria list',
     criterionLabel: (index) => `Criterion ${index}`,
     newCriterion: 'New criterion',
@@ -381,7 +381,7 @@ export const copy: TranslationCopy = {
     tieHeadline: (names) =>
       `Current tie: ${joinEnglishLabels(names)} are evenly matched right now.`,
     showResults: 'Show results',
-    hiddenStatus: 'Results hidden while you score.',
+    hiddenStatus: 'Results hidden while you rank.',
     recommendationAria: 'Recommendation preview',
     rankingAria: 'Weighted ranking',
     recommendationEyebrow: 'Recommendation',
