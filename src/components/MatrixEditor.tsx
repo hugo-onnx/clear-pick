@@ -1549,7 +1549,7 @@ export function MatrixEditor({
                                     {rankIndex + 1}
                                   </span>
                                   <SortableItemHandle
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-white hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    className="inline-flex h-10 w-10 touch-none select-none items-center justify-center rounded-md text-muted-foreground transition hover:bg-white hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-8 sm:w-8"
                                     cursor
                                   >
                                     <GripVertical aria-hidden="true" className="h-4 w-4" />
