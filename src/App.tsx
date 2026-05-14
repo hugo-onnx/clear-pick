@@ -910,6 +910,7 @@ function App() {
 
               <ResultsPanel
                 areResultsHidden={areResultsHidden}
+                contactEmail={copy.footer.contactEmail}
                 copy={copy.results}
                 matrix={matrix}
                 onResultsHiddenChange={setAreResultsHidden}
