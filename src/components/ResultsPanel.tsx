@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   Bot,
@@ -22,7 +31,6 @@ import type { CriterionContribution, DecisionSummary } from '../utils/scoring';
 
 interface ResultsPanelProps {
   areResultsHidden: boolean;
-  contactEmail: string;
   copy: TranslationCopy['results'];
   matrix: DecisionMatrix;
   summary: DecisionSummary;
@@ -70,18 +78,6 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((element) => !element.hasAttribute('disabled'));
-}
-
-function getMailToHref({
-  body,
-  email,
-  subject,
-}: {
-  body: string;
-  email: string;
-  subject: string;
-}) {
-  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 interface ContributionRowsProps {
@@ -158,7 +154,6 @@ function ContributionRows({
 
 export function ResultsPanel({
   areResultsHidden,
-  contactEmail,
   copy,
   matrix,
   summary,
@@ -167,15 +162,25 @@ export function ResultsPanel({
 }: ResultsPanelProps) {
   const [isRankingExpanded, setIsRankingExpanded] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistStatus, setWaitlistStatus] = useState<
+    'idle' | 'submitting' | 'succeeded' | 'error'
+  >('idle');
+  const [waitlistError, setWaitlistError] = useState('');
   const rankingDetailsRef = useRef<HTMLElement | null>(null);
   const resetDialogRef = useRef<HTMLDivElement | null>(null);
   const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const waitlistTriggerRef = useRef<HTMLButtonElement | null>(null);
   const resetCancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const waitlistEmailInputRef = useRef<HTMLInputElement | null>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const resultsDetailsId = 'weighted-results-details';
   const rankingDetailsId = 'weighted-results-ranking';
   const resetDialogTitleId = 'reset-matrix-dialog-title';
   const resetDialogDescriptionId = 'reset-matrix-dialog-description';
+  const waitlistErrorId = 'pro-waitlist-error';
+  const waitlistSuccessId = 'pro-waitlist-success';
   const leadingNames = summary.leadingOptionIds
     .map((optionId) =>
       summary.rankedOptions.find((option) => option.id === optionId)?.name,
@@ -286,6 +291,67 @@ export function ResultsPanel({
     onReset();
   };
 
+  const handleOpenWaitlistDialog = () => {
+    setWaitlistError('');
+    setWaitlistStatus('idle');
+    setIsWaitlistDialogOpen(true);
+    recordProInterest('pro-request');
+  };
+
+  const handleWaitlistDialogOpenChange = (isOpen: boolean) => {
+    setIsWaitlistDialogOpen(isOpen);
+
+    if (isOpen) {
+      setWaitlistError('');
+      setWaitlistStatus('idle');
+    }
+  };
+
+  const handleSubmitWaitlist = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const email = waitlistEmail.trim();
+    const emailInput = waitlistEmailInputRef.current;
+
+    if (!email || !emailInput?.validity.valid) {
+      setWaitlistStatus('error');
+      setWaitlistError(copy.proWaitlistInvalidEmail);
+      emailInput?.focus();
+      return;
+    }
+
+    const endpoint = import.meta.env.VITE_WAITLIST_ENDPOINT?.trim();
+
+    if (!endpoint) {
+      setWaitlistStatus('error');
+      setWaitlistError(copy.proWaitlistMissingEndpoint);
+      return;
+    }
+
+    setWaitlistStatus('submitting');
+    setWaitlistError('');
+
+    try {
+      const response = await fetch(endpoint, {
+        body: JSON.stringify({ email }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Waitlist request failed');
+      }
+
+      setWaitlistStatus('succeeded');
+      setWaitlistEmail('');
+    } catch {
+      setWaitlistStatus('error');
+      setWaitlistError(copy.proWaitlistSubmitError);
+    }
+  };
+
   const recordProInterest = (signalName: LaunchSignalName) => {
     recordLaunchSignal(signalName);
   };
@@ -334,10 +400,10 @@ export function ResultsPanel({
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">
             {copy.proValidationComingSoon}
           </p>
-          <h3 className="mt-1 text-base font-semibold text-foreground">
+          <h3 className="mt-2 text-base font-semibold text-foreground">
             {copy.proValidationTitle}
           </h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {copy.proValidationBody}
           </p>
         </div>
@@ -369,21 +435,13 @@ export function ResultsPanel({
       </div>
 
       <Button
-        asChild
         className="mt-3 w-full gap-2"
-        onClick={() => recordProInterest('pro-request')}
+        onClick={handleOpenWaitlistDialog}
+        ref={waitlistTriggerRef}
         size="sm"
       >
-        <a
-          href={getMailToHref({
-            body: copy.proRequestBody,
-            email: contactEmail,
-            subject: copy.proRequestSubject,
-          })}
-        >
-          <Mail aria-hidden="true" className="size-4" />
-          {copy.proRequest}
-        </a>
+        <Mail aria-hidden="true" className="size-4" />
+        {copy.proRequest}
       </Button>
       </div>
     </section>
@@ -696,6 +754,115 @@ export function ResultsPanel({
             </div>
           </div>
         ) : null}
+
+        <Dialog
+          onOpenChange={handleWaitlistDialogOpenChange}
+          open={isWaitlistDialogOpen}
+        >
+          <DialogContent
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              waitlistTriggerRef.current?.focus();
+            }}
+          >
+            <div className="mb-2 flex flex-col items-center gap-2">
+              <div
+                aria-hidden="true"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border"
+              >
+                <Mail className="size-5 text-foreground" strokeWidth={2} />
+              </div>
+              <DialogHeader>
+                <DialogTitle className="sm:text-center">
+                  {copy.proWaitlistDialogTitle}
+                </DialogTitle>
+                <DialogDescription className="sm:text-center">
+                  {copy.proWaitlistDialogDescription}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <form className="space-y-5" onSubmit={handleSubmitWaitlist}>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Input
+                    aria-describedby={
+                      waitlistStatus === 'error'
+                        ? waitlistErrorId
+                        : waitlistStatus === 'succeeded'
+                          ? waitlistSuccessId
+                          : undefined
+                    }
+                    aria-label={copy.proWaitlistEmailLabel}
+                    autoComplete="email"
+                    className="peer ps-9 caret-cyan-600 focus:border-cyan-600/60 focus:ring-4 focus:ring-cyan-600/15 focus-visible:border-cyan-600/60 focus-visible:ring-4 focus-visible:ring-cyan-600/15"
+                    disabled={waitlistStatus === 'submitting'}
+                    id="pro-waitlist-email"
+                    onChange={(event) => {
+                      setWaitlistEmail(event.target.value);
+                      if (waitlistStatus === 'error') {
+                        setWaitlistError('');
+                        setWaitlistStatus('idle');
+                      }
+                    }}
+                    placeholder={copy.proWaitlistEmailPlaceholder}
+                    ref={waitlistEmailInputRef}
+                    required
+                    type="email"
+                    value={waitlistEmail}
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <Mail aria-hidden="true" size={16} strokeWidth={2} />
+                  </div>
+                </div>
+              </div>
+
+              {waitlistStatus === 'succeeded' ? (
+                <p
+                  className="rounded-lg border border-border bg-muted px-3 py-2 text-center text-sm font-medium text-foreground"
+                  id={waitlistSuccessId}
+                  role="status"
+                >
+                  {copy.proWaitlistSuccess}
+                </p>
+              ) : null}
+
+              {waitlistStatus === 'error' && waitlistError ? (
+                <p
+                  className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-center text-sm font-medium text-destructive"
+                  id={waitlistErrorId}
+                  role="alert"
+                >
+                  {waitlistError}
+                </p>
+              ) : null}
+
+              <DialogFooter>
+                <Button
+                  className="w-full"
+                  disabled={waitlistStatus === 'submitting'}
+                  size="sm"
+                  type="submit"
+                >
+                  {waitlistStatus === 'submitting'
+                    ? copy.proWaitlistSubmitting
+                    : copy.proWaitlistSubmit}
+                </Button>
+              </DialogFooter>
+            </form>
+
+            <p className="text-center text-xs text-muted-foreground">
+              {copy.proWaitlistPrivacy}{' '}
+              <a
+                className="underline underline-offset-2 hover:no-underline"
+                href="/privacy-policy"
+              >
+                {copy.proWaitlistPrivacyLink}
+              </a>{' '}
+              {copy.proWaitlistPrivacySuffix}
+            </p>
+          </DialogContent>
+        </Dialog>
       </div>
     </aside>
   );
