@@ -1,13 +1,25 @@
-import { ArrowLeft, ArrowUp, BookOpen, CircleHelp, Mail } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowUp,
+  BookOpen,
+  CircleHelp,
+  Mail,
+  ShieldCheck,
+} from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import { Button } from './ui/button';
 
 interface AppFooterProps {
   copy: TranslationCopy['footer'];
   homeLinkLabel?: string;
+  showPrivacyPolicyLink?: boolean;
 }
 
-export function AppFooter({ copy, homeLinkLabel }: AppFooterProps) {
+export function AppFooter({
+  copy,
+  homeLinkLabel,
+  showPrivacyPolicyLink = true,
+}: AppFooterProps) {
   const handleBackToTop = () => {
     const decisionMatrix = document.getElementById('decision-matrix');
 
@@ -72,6 +84,14 @@ export function AppFooter({ copy, homeLinkLabel }: AppFooterProps) {
                   </Button>
                 </>
               )}
+              {showPrivacyPolicyLink ? (
+                <Button asChild className="gap-2" size="sm" variant="outline">
+                  <a href="/privacy-policy">
+                    <ShieldCheck aria-hidden="true" className="size-4" />
+                    {copy.privacyPolicy}
+                  </a>
+                </Button>
+              ) : null}
               <Button asChild className="gap-2" size="sm" variant="outline">
                 <a href={`mailto:${copy.contactEmail}`}>
                   <Mail aria-hidden="true" className="size-4" />
