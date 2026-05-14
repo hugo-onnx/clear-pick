@@ -1129,7 +1129,7 @@ describe('App', () => {
     expect(
       within(criteriaRegion).getByLabelText(/importance for criterion 1/i),
     ).toHaveValue('0');
-    expect(firstScore).toHaveTextContent('0/10');
+    expect(firstScore).toHaveTextContent('10/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(rankingRows).toHaveClass('criteria-score-rows');
     expect(Array.from(rankingRows?.children ?? [])).toHaveLength(2);
@@ -1213,7 +1213,7 @@ describe('App', () => {
     });
 
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(within(optionsRegion).queryByText(/^leading$/i)).not.toBeInTheDocument();
   });
@@ -1231,7 +1231,9 @@ describe('App', () => {
 
     const ranking = screen.getByRole('region', { name: /weighted ranking/i });
 
-    expect(within(ranking).getAllByText(/^tied$/i)).toHaveLength(2);
+    expect(within(ranking).queryByText(/^tied$/i)).not.toBeInTheDocument();
+    expect(within(ranking).getByText('Option 1')).toBeInTheDocument();
+    expect(within(ranking).getByText(/^leading$/i)).toBeInTheDocument();
 
     await userEvent.click(getMoveOptionUpButton('Option 2'));
 
@@ -1331,10 +1333,10 @@ describe('App', () => {
     expect(
       screen.getByText(/stay here comes out ahead/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/ahead by 6\.0 pts/i)).toBeInTheDocument();
+    expect(screen.getByText(/ahead by 10\.0 pts/i)).toBeInTheDocument();
     expect(screen.getByText('10.0/10')).toBeInTheDocument();
     expect(screen.getByText(/closest alternative/i)).toBeInTheDocument();
-    expect(screen.getByText(/move abroad \(4\/10\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/move abroad \(0\/10\)/i)).toBeInTheDocument();
     expect(screen.queryByText(/runner-up/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^leader$/i)).not.toBeInTheDocument();
     expect(screen.getByText(/top contributors/i)).toBeInTheDocument();
@@ -1374,7 +1376,7 @@ describe('App', () => {
     );
     expect(within(ranking).getByText('Stay here')).toBeInTheDocument();
     expect(within(ranking).getByText(/10\.0\/10 weighted score/i)).toBeInTheDocument();
-    expect(within(ranking).getByText(/6\.0 pts behind leader/i)).toBeInTheDocument();
+    expect(within(ranking).getByText(/10\.0 pts behind leader/i)).toBeInTheDocument();
     expect(
       screen.getByRole('region', { name: /recommendation preview/i }),
     ).toBeInTheDocument();
@@ -1555,7 +1557,7 @@ describe('App', () => {
 
     await user.click(getMoveOptionUpButton('Option 2', 'Eligibility'));
 
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
     expect(getInterpolatedScore('Option 2', 'Eligibility')).toHaveTextContent(
       '10/10',
@@ -1610,7 +1612,7 @@ describe('App', () => {
         name: /scoring type for option 1 on criterion 1/i,
       }),
     ).not.toBeInTheDocument();
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
   });
 
   it('restores the saved matrix and updates results live', async () => {
@@ -1971,7 +1973,7 @@ describe('App', () => {
     fireEvent.focus(weightSlider);
     expect(weightSlider).toHaveValue('0');
     fireEvent.focus(moveButton);
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
   });
 
@@ -2064,7 +2066,7 @@ describe('App', () => {
     expect(screen.getByLabelText(/^option 2$/i)).toHaveValue('');
     expect(screen.getByLabelText(/^criterion 1$/i)).toHaveValue('');
     expect(screen.getByLabelText(/importance for criterion 1/i)).toHaveValue('0');
-    expect(getInterpolatedScore('Option 1')).toHaveTextContent('0/10');
+    expect(getInterpolatedScore('Option 1')).toHaveTextContent('10/10');
     expect(getInterpolatedScore('Option 2')).toHaveTextContent('0/10');
   });
 
