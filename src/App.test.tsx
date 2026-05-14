@@ -526,6 +526,51 @@ describe('App', () => {
     );
   });
 
+  it('renders SEO template pages with route metadata and tool links', () => {
+    window.history.pushState({}, '', '/templates/vendor-selection-matrix');
+    const descriptionMeta = document.createElement('meta');
+    descriptionMeta.setAttribute('name', 'description');
+    document.head.append(descriptionMeta);
+    const canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    document.head.append(canonicalLink);
+    const ogUrlMeta = document.createElement('meta');
+    ogUrlMeta.setAttribute('property', 'og:url');
+    document.head.append(ogUrlMeta);
+
+    render(<App />);
+
+    expect(document.title).toBe('Vendor Selection Matrix Template | ClearPick');
+    expect(
+      document.querySelector('meta[name="description"]'),
+    ).toHaveAttribute(
+      'content',
+      expect.stringMatching(/evaluate vendors/i),
+    );
+    expect(canonicalLink).toHaveAttribute(
+      'href',
+      'https://clear-pick.pages.dev/templates/vendor-selection-matrix',
+    );
+    expect(ogUrlMeta).toHaveAttribute(
+      'content',
+      'https://clear-pick.pages.dev/templates/vendor-selection-matrix',
+    );
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /vendor selection matrix/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/feature fit/i)).toBeInTheDocument();
+    expect(screen.getByText(/security posture/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /open the decision tool/i }),
+    ).toHaveAttribute('href', '/');
+    expect(document.querySelector('script[type="application/ld+json"]')).toHaveTextContent(
+      '"@type":"WebPage"',
+    );
+  });
+
   it('scrolls to the FAQ section when the how-it-works hash route loads', async () => {
     window.history.pushState({}, '', '/how-it-works#faq-heading');
     const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
