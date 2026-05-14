@@ -155,6 +155,16 @@ describe('matrix normalization', () => {
     );
   });
 
+  it('initializes blank default category scores from the current ranking order', () => {
+    const matrix = createStarterMatrix();
+    const categoryId = matrix.categories[0].id;
+
+    const refreshed = refreshRankedCategoryScores(matrix);
+
+    expect(refreshed.scores[matrix.options[0].id]?.[categoryId]).toBe(10);
+    expect(refreshed.scores[matrix.options[1].id]?.[categoryId]).toBe(0);
+  });
+
   it('orders saved score rankings without rewriting until refreshed', () => {
     const matrix = createStarterMatrix();
     const categoryId = matrix.categories[0].id;
@@ -170,5 +180,17 @@ describe('matrix normalization', () => {
     const refreshed = refreshRankedCategoryScores(matrix);
     expect(refreshed.scores[matrix.options[1].id]?.[categoryId]).toBe(10);
     expect(refreshed.scores[matrix.options[0].id]?.[categoryId]).toBe(0);
+  });
+
+  it('preserves equal non-default saved scores when refreshing rankings', () => {
+    const matrix = createStarterMatrix();
+    const categoryId = matrix.categories[0].id;
+    matrix.scores[matrix.options[0].id][categoryId] = 5;
+    matrix.scores[matrix.options[1].id][categoryId] = 5;
+
+    const refreshed = refreshRankedCategoryScores(matrix);
+
+    expect(refreshed.scores[matrix.options[0].id]?.[categoryId]).toBe(5);
+    expect(refreshed.scores[matrix.options[1].id]?.[categoryId]).toBe(5);
   });
 });
