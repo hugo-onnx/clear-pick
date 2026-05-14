@@ -25,7 +25,124 @@ import { loadActiveDecision, saveActiveDecision } from './utils/storage';
 
 const MATRIX_SAVE_DEBOUNCE_MS = 250;
 const MATRIX_SCROLL_FALLBACK_DELAY_MS = 80;
+const SITE_URL = 'https://clear-pick.pages.dev';
 type WorkspaceTab = 'matrix' | 'quickDecider';
+
+interface SeoTemplatePage {
+  path: string;
+  documentTitle: string;
+  metaDescription: string;
+  eyebrow: string;
+  heading: string;
+  description: string;
+  criteriaHeading: string;
+  criteria: string[];
+  workflowHeading: string;
+  workflow: string[];
+}
+
+const seoTemplatePages: SeoTemplatePage[] = [
+  {
+    path: '/templates/job-offer-comparison',
+    documentTitle: 'Job Offer Comparison Matrix | ClearPick',
+    metaDescription:
+      'Compare salary, growth, flexibility, benefits, commute, and risk with a private weighted job offer comparison matrix.',
+    eyebrow: 'Career decision template',
+    heading: 'Job offer comparison matrix',
+    description:
+      'Compare competing offers with weighted criteria so the decision reflects more than salary alone.',
+    criteriaHeading: 'Example criteria',
+    criteria: [
+      'Compensation',
+      'Growth potential',
+      'Flexibility',
+      'Manager fit',
+      'Commute or location',
+      'Long-term risk',
+    ],
+    workflowHeading: 'How to use it',
+    workflow: [
+      'Add each offer as an option.',
+      'Weight the criteria based on what matters most right now.',
+      'Rank each offer once, then review the recommendation and score drivers.',
+    ],
+  },
+  {
+    path: '/templates/vendor-selection-matrix',
+    documentTitle: 'Vendor Selection Matrix Template | ClearPick',
+    metaDescription:
+      'Evaluate vendors by fit, cost, support, security, implementation effort, and risk with a weighted selection matrix.',
+    eyebrow: 'Business decision template',
+    heading: 'Vendor selection matrix',
+    description:
+      'Make vendor comparisons repeatable by scoring each provider against the same weighted buying criteria.',
+    criteriaHeading: 'Example criteria',
+    criteria: [
+      'Feature fit',
+      'Total cost',
+      'Implementation effort',
+      'Support quality',
+      'Security posture',
+      'Contract risk',
+    ],
+    workflowHeading: 'How to use it',
+    workflow: [
+      'Add the shortlisted vendors as options.',
+      'Set weights with stakeholders before scoring.',
+      'Rank each vendor against every criterion and use the breakdown to explain the choice.',
+    ],
+  },
+  {
+    path: '/templates/apartment-comparison',
+    documentTitle: 'Apartment Comparison Matrix | ClearPick',
+    metaDescription:
+      'Compare apartments by rent, commute, space, neighborhood, amenities, and lease risk with a weighted decision matrix.',
+    eyebrow: 'Personal decision template',
+    heading: 'Apartment comparison matrix',
+    description:
+      'Turn apartment tradeoffs into a clear side-by-side decision before signing a lease.',
+    criteriaHeading: 'Example criteria',
+    criteria: [
+      'Rent',
+      'Commute',
+      'Space and layout',
+      'Neighborhood',
+      'Amenities',
+      'Lease flexibility',
+    ],
+    workflowHeading: 'How to use it',
+    workflow: [
+      'Add each apartment or neighborhood as an option.',
+      'Weight essentials higher than nice-to-have features.',
+      'Rank each place and compare the final score with your gut check.',
+    ],
+  },
+  {
+    path: '/templates/product-prioritization',
+    documentTitle: 'Product Prioritization Matrix | ClearPick',
+    metaDescription:
+      'Prioritize product ideas by customer impact, confidence, effort, revenue potential, and strategic fit.',
+    eyebrow: 'Product decision template',
+    heading: 'Product prioritization matrix',
+    description:
+      'Score roadmap ideas consistently so teams can compare impact, effort, and strategy in one place.',
+    criteriaHeading: 'Example criteria',
+    criteria: [
+      'Customer impact',
+      'Revenue potential',
+      'Strategic fit',
+      'Confidence',
+      'Delivery effort',
+      'Risk reduction',
+    ],
+    workflowHeading: 'How to use it',
+    workflow: [
+      'Add each feature, bet, or initiative as an option.',
+      'Agree on weights before ranking ideas.',
+      'Use the weighted result as a discussion starter, not a substitute for judgment.',
+    ],
+  },
+];
 
 let pendingMatrixScrollAnimationFrame: number | null = null;
 let pendingMatrixScrollTimeout: number | null = null;
@@ -254,6 +371,131 @@ function HowItWorksPage({
   );
 }
 
+function SeoTemplateStructuredData({ page }: { page: SeoTemplatePage }) {
+  return (
+    <script type="application/ld+json">
+      {JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}${page.path}#webpage`,
+        name: page.documentTitle,
+        description: page.metaDescription,
+        url: `${SITE_URL}${page.path}`,
+        isPartOf: {
+          '@id': `${SITE_URL}/#website`,
+        },
+        mainEntity: {
+          '@type': 'SoftwareApplication',
+          name: 'ClearPick',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Any',
+          url: SITE_URL,
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'USD',
+          },
+        },
+      })}
+    </script>
+  );
+}
+
+function SeoTemplatePage({
+  footerCopy,
+  page,
+}: {
+  footerCopy: TranslationCopy['footer'];
+  page: SeoTemplatePage;
+}) {
+  return (
+    <div className="matrix-theme relative min-h-screen overflow-hidden bg-background text-foreground">
+      <SeoTemplateStructuredData page={page} />
+      <div
+        aria-hidden="true"
+        className="h-1 w-full bg-gradient-to-r from-cyan-600/80 via-white/60 to-orange-500/80"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-0 -z-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-cyan-200/28 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-32 right-[-12rem] -z-10 h-[30rem] w-[30rem] rounded-full bg-orange-200/28 blur-3xl"
+      />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <main>
+          <article className="mx-auto max-w-3xl px-1 py-4 sm:py-8">
+            <header className="pb-12">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
+                {page.eyebrow}
+              </p>
+              <h1 className="mt-3 max-w-4xl font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+                {page.heading}
+              </h1>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+                {page.description}
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  className="inline-flex justify-center rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  href="/"
+                >
+                  Open the decision tool
+                </a>
+              </div>
+            </header>
+
+            <div className="space-y-14">
+              <section className="border-t border-cyan-900/15 pt-10">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-700">
+                  01
+                </p>
+                <h2 className="mt-2 font-display text-3xl font-semibold text-foreground">
+                  {page.criteriaHeading}
+                </h2>
+                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {page.criteria.map((criterion) => (
+                    <li
+                      className="rounded-lg border border-cyan-900/10 bg-white/72 px-4 py-3 text-sm font-semibold text-foreground shadow-sm"
+                      key={criterion}
+                    >
+                      {criterion}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="border-t border-cyan-900/15 pt-10">
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-700">
+                  02
+                </p>
+                <h2 className="mt-2 font-display text-3xl font-semibold text-foreground">
+                  {page.workflowHeading}
+                </h2>
+                <ol className="mt-6 space-y-5">
+                  {page.workflow.map((step, index) => (
+                    <li className="flex gap-4" key={step}>
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cyan-900 text-sm font-bold text-white">
+                        {index + 1}
+                      </span>
+                      <p className="pt-1 text-base leading-7 text-muted-foreground">
+                        {step}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            </div>
+          </article>
+        </main>
+
+        <AppFooter copy={footerCopy} homeLinkLabel="Back to the decision tool" />
+      </div>
+    </div>
+  );
+}
+
 function getCurrentPathname() {
   if (typeof window === 'undefined') {
     return '/';
@@ -264,6 +506,12 @@ function getCurrentPathname() {
 
 function isHowItWorksPath(pathname: string) {
   return pathname.replace(/\/+$/, '') === '/how-it-works';
+}
+
+function getSeoTemplatePage(pathname: string) {
+  const normalizedPathname = pathname.replace(/\/+$/, '');
+
+  return seoTemplatePages.find((page) => page.path === normalizedPathname) ?? null;
 }
 
 function getCurrentHashTargetId() {
@@ -278,7 +526,7 @@ function getFaqStructuredData(copy: TranslationCopy['seoContent']) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    '@id': 'https://clear-pick.pages.dev/how-it-works#faq',
+    '@id': `${SITE_URL}/how-it-works#faq`,
     name: copy.faqHeading,
     mainEntity: copy.faq.map((item) => ({
       '@type': 'Question',
@@ -302,6 +550,7 @@ function FaqStructuredData({ copy }: { copy: TranslationCopy['seoContent'] }) {
 function App() {
   const [pathname] = useState(() => getCurrentPathname());
   const isHowItWorks = isHowItWorksPath(pathname);
+  const seoTemplatePage = getSeoTemplatePage(pathname);
   const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
   const [areResultsHidden, setAreResultsHidden] = useState(true);
   const [activeWorkspaceTab, setActiveWorkspaceTab] =
@@ -393,27 +642,43 @@ function App() {
       }
     };
 
-    const documentTitle = isHowItWorks
-      ? copy.document.howItWorksTitle
-      : copy.document.title;
-    const documentDescription = isHowItWorks
-      ? copy.document.howItWorksDescription
-      : copy.document.description;
+    const updateLinkHref = (selector: string, href: string) => {
+      const link = document.querySelector<HTMLLinkElement>(selector);
+      if (link) {
+        link.href = href;
+      }
+    };
+
+    const documentTitle = seoTemplatePage
+      ? seoTemplatePage.documentTitle
+      : isHowItWorks
+        ? copy.document.howItWorksTitle
+        : copy.document.title;
+    const documentDescription = seoTemplatePage
+      ? seoTemplatePage.metaDescription
+      : isHowItWorks
+        ? copy.document.howItWorksDescription
+        : copy.document.description;
+    const canonicalPath = seoTemplatePage?.path ?? (isHowItWorks ? '/how-it-works' : '/');
+    const canonicalUrl =
+      canonicalPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${canonicalPath}`;
 
     document.title = documentTitle;
 
+    updateLinkHref('link[rel="canonical"]', canonicalUrl);
     updateMetaContent('meta[name="description"]', documentDescription);
     updateMetaContent('meta[property="og:title"]', documentTitle);
     updateMetaContent(
       'meta[property="og:description"]',
       documentDescription,
     );
+    updateMetaContent('meta[property="og:url"]', canonicalUrl);
     updateMetaContent('meta[name="twitter:title"]', documentTitle);
     updateMetaContent(
       'meta[name="twitter:description"]',
       documentDescription,
     );
-  }, [isHowItWorks]);
+  }, [isHowItWorks, seoTemplatePage]);
 
   const applyChange = (
     transform: (current: DecisionMatrix) => DecisionMatrix,
@@ -469,6 +734,14 @@ function App() {
       <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
         <FaqStructuredData copy={copy.seoContent} />
         <HowItWorksPage copy={copy.seoContent} footerCopy={copy.footer} />
+      </div>
+    );
+  }
+
+  if (seoTemplatePage) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+        <SeoTemplatePage footerCopy={copy.footer} page={seoTemplatePage} />
       </div>
     );
   }
