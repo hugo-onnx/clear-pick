@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Eye, ListOrdered, RotateCcw } from 'lucide-react';
+import {
+  Download,
+  Eye,
+  ListOrdered,
+  LockKeyhole,
+  Mail,
+  RotateCcw,
+  Save,
+  Share2,
+} from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
+import {
+  recordLaunchSignal,
+  type LaunchSignalName,
+} from '../utils/launchSignals';
 import { MAX_SCORE } from '../utils/matrix';
 import type { CriterionContribution, DecisionSummary } from '../utils/scoring';
 
 interface ResultsPanelProps {
   areResultsHidden: boolean;
+  contactEmail: string;
   copy: TranslationCopy['results'];
   matrix: DecisionMatrix;
   summary: DecisionSummary;
@@ -56,6 +70,18 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
   ).filter((element) => !element.hasAttribute('disabled'));
+}
+
+function getMailToHref({
+  body,
+  email,
+  subject,
+}: {
+  body: string;
+  email: string;
+  subject: string;
+}) {
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 interface ContributionRowsProps {
@@ -132,6 +158,7 @@ function ContributionRows({
 
 export function ResultsPanel({
   areResultsHidden,
+  contactEmail,
   copy,
   matrix,
   summary,
@@ -258,6 +285,90 @@ export function ResultsPanel({
     setIsResetDialogOpen(false);
     onReset();
   };
+
+  const recordProInterest = (signalName: LaunchSignalName) => {
+    recordLaunchSignal(signalName);
+  };
+
+  const proFeatureButtons = [
+    {
+      icon: Download,
+      label: copy.proExport,
+      signalName: 'pro-export',
+    },
+    {
+      icon: Save,
+      label: copy.proSave,
+      signalName: 'pro-save',
+    },
+    {
+      icon: Share2,
+      label: copy.proShare,
+      signalName: 'pro-share',
+    },
+  ] satisfies Array<{
+    icon: typeof Download;
+    label: string;
+    signalName: LaunchSignalName;
+  }>;
+
+  const renderProValidation = () => (
+    <section className="rounded-lg border border-cyan-900/12 bg-white/[0.76] p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-800"
+        >
+          <LockKeyhole className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">
+            {copy.proValidationComingSoon}
+          </p>
+          <h3 className="mt-1 text-base font-semibold text-foreground">
+            {copy.proValidationTitle}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {copy.proValidationBody}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        {proFeatureButtons.map(({ icon: Icon, label, signalName }) => (
+          <Button
+            className="justify-start gap-2"
+            key={signalName}
+            onClick={() => recordProInterest(signalName)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <Icon aria-hidden="true" className="size-4" />
+            {label}
+          </Button>
+        ))}
+      </div>
+
+      <Button
+        asChild
+        className="mt-3 w-full gap-2"
+        onClick={() => recordProInterest('pro-request')}
+        size="sm"
+      >
+        <a
+          href={getMailToHref({
+            body: copy.proRequestBody,
+            email: contactEmail,
+            subject: copy.proRequestSubject,
+          })}
+        >
+          <Mail aria-hidden="true" className="size-4" />
+          {copy.proRequest}
+        </a>
+      </Button>
+    </section>
+  );
 
   const renderNeutralState = () => (
     <div className="rounded-lg border border-dashed border-border bg-white/[0.72] p-5">
@@ -480,6 +591,7 @@ export function ResultsPanel({
         ) : (
           <>
             {renderRecommendation()}
+            {renderProValidation()}
 
             {summary.hasScoringBasis ? (
               <section className="space-y-4">
