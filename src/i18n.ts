@@ -164,6 +164,15 @@ export interface TranslationCopy {
     resetDialogCancel: string;
     resetDialogConfirm: string;
     matrixCount: (options: number, categories: number) => string;
+    proValidationTitle: string;
+    proValidationBody: string;
+    proValidationComingSoon: string;
+    proExport: string;
+    proSave: string;
+    proShare: string;
+    proRequest: string;
+    proRequestSubject: string;
+    proRequestBody: string;
   };
   footer: {
     productLabel: string;
@@ -416,6 +425,17 @@ export const copy: TranslationCopy = {
     resetDialogConfirm: 'Start over',
     matrixCount: (options, categories) =>
       `${options} options / ${categories} criteria`,
+    proValidationTitle: 'Need advanced features?',
+    proValidationBody:
+      'These are the first Pro features under consideration.',
+    proValidationComingSoon: 'Planned Pro Plan',
+    proExport: 'Export PDF / CSV',
+    proSave: 'Save multiple decisions',
+    proShare: 'AI assisted decisions',
+    proRequest: 'Request Pro access',
+    proRequestSubject: 'ClearPick Pro request',
+    proRequestBody:
+      'Hi, I want early access to ClearPick Pro. The feature I care about most is:',
   },
   footer: {
     productLabel: 'ClearPick',
