@@ -288,7 +288,7 @@ export const copy: TranslationCopy = {
   quickDecider: {
     sectionAria: 'Quick random decider',
     sectionLabel: 'Quick Decider',
-    headline: 'I keep going back and forth between',
+    headline: 'I can\'t decide between',
     optionsGroupAria: 'Quick decider options',
     optionLabel: (index) => `Quick option ${index}`,
     optionPlaceholder: (index) => `Option ${index}`,
