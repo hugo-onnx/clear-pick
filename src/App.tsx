@@ -371,6 +371,110 @@ function HowItWorksPage({
   );
 }
 
+function PrivacyPolicyPage({
+  copy,
+  footerCopy,
+}: {
+  copy: TranslationCopy['privacyPolicy'];
+  footerCopy: TranslationCopy['footer'];
+}) {
+  return (
+    <div className="matrix-theme relative min-h-screen overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="h-1 w-full bg-gradient-to-r from-cyan-600/80 via-white/60 to-orange-500/80"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-0 -z-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-cyan-200/28 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-32 right-[-12rem] -z-10 h-[30rem] w-[30rem] rounded-full bg-orange-200/28 blur-3xl"
+      />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <main>
+          <article
+            aria-labelledby="privacy-policy-heading"
+            className="mx-auto max-w-3xl px-1 py-4 sm:py-8"
+          >
+            <header className="pb-12">
+              <h1
+                className="max-w-4xl font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl"
+                id="privacy-policy-heading"
+              >
+                {copy.heading}
+              </h1>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
+                {copy.description}
+              </p>
+              <p className="mt-3 text-sm font-semibold text-muted-foreground">
+                {copy.effectiveDate}
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  className="inline-flex justify-center rounded-full bg-gradient-to-r from-cyan-600 to-orange-600 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(8,145,178,0.18)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  href="/"
+                >
+                  {copy.backToTool}
+                </a>
+              </div>
+            </header>
+
+            <div className="space-y-10">
+              {copy.sections.map((section, index) => (
+                <section
+                  aria-labelledby={`privacy-policy-section-${index}`}
+                  className="border-t border-cyan-900/15 pt-8"
+                  key={section.heading}
+                >
+                  <h2
+                    className="font-display text-2xl font-semibold text-foreground"
+                    id={`privacy-policy-section-${index}`}
+                  >
+                    {section.heading}
+                  </h2>
+                  <p className="mt-3 text-base leading-7 text-muted-foreground">
+                    {section.body}
+                  </p>
+                </section>
+              ))}
+
+              <section
+                aria-labelledby="privacy-policy-contact"
+                className="border-t border-cyan-900/15 pt-8"
+              >
+                <h2
+                  className="font-display text-2xl font-semibold text-foreground"
+                  id="privacy-policy-contact"
+                >
+                  {copy.contactHeading}
+                </h2>
+                <p className="mt-3 text-base leading-7 text-muted-foreground">
+                  {copy.contactBody}{' '}
+                  <a
+                    className="font-semibold text-cyan-800 underline underline-offset-2 hover:no-underline"
+                    href={`mailto:${footerCopy.contactEmail}`}
+                  >
+                    {copy.contactLink.toLowerCase()}
+                  </a>
+                  .
+                </p>
+              </section>
+            </div>
+          </article>
+        </main>
+
+        <AppFooter
+          copy={footerCopy}
+          homeLinkLabel={copy.backToTool}
+          showPrivacyPolicyLink={false}
+        />
+      </div>
+    </div>
+  );
+}
+
 function SeoTemplateStructuredData({ page }: { page: SeoTemplatePage }) {
   return (
     <script type="application/ld+json">
@@ -508,6 +612,10 @@ function isHowItWorksPath(pathname: string) {
   return pathname.replace(/\/+$/, '') === '/how-it-works';
 }
 
+function isPrivacyPolicyPath(pathname: string) {
+  return pathname.replace(/\/+$/, '') === '/privacy-policy';
+}
+
 function getSeoTemplatePage(pathname: string) {
   const normalizedPathname = pathname.replace(/\/+$/, '');
 
@@ -550,6 +658,7 @@ function FaqStructuredData({ copy }: { copy: TranslationCopy['seoContent'] }) {
 function App() {
   const [pathname] = useState(() => getCurrentPathname());
   const isHowItWorks = isHowItWorksPath(pathname);
+  const isPrivacyPolicy = isPrivacyPolicyPath(pathname);
   const seoTemplatePage = getSeoTemplatePage(pathname);
   const [matrix, setMatrix] = useState<DecisionMatrix>(() =>
     refreshRankedCategoryScores(loadActiveDecision()),
@@ -653,15 +762,21 @@ function App() {
 
     const documentTitle = seoTemplatePage
       ? seoTemplatePage.documentTitle
+      : isPrivacyPolicy
+        ? copy.document.privacyPolicyTitle
       : isHowItWorks
         ? copy.document.howItWorksTitle
         : copy.document.title;
     const documentDescription = seoTemplatePage
       ? seoTemplatePage.metaDescription
+      : isPrivacyPolicy
+        ? copy.document.privacyPolicyDescription
       : isHowItWorks
         ? copy.document.howItWorksDescription
         : copy.document.description;
-    const canonicalPath = seoTemplatePage?.path ?? (isHowItWorks ? '/how-it-works' : '/');
+    const canonicalPath =
+      seoTemplatePage?.path ??
+      (isPrivacyPolicy ? '/privacy-policy' : isHowItWorks ? '/how-it-works' : '/');
     const canonicalUrl =
       canonicalPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${canonicalPath}`;
 
@@ -680,7 +795,7 @@ function App() {
       'meta[name="twitter:description"]',
       documentDescription,
     );
-  }, [isHowItWorks, seoTemplatePage]);
+  }, [isHowItWorks, isPrivacyPolicy, seoTemplatePage]);
 
   const applyChange = (
     transform: (current: DecisionMatrix) => DecisionMatrix,
@@ -736,6 +851,17 @@ function App() {
       <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
         <FaqStructuredData copy={copy.seoContent} />
         <HowItWorksPage copy={copy.seoContent} footerCopy={copy.footer} />
+      </div>
+    );
+  }
+
+  if (isPrivacyPolicy) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+        <PrivacyPolicyPage
+          copy={copy.privacyPolicy}
+          footerCopy={copy.footer}
+        />
       </div>
     );
   }
@@ -910,7 +1036,6 @@ function App() {
 
               <ResultsPanel
                 areResultsHidden={areResultsHidden}
-                contactEmail={copy.footer.contactEmail}
                 copy={copy.results}
                 matrix={matrix}
                 onResultsHiddenChange={setAreResultsHidden}
