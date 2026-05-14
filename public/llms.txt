@@ -2,6 +2,11 @@
 
 Canonical URL: https://clear-pick.pages.dev/
 How it works guide: https://clear-pick.pages.dev/how-it-works
+Template pages:
+- https://clear-pick.pages.dev/templates/job-offer-comparison
+- https://clear-pick.pages.dev/templates/vendor-selection-matrix
+- https://clear-pick.pages.dev/templates/apartment-comparison
+- https://clear-pick.pages.dev/templates/product-prioritization
 Sitemap: https://clear-pick.pages.dev/sitemap.xml
 Robots policy: https://clear-pick.pages.dev/robots.txt
 Preview image: https://clear-pick.pages.dev/social-card-whatsapp.jpg
@@ -52,6 +57,10 @@ Useful search intents:
 - weighted scoring model
 - decision matrix app
 - decision making tool
+- job offer comparison matrix
+- vendor selection matrix
+- apartment comparison matrix
+- product prioritization matrix
 - compare options with weighted criteria
 - private decision matrix
 - browser-only decision matrix
