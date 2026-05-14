@@ -127,6 +127,24 @@ function hasCategoryScoreSpread(
   return scores.some((score) => score !== firstScore);
 }
 
+function hasBlankDefaultCategoryScores(
+  matrix: DecisionMatrix,
+  categoryId: string,
+): boolean {
+  const category = matrix.categories.find((item) => item.id === categoryId);
+
+  return matrix.options.every((option) => {
+    const score = getScoreForCategory(matrix, option.id, categoryId);
+    const scoreMode = normalizeScoreMode(
+      matrix.scoreModes[option.id]?.[categoryId] ??
+        category?.scoreMode ??
+        DEFAULT_SCORE_MODE,
+    );
+
+    return score === DEFAULT_SCORE && scoreMode === DEFAULT_SCORE_MODE;
+  });
+}
+
 export function getRankedOptionsForCategory(
   matrix: DecisionMatrix,
   categoryId: string,
@@ -198,7 +216,10 @@ export function refreshRankedCategoryScores(
   categoryIds = matrix.categories.map((category) => category.id),
 ): DecisionMatrix {
   return categoryIds.reduce((current, categoryId) => {
-    if (!hasCategoryScoreSpread(current, categoryId)) {
+    if (
+      !hasCategoryScoreSpread(current, categoryId) &&
+      !hasBlankDefaultCategoryScores(current, categoryId)
+    ) {
       return current;
     }
 
