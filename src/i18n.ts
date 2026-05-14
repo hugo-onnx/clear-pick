@@ -310,7 +310,7 @@ export const copy: TranslationCopy = {
     localStorageNoticeBody:
       'Your decision stays in this browser. We do not upload, store, or access it.',
     onboardingGuideAria: 'Workflow guide',
-    onboardingSteps: ['Name your choices', 'Set what matters', 'Rank and compare'],
+    onboardingSteps: ['Name your options', 'Set what matters', 'Rank and compare'],
     optionsRegionAria: 'Options to compare',
     optionsHeading: 'Your options',
     optionsDescription:
