@@ -551,7 +551,9 @@ function App() {
   const [pathname] = useState(() => getCurrentPathname());
   const isHowItWorks = isHowItWorksPath(pathname);
   const seoTemplatePage = getSeoTemplatePage(pathname);
-  const [matrix, setMatrix] = useState<DecisionMatrix>(() => loadActiveDecision());
+  const [matrix, setMatrix] = useState<DecisionMatrix>(() =>
+    refreshRankedCategoryScores(loadActiveDecision()),
+  );
   const [areResultsHidden, setAreResultsHidden] = useState(true);
   const [activeWorkspaceTab, setActiveWorkspaceTab] =
     useState<WorkspaceTab>('matrix');
@@ -701,7 +703,7 @@ function App() {
   const handleReset = () => {
     setActiveWorkspaceTab('matrix');
     setAreResultsHidden(true);
-    setMatrix(createStarterMatrix());
+    setMatrix(refreshRankedCategoryScores(createStarterMatrix()));
     scrollToDecisionMatrix();
   };
 
@@ -852,27 +854,33 @@ function App() {
                   }))
                 }
                 onAddCategory={(name) =>
-                  applyChange((current) => ({
-                    ...current,
-                    categories: [
-                      ...current.categories,
-                      createCategory(name ?? ''),
-                    ],
-                  }))
+                  applyChange(
+                    (current) => ({
+                      ...current,
+                      categories: [
+                        ...current.categories,
+                        createCategory(name ?? ''),
+                      ],
+                    }),
+                    { refreshRankedScores: true },
+                  )
                 }
                 onRemoveCategory={(categoryId) =>
-                  applyChange((current) => {
-                    if (current.categories.length <= MIN_CATEGORIES) {
-                      return current;
-                    }
+                  applyChange(
+                    (current) => {
+                      if (current.categories.length <= MIN_CATEGORIES) {
+                        return current;
+                      }
 
-                    return {
-                      ...current,
-                      categories: current.categories.filter(
-                        (category) => category.id !== categoryId,
-                      ),
-                    };
-                  })
+                      return {
+                        ...current,
+                        categories: current.categories.filter(
+                          (category) => category.id !== categoryId,
+                        ),
+                      };
+                    },
+                    { refreshRankedScores: true },
+                  )
                 }
                 onCategoryNameChange={(categoryId, name) =>
                   applyChange((current) => ({
