@@ -23,6 +23,7 @@ import {
   QUICK_DECIDER_STORAGE_KEY,
   STORAGE_KEY,
 } from './utils/storage';
+import { LAUNCH_SIGNALS_STORAGE_KEY } from './utils/launchSignals';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -1402,6 +1403,49 @@ describe('App', () => {
     expect(
       screen.queryByRole('button', { name: /see full ranking/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it('surfaces planned Pro validation prompts without requiring checkout', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+
+    expect(screen.getByText(/planned pro plan/i)).toBeInTheDocument();
+    expect(screen.getByText(/need this for real work/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /export pdf \/ csv/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /save multiple decisions/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /ai assisted decisions/i }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /export pdf \/ csv/i }));
+    await user.click(screen.getByRole('button', { name: /save multiple decisions/i }));
+
+    expect(
+      JSON.parse(window.localStorage.getItem(LAUNCH_SIGNALS_STORAGE_KEY) ?? '{}'),
+    ).toMatchObject({
+      'pro-export': 1,
+      'pro-save': 1,
+    });
+
+    const requestLink = screen.getByRole('link', {
+      name: /request pro access/i,
+    });
+    expect(requestLink).toHaveAttribute(
+      'href',
+      expect.stringContaining('mailto:hugonzalezhuerta@gmail.com'),
+    );
+    expect(requestLink).toHaveAttribute(
+      'href',
+      expect.stringContaining('ClearPick%20Pro%20request'),
+    );
   });
 
   it('hides result designs and explains the bias guard', async () => {
