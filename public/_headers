@@ -7,9 +7,32 @@
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
 
+/site.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/service-worker.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: no-cache
+
+/offline.html
+  Cache-Control: no-cache
+
 /social-preview.png
   Content-Type: image/png
   Cache-Control: public, max-age=86400
+
+/icon-192.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
+
+/icon-512.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
+
+/apple-touch-icon.png
+  Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
 
 /social-card.png
   Content-Type: image/png
