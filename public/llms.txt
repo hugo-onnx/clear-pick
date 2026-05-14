@@ -24,7 +24,9 @@ Privacy:
 - Runs entirely in the browser
 - Stores data only in local browser storage
 - Does not upload or track user decisions
-- Does not require an account, backend, analytics, or user tracking
+- Does not require an account, analytics, or user tracking
+- The ClearPick Pro waitlist collects an email address only when the user submits the waitlist form
+- Privacy policy: https://clear-pick.pages.dev/privacy-policy
 
 Main use cases:
 - Compare difficult personal or work choices
