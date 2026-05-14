@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
+  Bot,
   Download,
   Eye,
   ListOrdered,
@@ -9,7 +10,6 @@ import {
   Mail,
   RotateCcw,
   Save,
-  Share2,
 } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
@@ -292,32 +292,41 @@ export function ResultsPanel({
 
   const proFeatureButtons = [
     {
+      description: copy.proExportDescription,
       icon: Download,
       label: copy.proExport,
       signalName: 'pro-export',
     },
     {
+      description: copy.proSaveDescription,
       icon: Save,
       label: copy.proSave,
       signalName: 'pro-save',
     },
     {
-      icon: Share2,
+      description: copy.proShareDescription,
+      icon: Bot,
       label: copy.proShare,
       signalName: 'pro-share',
     },
   ] satisfies Array<{
+    description: string;
     icon: typeof Download;
     label: string;
     signalName: LaunchSignalName;
   }>;
 
   const renderProValidation = () => (
-    <section className="rounded-lg border border-cyan-900/12 bg-white/[0.76] p-5 shadow-sm">
+    <section className="overflow-hidden rounded-lg border border-cyan-700/25 bg-white/[0.86] shadow-[0_18px_48px_rgba(8,145,178,0.12)]">
+      <div
+        aria-hidden="true"
+        className="h-1 w-full bg-gradient-to-r from-cyan-600 via-white to-orange-500"
+      />
+      <div className="p-5">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-800"
+          className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-orange-100 text-cyan-900 ring-1 ring-cyan-900/10"
         >
           <LockKeyhole className="size-4" />
         </span>
@@ -335,17 +344,26 @@ export function ResultsPanel({
       </div>
 
       <div className="mt-4 grid gap-2">
-        {proFeatureButtons.map(({ icon: Icon, label, signalName }) => (
+        {proFeatureButtons.map(({ description, icon: Icon, label, signalName }) => (
           <Button
-            className="justify-start gap-2"
+            className="h-auto justify-start gap-3 rounded-lg border-cyan-900/10 bg-white/82 px-3 py-3 text-left hover:border-cyan-700/30 hover:bg-cyan-50/55"
             key={signalName}
             onClick={() => recordProInterest(signalName)}
             size="sm"
             type="button"
             variant="outline"
           >
-            <Icon aria-hidden="true" className="size-4" />
-            {label}
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-cyan-100 text-cyan-800">
+              <Icon aria-hidden="true" className="size-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-foreground">
+                {label}
+              </span>
+              <span className="mt-0.5 block whitespace-normal text-xs leading-5 text-muted-foreground">
+                {description}
+              </span>
+            </span>
           </Button>
         ))}
       </div>
@@ -367,6 +385,7 @@ export function ResultsPanel({
           {copy.proRequest}
         </a>
       </Button>
+      </div>
     </section>
   );
 
