@@ -1413,20 +1413,30 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /show results/i }));
 
-    expect(screen.getByText(/planned pro plan/i)).toBeInTheDocument();
-    expect(screen.getByText(/need this for real work/i)).toBeInTheDocument();
+    expect(screen.getByText(/pro preview/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /export pdf \/ csv/i }),
+      screen.getByText(/turn this decision into something you can keep/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /save multiple decisions/i }),
+      screen.getByRole('button', { name: /export the result/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/pdf \/ csv for reports or records/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /save decision history/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/keep multiple matrices/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /ai decision review/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /ai assisted decisions/i }),
+      screen.getByText(/blind spots, objections, and missing tradeoffs/i),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/no payment required/i),
+    ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /export pdf \/ csv/i }));
-    await user.click(screen.getByRole('button', { name: /save multiple decisions/i }));
+    await user.click(screen.getByRole('button', { name: /export the result/i }));
+    await user.click(screen.getByRole('button', { name: /save decision history/i }));
 
     expect(
       JSON.parse(window.localStorage.getItem(LAUNCH_SIGNALS_STORAGE_KEY) ?? '{}'),
@@ -1436,7 +1446,7 @@ describe('App', () => {
     });
 
     const requestLink = screen.getByRole('link', {
-      name: /request pro access/i,
+      name: /join the pro waitlist/i,
     });
     expect(requestLink).toHaveAttribute(
       'href',
