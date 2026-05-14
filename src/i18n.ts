@@ -4,6 +4,8 @@ export interface TranslationCopy {
     description: string;
     howItWorksTitle: string;
     howItWorksDescription: string;
+    privacyPolicyTitle: string;
+    privacyPolicyDescription: string;
   };
   hero: {
     eyebrow: string;
@@ -45,6 +47,20 @@ export interface TranslationCopy {
       question: string;
       answer: string;
     }>;
+  };
+  privacyPolicy: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    effectiveDate: string;
+    backToTool: string;
+    sections: Array<{
+      heading: string;
+      body: string;
+    }>;
+    contactHeading: string;
+    contactBody: string;
+    contactLink: string;
   };
   quickDecider: {
     sectionAria: string;
@@ -174,8 +190,19 @@ export interface TranslationCopy {
     proShare: string;
     proShareDescription: string;
     proRequest: string;
-    proRequestSubject: string;
-    proRequestBody: string;
+    proWaitlistDialogTitle: string;
+    proWaitlistDialogDescription: string;
+    proWaitlistEmailLabel: string;
+    proWaitlistEmailPlaceholder: string;
+    proWaitlistSubmit: string;
+    proWaitlistSubmitting: string;
+    proWaitlistPrivacy: string;
+    proWaitlistPrivacySuffix: string;
+    proWaitlistPrivacyLink: string;
+    proWaitlistSuccess: string;
+    proWaitlistInvalidEmail: string;
+    proWaitlistMissingEndpoint: string;
+    proWaitlistSubmitError: string;
   };
   footer: {
     productLabel: string;
@@ -183,6 +210,7 @@ export interface TranslationCopy {
     copyright: string;
     howItWorks: string;
     faq: string;
+    privacyPolicy: string;
     contactCta: string;
     contactEmail: string;
     backToTop: string;
@@ -209,6 +237,9 @@ export const copy: TranslationCopy = {
     howItWorksTitle: 'How ClearPick Works | Weighted Decision Guide',
     howItWorksDescription:
       'Learn how ClearPick helps you compare options, set priorities, rank choices, and reach a clear recommendation — privately, without an account.',
+    privacyPolicyTitle: 'Privacy Policy | ClearPick',
+    privacyPolicyDescription:
+      'Read how ClearPick handles local decision data and Pro waitlist email addresses.',
   },
   hero: {
     eyebrow: 'Weighted decisions, in your browser',
@@ -296,6 +327,36 @@ export const copy: TranslationCopy = {
           'Use it when you need to compare options across several criteria, make tradeoffs explicit, and explain why one choice ranks higher than another.',
       },
     ],
+  },
+  privacyPolicy: {
+    eyebrow: 'Privacy policy',
+    heading: 'Privacy Policy',
+    description:
+      'ClearPick is built to keep your decision work private. This policy explains what stays in your browser and what is sent when you join the Pro waitlist.',
+    effectiveDate: 'Effective date: May 15, 2026',
+    backToTool: 'Back to the decision tool',
+    sections: [
+      {
+        heading: 'Decision data',
+        body: 'Your options, criteria, weights, scores, and quick-decider choices are saved only in local browser storage on your device. ClearPick does not upload, store, or access your decision data.',
+      },
+      {
+        heading: 'Pro waitlist email',
+        body: 'If you join the ClearPick Pro waitlist, we collect the email address you submit. The purpose is to send early access updates and related ClearPick Pro messages.',
+      },
+      {
+        heading: 'Service providers',
+        body: 'Waitlist emails may be processed by the configured waitlist endpoint or form provider used to run the signup list. ClearPick does not sell personal information.',
+      },
+      {
+        heading: 'Retention and choices',
+        body: 'Waitlist emails are kept until they are no longer needed for the Pro launch, you unsubscribe, or you ask for deletion.',
+      },
+    ],
+    contactHeading: 'Privacy requests',
+    contactBody:
+      'For access, deletion, or privacy questions, use the',
+    contactLink: 'Privacy contact',
   },
   quickDecider: {
     sectionAria: 'Quick random decider',
@@ -441,16 +502,31 @@ export const copy: TranslationCopy = {
     proShareDescription:
       'Find blind spots, objections, and missing tradeoffs before you commit',
     proRequest: 'Join the Pro waitlist',
-    proRequestSubject: 'ClearPick Pro request',
-    proRequestBody:
-      'Hi, I want early access to ClearPick Pro. The feature I care about most is:',
+    proWaitlistDialogTitle: 'Join the Pro waitlist',
+    proWaitlistDialogDescription:
+      'Leave your email and we will let you know when ClearPick Pro is ready for early access.',
+    proWaitlistEmailLabel: 'Email address',
+    proWaitlistEmailPlaceholder: 'you@example.com',
+    proWaitlistSubmit: 'Join waitlist',
+    proWaitlistSubmitting: 'Joining...',
+    proWaitlistPrivacy:
+      'We will only use your email for ClearPick Pro early access updates. Read the',
+    proWaitlistPrivacyLink: 'privacy policy',
+    proWaitlistPrivacySuffix: 'for details.',
+    proWaitlistSuccess: 'You are on the waitlist.',
+    proWaitlistInvalidEmail: 'Enter a valid email address.',
+    proWaitlistMissingEndpoint:
+      'The waitlist is not configured yet. Add VITE_WAITLIST_ENDPOINT to enable submissions.',
+    proWaitlistSubmitError:
+      'We could not add you to the waitlist. Try again in a moment.',
   },
   footer: {
     productLabel: 'ClearPick',
-    note: 'Your data never leaves this browser. No account, no server, no tracking.',
+    note: 'Your decision data stays in this browser. Waitlist emails are only sent when you submit the Pro form.',
     copyright: 'Copyright © 2026 ClearPick - All rights reserved.',
     howItWorks: 'How it works',
     faq: 'FAQ',
+    privacyPolicy: 'Privacy Policy',
     contactCta: 'Contact support',
     contactEmail: 'hugonzalezhuerta@gmail.com',
     backToTop: 'Back to top',
