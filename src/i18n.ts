@@ -168,8 +168,11 @@ export interface TranslationCopy {
     proValidationBody: string;
     proValidationComingSoon: string;
     proExport: string;
+    proExportDescription: string;
     proSave: string;
+    proSaveDescription: string;
     proShare: string;
+    proShareDescription: string;
     proRequest: string;
     proRequestSubject: string;
     proRequestBody: string;
@@ -425,14 +428,19 @@ export const copy: TranslationCopy = {
     resetDialogConfirm: 'Start over',
     matrixCount: (options, categories) =>
       `${options} options / ${categories} criteria`,
-    proValidationTitle: 'Need advanced features?',
+    proValidationTitle:
+      'Turn this decision into something you can keep, share, and reuse',
     proValidationBody:
-      'These are the first Pro features under consideration.',
-    proValidationComingSoon: 'Planned Pro Plan',
-    proExport: 'Export PDF / CSV',
-    proSave: 'Save multiple decisions',
-    proShare: 'AI assisted decisions',
-    proRequest: 'Request Pro access',
+      'ClearPick Pro is being shaped around the next things people need after a decision: exporting, saving, sharing, and getting help structuring the next one.',
+    proValidationComingSoon: 'Pro preview',
+    proExport: 'Export the result',
+    proExportDescription: 'PDF / CSV for reports or records',
+    proSave: 'Save decision history',
+    proSaveDescription: 'Keep multiple matrices in one place',
+    proShare: 'AI decision review',
+    proShareDescription:
+      'Find blind spots, objections, and missing tradeoffs before you commit',
+    proRequest: 'Join the Pro waitlist',
     proRequestSubject: 'ClearPick Pro request',
     proRequestBody:
       'Hi, I want early access to ClearPick Pro. The feature I care about most is:',
