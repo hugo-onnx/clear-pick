@@ -27,6 +27,8 @@ import { LAUNCH_SIGNALS_STORAGE_KEY } from './utils/launchSignals';
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
   window.localStorage.clear();
   window.history.pushState({}, '', '/');
   vi.restoreAllMocks();
@@ -292,7 +294,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(
       within(footer).getByText(
-        /your data never leaves this browser/i,
+        /your decision data stays in this browser/i,
       ),
     ).toBeInTheDocument();
     expect(
@@ -319,6 +321,9 @@ describe('App', () => {
     expect(
       within(footer).getByRole('link', { name: /faq/i }),
     ).toHaveAttribute('href', '/how-it-works#faq-heading');
+    expect(
+      within(footer).getByRole('link', { name: /privacy policy/i }),
+    ).toHaveAttribute('href', '/privacy-policy');
     expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: /templates/i }),
@@ -329,7 +334,7 @@ describe('App', () => {
     expect(
       document.getElementById('site-footer-note'),
     ).toHaveTextContent(
-      /your data never leaves this browser/i,
+      /waitlist emails are only sent when you submit the pro form/i,
     );
     expect(document.getElementById('local-save-notice')).toHaveTextContent(
       /your decision stays on this device/i,
@@ -527,6 +532,65 @@ describe('App', () => {
     );
   });
 
+  it('renders the privacy policy page with route metadata', () => {
+    window.history.pushState({}, '', '/privacy-policy');
+    const descriptionMeta = document.createElement('meta');
+    descriptionMeta.setAttribute('name', 'description');
+    document.head.append(descriptionMeta);
+    const canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    document.head.append(canonicalLink);
+
+    render(<App />);
+
+    expect(document.title).toBe('Privacy Policy | ClearPick');
+    expect(
+      document.querySelector('meta[name="description"]'),
+    ).toHaveAttribute(
+      'content',
+      copy.document.privacyPolicyDescription,
+    );
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://clear-pick.pages.dev/privacy-policy',
+    );
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /privacy policy/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^decision data$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /^pro waitlist email$/i }),
+    ).toBeInTheDocument();
+    const privacyContact = screen.getByRole('link', {
+      name: /privacy contact/i,
+    });
+    expect(privacyContact).toHaveAttribute(
+      'href',
+      'mailto:hugonzalezhuerta@gmail.com',
+    );
+    expect(privacyContact).not.toHaveTextContent(/hugonzalezhuerta@gmail\.com/i);
+    expect(screen.queryByText(/hugonzalezhuerta@gmail\.com/i)).not.toBeInTheDocument();
+
+    const footer = screen.getByRole('contentinfo');
+    expect(
+      within(footer).getByRole('link', {
+        name: /back to the decision tool/i,
+      }),
+    ).toHaveAttribute('href', '/');
+    expect(
+      within(footer).queryByRole('link', { name: /privacy policy/i }),
+    ).not.toBeInTheDocument();
+
+    document.head
+      .querySelectorAll('link[rel="canonical"], meta[name="description"]')
+      .forEach((element) => element.remove());
+  });
+
   it('renders SEO template pages with route metadata and tool links', () => {
     window.history.pushState({}, '', '/templates/vendor-selection-matrix');
     const descriptionMeta = document.createElement('meta');
@@ -609,6 +673,7 @@ describe('App', () => {
     const combined = files.join('\n');
 
     expect(combined).toContain('https://clear-pick.pages.dev/');
+    expect(combined).toContain('https://clear-pick.pages.dev/privacy-policy');
     expect(combined).not.toContain('weighted-decision-making.pages.dev');
 
   });
@@ -1445,17 +1510,140 @@ describe('App', () => {
       'pro-save': 1,
     });
 
-    const requestLink = screen.getByRole('link', {
+    const requestButton = screen.getByRole('button', {
       name: /join the pro waitlist/i,
     });
-    expect(requestLink).toHaveAttribute(
-      'href',
-      expect.stringContaining('mailto:hugonzalezhuerta@gmail.com'),
+    await user.click(requestButton);
+
+    expect(
+      screen.getByRole('dialog', { name: /join the pro waitlist/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /privacy policy/i }),
+    ).toHaveAttribute('href', '/privacy-policy');
+    expect(
+      JSON.parse(window.localStorage.getItem(LAUNCH_SIGNALS_STORAGE_KEY) ?? '{}'),
+    ).toMatchObject({
+      'pro-export': 1,
+      'pro-save': 1,
+      'pro-request': 1,
+    });
+  });
+
+  it('submits the Pro waitlist email to the configured endpoint', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
+    vi.stubGlobal('fetch', fetchMock);
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
     );
-    expect(requestLink).toHaveAttribute(
-      'href',
-      expect.stringContaining('ClearPick%20Pro%20request'),
+    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('https://example.test/waitlist', {
+        body: JSON.stringify({ email: 'person@example.com' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+    });
+    expect(screen.getByText(/you are on the waitlist/i)).toBeInTheDocument();
+  });
+
+  it('does not submit the Pro waitlist form with an invalid email', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
+    vi.stubGlobal('fetch', fetchMock);
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
     );
+    await user.type(screen.getByLabelText(/email address/i), 'not-an-email');
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('explains when the Pro waitlist endpoint is not configured', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
+    );
+    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /waitlist is not configured yet/i,
+    );
+  });
+
+  it('surfaces Pro waitlist submission failures', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
+    vi.stubGlobal('fetch', fetchMock);
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
+    );
+    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /could not add you to the waitlist/i,
+    );
+  });
+
+  it('closes the Pro waitlist dialog with Escape and returns focus', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    const requestButton = screen.getByRole('button', {
+      name: /join the pro waitlist/i,
+    });
+    await user.click(requestButton);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/email address/i)).toHaveFocus();
+    });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /join the pro waitlist/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(requestButton).toHaveFocus();
   });
 
   it('hides result designs and explains the bias guard', async () => {
