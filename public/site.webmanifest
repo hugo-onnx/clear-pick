@@ -1,0 +1,57 @@
+{
+  "name": "ClearPick - Weighted Decision Tool",
+  "short_name": "ClearPick",
+  "description": "Compare options, weight priorities, rank choices, and get a clear recommendation privately in your browser.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#061014",
+  "background_color": "#f8fafc",
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start a decision",
+      "short_name": "Decide",
+      "description": "Open the weighted decision matrix.",
+      "url": "/#decision-matrix",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "How it works",
+      "short_name": "Guide",
+      "description": "Read how ClearPick compares choices.",
+      "url": "/how-it-works",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
