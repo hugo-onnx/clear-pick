@@ -827,7 +827,7 @@ export function ResultsPanel({
                   </span>
                   <span className="mt-4 max-w-[19rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800">
                     {
-                      "We'll let you know as soon as PANOT is ready.\nIn the meantime, thanks for your trust."
+                      "You're on the ClearPick Pro waitlist.\nWe'll be in touch soon."
                     }
                   </span>
                 </div>
