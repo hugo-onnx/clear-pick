@@ -63,10 +63,16 @@ function createStorageMock(): Storage {
 }
 
 const localStorageMock = createStorageMock();
+const sessionStorageMock = createStorageMock();
 
 Object.defineProperty(window, 'localStorage', {
   configurable: true,
   value: localStorageMock,
+});
+
+Object.defineProperty(window, 'sessionStorage', {
+  configurable: true,
+  value: sessionStorageMock,
 });
 
 Object.defineProperty(globalThis, 'localStorage', {
@@ -74,7 +80,13 @@ Object.defineProperty(globalThis, 'localStorage', {
   value: localStorageMock,
 });
 
+Object.defineProperty(globalThis, 'sessionStorage', {
+  configurable: true,
+  value: sessionStorageMock,
+});
+
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.sessionStorage.clear();
 });
