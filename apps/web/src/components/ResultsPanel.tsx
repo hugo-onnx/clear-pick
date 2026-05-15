@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   Bot,
-  CircleCheck,
+  Check,
   Download,
   Eye,
   ListOrdered,
@@ -812,18 +812,23 @@ export function ResultsPanel({
 
               {waitlistStatus === 'succeeded' ? (
                 <div
-                  className="flex flex-col items-center gap-3 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-5 text-center shadow-[0_18px_50px_rgba(8,145,178,0.16)]"
+                  className="flex flex-col items-center rounded-2xl border border-cyan-400/60 bg-cyan-400/10 px-5 py-8 text-center shadow-[0_18px_50px_rgba(8,145,178,0.12)]"
                   id={waitlistSuccessId}
                   role="status"
                 >
                   <span
                     aria-hidden="true"
-                    className="flex size-12 items-center justify-center rounded-full bg-cyan-600 text-white shadow-lg shadow-cyan-600/25"
+                    className="mb-5 flex size-16 items-center justify-center rounded-full bg-cyan-300/35 text-cyan-700"
                   >
-                    <CircleCheck className="size-6" strokeWidth={2.5} />
+                    <Check className="size-8" strokeWidth={3} />
                   </span>
-                  <span className="text-base font-semibold text-foreground">
+                  <span className="font-mono text-xl font-medium text-cyan-950">
                     {copy.proWaitlistSuccess}
+                  </span>
+                  <span className="mt-4 max-w-[19rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800">
+                    {
+                      "We'll let you know as soon as PANOT is ready.\nIn the meantime, thanks for your trust."
+                    }
                   </span>
                 </div>
               ) : null}
