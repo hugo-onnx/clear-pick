@@ -165,6 +165,7 @@ export function ResultsPanel({
     'idle' | 'submitting' | 'succeeded' | 'error'
   >('idle');
   const [waitlistError, setWaitlistError] = useState('');
+  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
   const rankingDetailsRef = useRef<HTMLElement | null>(null);
   const resetDialogRef = useRef<HTMLDivElement | null>(null);
   const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -290,7 +291,7 @@ export function ResultsPanel({
 
   const handleOpenWaitlistDialog = () => {
     setWaitlistError('');
-    setWaitlistStatus('idle');
+    setWaitlistStatus(hasJoinedWaitlist ? 'succeeded' : 'idle');
     setIsWaitlistDialogOpen(true);
   };
 
@@ -299,12 +300,18 @@ export function ResultsPanel({
 
     if (isOpen) {
       setWaitlistError('');
-      setWaitlistStatus('idle');
+      setWaitlistStatus(hasJoinedWaitlist ? 'succeeded' : 'idle');
     }
   };
 
   const handleSubmitWaitlist = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (hasJoinedWaitlist) {
+      setWaitlistStatus('succeeded');
+      setWaitlistError('');
+      return;
+    }
 
     const email = waitlistEmail.trim();
     const emailInput = waitlistEmailInputRef.current;
@@ -336,6 +343,7 @@ export function ResultsPanel({
       }
 
       setWaitlistStatus('succeeded');
+      setHasJoinedWaitlist(true);
       setWaitlistEmail('');
     } catch {
       setWaitlistStatus('error');
@@ -778,7 +786,9 @@ export function ResultsPanel({
                     aria-label={copy.proWaitlistEmailLabel}
                     autoComplete="email"
                     className="peer ps-9 caret-cyan-600 focus:border-cyan-600/60 focus:ring-4 focus:ring-cyan-600/15 focus-visible:border-cyan-600/60 focus-visible:ring-4 focus-visible:ring-cyan-600/15"
-                    disabled={waitlistStatus === 'submitting'}
+                    disabled={
+                      waitlistStatus === 'submitting' || hasJoinedWaitlist
+                    }
                     id="pro-waitlist-email"
                     onChange={(event) => {
                       setWaitlistEmail(event.target.value);
@@ -822,7 +832,9 @@ export function ResultsPanel({
               <DialogFooter>
                 <Button
                   className="w-full"
-                  disabled={waitlistStatus === 'submitting'}
+                  disabled={
+                    waitlistStatus === 'submitting' || hasJoinedWaitlist
+                  }
                   size="sm"
                   type="submit"
                 >
