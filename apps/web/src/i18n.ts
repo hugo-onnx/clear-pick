@@ -346,7 +346,7 @@ export const copy: TranslationCopy = {
       },
       {
         heading: 'Service providers',
-        body: 'Waitlist emails are processed by ClearPick infrastructure used to run the signup list, including the waitlist endpoint and database. ClearPick does not sell personal information.',
+        body: 'Waitlist emails are processed by ClearPick infrastructure used to run the signup list, including the waitlist endpoint and database. ClearPick uses request limits and spam checks to protect the form from automated abuse. ClearPick does not sell personal information.',
       },
       {
         heading: 'Retention and choices',
