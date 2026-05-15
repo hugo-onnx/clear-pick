@@ -22,10 +22,6 @@ import {
 } from 'lucide-react';
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
-import {
-  recordLaunchSignal,
-  type LaunchSignalName,
-} from '../utils/launchSignals';
 import { MAX_SCORE } from '../utils/matrix';
 import type { CriterionContribution, DecisionSummary } from '../utils/scoring';
 
@@ -295,7 +291,6 @@ export function ResultsPanel({
     setWaitlistError('');
     setWaitlistStatus('idle');
     setIsWaitlistDialogOpen(true);
-    recordProInterest('pro-request');
   };
 
   const handleWaitlistDialogOpenChange = (isOpen: boolean) => {
@@ -352,34 +347,26 @@ export function ResultsPanel({
     }
   };
 
-  const recordProInterest = (signalName: LaunchSignalName) => {
-    recordLaunchSignal(signalName);
-  };
-
   const proFeatureButtons = [
     {
       description: copy.proExportDescription,
       icon: Download,
       label: copy.proExport,
-      signalName: 'pro-export',
     },
     {
       description: copy.proSaveDescription,
       icon: Save,
       label: copy.proSave,
-      signalName: 'pro-save',
     },
     {
       description: copy.proShareDescription,
       icon: Bot,
       label: copy.proShare,
-      signalName: 'pro-share',
     },
   ] satisfies Array<{
     description: string;
     icon: typeof Download;
     label: string;
-    signalName: LaunchSignalName;
   }>;
 
   const renderProValidation = () => (
@@ -410,11 +397,10 @@ export function ResultsPanel({
       </div>
 
       <div className="mt-4 grid gap-2">
-        {proFeatureButtons.map(({ description, icon: Icon, label, signalName }) => (
+        {proFeatureButtons.map(({ description, icon: Icon, label }) => (
           <Button
             className="h-auto justify-start gap-3 rounded-lg border-cyan-900/10 bg-white/82 px-3 py-3 text-left hover:border-cyan-700/30 hover:bg-cyan-50/55"
-            key={signalName}
-            onClick={() => recordProInterest(signalName)}
+            key={label}
             size="sm"
             type="button"
             variant="outline"
