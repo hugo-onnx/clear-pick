@@ -759,7 +759,7 @@ export function ResultsPanel({
           open={isWaitlistDialogOpen}
         >
           <DialogContent
-            className="top-4 max-h-[calc(100dvh-2rem)] sm:top-1/2 sm:max-h-[calc(100%-4rem)] sm:-translate-y-1/2 sm:max-w-[480px]"
+            className="top-4 translate-y-0 max-h-[calc(100dvh-2rem)] sm:top-1/2 sm:max-h-[calc(100%-4rem)] sm:-translate-y-1/2 sm:max-w-[480px]"
             onOpenAutoFocus={(event) => {
               event.preventDefault();
               if (event.currentTarget instanceof HTMLElement) {
