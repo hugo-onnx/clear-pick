@@ -25,6 +25,7 @@ import {
 import type { TranslationCopy } from '../i18n';
 import type { DecisionMatrix } from '../types';
 import { MAX_SCORE } from '../utils/matrix';
+import { revealInputIfNeeded } from '../utils/matrixEditorUtils';
 import type { CriterionContribution, DecisionSummary } from '../utils/scoring';
 
 interface ResultsPanelProps {
@@ -758,7 +759,13 @@ export function ResultsPanel({
           open={isWaitlistDialogOpen}
         >
           <DialogContent
-            className="sm:max-w-[480px]"
+            className="top-4 max-h-[calc(100dvh-2rem)] sm:top-1/2 sm:max-h-[calc(100%-4rem)] sm:-translate-y-1/2 sm:max-w-[480px]"
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              if (event.currentTarget instanceof HTMLElement) {
+                event.currentTarget.focus();
+              }
+            }}
             onCloseAutoFocus={(event) => {
               event.preventDefault();
               waitlistTriggerRef.current?.focus();
@@ -806,6 +813,7 @@ export function ResultsPanel({
                         setWaitlistStatus('idle');
                       }
                     }}
+                    onFocus={(event) => revealInputIfNeeded(event.currentTarget)}
                     placeholder={copy.proWaitlistEmailPlaceholder}
                     ref={waitlistEmailInputRef}
                     required
