@@ -7,11 +7,3 @@ binding = "WAITLIST_DB"
 database_name = "clear-pick-waitlist"
 database_id = "a4fb1340-4cba-442b-8d39-3010b277af31"
 migrations_dir = "apps/api/migrations"
-
-[[ratelimits]]
-name = "WAITLIST_RATE_LIMITER"
-namespace_id = "1001"
-
-  [ratelimits.simple]
-  limit = 5
-  period = 60
