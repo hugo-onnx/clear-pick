@@ -348,14 +348,11 @@ export function ResultsPanel({
       return;
     }
 
-    const endpoint =
-      import.meta.env.VITE_WAITLIST_ENDPOINT?.trim() || WAITLIST_ENDPOINT;
-
     setWaitlistStatus('submitting');
     setWaitlistError('');
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(WAITLIST_ENDPOINT, {
         body: JSON.stringify({
           email,
           website: waitlistWebsite,
