@@ -1537,7 +1537,25 @@ describe('App', () => {
         method: 'POST',
       });
     });
-    expect(screen.getByText(/you are on the waitlist/i)).toBeInTheDocument();
+    expect(await screen.findByText(/thanks for joining/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeDisabled();
+    expect(screen.getByRole('button', { name: /join waitlist/i })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /close/i }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: /join the pro waitlist/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
+    );
+
+    expect(screen.getByText(/thanks for joining/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('submits the Pro waitlist email to a configured endpoint override', async () => {
