@@ -8,13 +8,30 @@ import {
 export interface Env {
   ASSETS: Fetcher;
   WAITLIST_DB: D1Database;
-  WAITLIST_RATE_LIMITER: {
+  WAITLIST_RATE_LIMITER?: {
     limit(options: { key: string }): Promise<{ success: boolean }>;
   };
 }
 
 const app = new Hono<{ Bindings: Env }>();
 const MAX_WAITLIST_BODY_BYTES = 4096;
+
+async function isWaitlistRateLimited(
+  rateLimiter: Env['WAITLIST_RATE_LIMITER'],
+  key: string,
+): Promise<boolean> {
+  if (!rateLimiter) {
+    return false;
+  }
+
+  try {
+    const result = await rateLimiter.limit({ key });
+
+    return !result.success;
+  } catch {
+    return false;
+  }
+}
 
 app.post('/api/waitlist', async (c) => {
   const contentType = c.req.header('content-type') ?? '';
@@ -34,11 +51,13 @@ app.post('/api/waitlist', async (c) => {
   }
 
   const ip = c.req.header('cf-connecting-ip') ?? null;
-  const rateLimit = await c.env.WAITLIST_RATE_LIMITER.limit({
-    key: ip ?? 'anonymous',
-  });
+  const rateLimitKey = ip ?? 'anonymous';
+  const isRateLimited = await isWaitlistRateLimited(
+    c.env.WAITLIST_RATE_LIMITER,
+    rateLimitKey,
+  );
 
-  if (!rateLimit.success) {
+  if (isRateLimited) {
     return c.json({ error: 'rate_limited' }, 429);
   }
 
