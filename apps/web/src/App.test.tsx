@@ -24,11 +24,14 @@ import {
   STORAGE_KEY,
 } from './utils/storage';
 
+const WAITLIST_SESSION_STORAGE_KEY = 'clearpick:pro-waitlist-submitted';
+
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   window.history.pushState({}, '', '/');
   vi.restoreAllMocks();
 });
@@ -1556,6 +1559,9 @@ describe('App', () => {
       });
     });
     expect(await screen.findByText(/thanks for joining/i)).toBeInTheDocument();
+    expect(window.sessionStorage.getItem(WAITLIST_SESSION_STORAGE_KEY)).toBe(
+      'true',
+    );
     expect(screen.getByLabelText(/email address/i)).toBeDisabled();
     expect(screen.getByRole('button', { name: /join waitlist/i })).toBeDisabled();
 
@@ -1574,6 +1580,28 @@ describe('App', () => {
     expect(screen.getByLabelText(/email address/i)).toBeDisabled();
     await user.click(screen.getByRole('button', { name: /join waitlist/i }));
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the Pro waitlist disabled after a successful submit in the same browser session', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    window.sessionStorage.setItem(WAITLIST_SESSION_STORAGE_KEY, 'true');
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
+    );
+
+    expect(screen.getByText(/thanks for joining/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeDisabled();
+    expect(screen.getByRole('button', { name: /join waitlist/i })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('submits the Pro waitlist email to a configured endpoint override', async () => {
@@ -1625,9 +1653,12 @@ describe('App', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('surfaces Pro waitlist submission failures', async () => {
+  it('does not store the Pro waitlist session flag after a failed submission', async () => {
     const user = userEvent.setup();
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 500 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
     vi.stubGlobal('fetch', fetchMock);
     saveScoredMatrix();
@@ -1643,6 +1674,15 @@ describe('App', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /could not add you to the waitlist/i,
+    );
+    expect(window.sessionStorage.getItem(WAITLIST_SESSION_STORAGE_KEY)).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    expect(await screen.findByText(/thanks for joining/i)).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(window.sessionStorage.getItem(WAITLIST_SESSION_STORAGE_KEY)).toBe(
+      'true',
     );
   });
 
