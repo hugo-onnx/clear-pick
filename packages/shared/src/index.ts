@@ -1,5 +1,6 @@
 export interface WaitlistSignupRequest {
   email: string;
+  website?: string;
 }
 
 export const WAITLIST_ENDPOINT = '/api/waitlist';
