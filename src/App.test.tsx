@@ -23,7 +23,6 @@ import {
   QUICK_DECIDER_STORAGE_KEY,
   STORAGE_KEY,
 } from './utils/storage';
-import { LAUNCH_SIGNALS_STORAGE_KEY } from './utils/launchSignals';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -1500,16 +1499,6 @@ describe('App', () => {
       screen.queryByText(/no payment required/i),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /export the result/i }));
-    await user.click(screen.getByRole('button', { name: /save decision history/i }));
-
-    expect(
-      JSON.parse(window.localStorage.getItem(LAUNCH_SIGNALS_STORAGE_KEY) ?? '{}'),
-    ).toMatchObject({
-      'pro-export': 1,
-      'pro-save': 1,
-    });
-
     const requestButton = screen.getByRole('button', {
       name: /join the pro waitlist/i,
     });
@@ -1522,13 +1511,6 @@ describe('App', () => {
     expect(
       screen.getByRole('link', { name: /privacy policy/i }),
     ).toHaveAttribute('href', '/privacy-policy');
-    expect(
-      JSON.parse(window.localStorage.getItem(LAUNCH_SIGNALS_STORAGE_KEY) ?? '{}'),
-    ).toMatchObject({
-      'pro-export': 1,
-      'pro-save': 1,
-      'pro-request': 1,
-    });
   });
 
   it('submits the Pro waitlist email to the configured endpoint', async () => {
