@@ -200,7 +200,6 @@ export interface TranslationCopy {
     proWaitlistPrivacyLink: string;
     proWaitlistSuccess: string;
     proWaitlistInvalidEmail: string;
-    proWaitlistMissingEndpoint: string;
     proWaitlistSubmitError: string;
   };
   footer: {
@@ -513,8 +512,6 @@ export const copy: TranslationCopy = {
     proWaitlistPrivacyLink: 'Privacy Policy',
     proWaitlistSuccess: 'Thanks for joining!',
     proWaitlistInvalidEmail: 'Enter a valid email address.',
-    proWaitlistMissingEndpoint:
-      'The waitlist is not configured yet. Add VITE_WAITLIST_ENDPOINT to enable submissions.',
     proWaitlistSubmitError:
       'We could not add you to the waitlist. Try again in a moment.',
   },
