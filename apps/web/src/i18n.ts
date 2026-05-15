@@ -197,8 +197,6 @@ export interface TranslationCopy {
     proWaitlistSubmit: string;
     proWaitlistSubmitting: string;
     proWaitlistPrivacy: string;
-    proWaitlistPrivacyPrefix: string;
-    proWaitlistPrivacySuffix: string;
     proWaitlistPrivacyLink: string;
     proWaitlistSuccess: string;
     proWaitlistInvalidEmail: string;
@@ -347,7 +345,7 @@ export const copy: TranslationCopy = {
       },
       {
         heading: 'Service providers',
-        body: 'Waitlist emails are processed by ClearPick infrastructure used to run the signup list, including the waitlist endpoint and database. ClearPick uses request limits and spam checks to protect the form from automated abuse. ClearPick does not sell personal information.',
+        body: 'Waitlist emails are processed by ClearPick infrastructure used to run the signup list, including the waitlist endpoint and database. ClearPick uses spam checks to protect the form from automated abuse. ClearPick does not sell personal information.',
       },
       {
         heading: 'Retention and choices',
@@ -512,9 +510,7 @@ export const copy: TranslationCopy = {
     proWaitlistSubmitting: 'Joining...',
     proWaitlistPrivacy:
       'We will only use your email for ClearPick Pro early access updates.',
-    proWaitlistPrivacyPrefix: 'Read the',
-    proWaitlistPrivacyLink: 'privacy policy',
-    proWaitlistPrivacySuffix: 'for details.',
+    proWaitlistPrivacyLink: 'Privacy Policy',
     proWaitlistSuccess: 'Thanks for joining!',
     proWaitlistInvalidEmail: 'Enter a valid email address.',
     proWaitlistMissingEndpoint:
