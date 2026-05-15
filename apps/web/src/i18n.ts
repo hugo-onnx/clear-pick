@@ -197,6 +197,7 @@ export interface TranslationCopy {
     proWaitlistSubmit: string;
     proWaitlistSubmitting: string;
     proWaitlistPrivacy: string;
+    proWaitlistPrivacyPrefix: string;
     proWaitlistPrivacySuffix: string;
     proWaitlistPrivacyLink: string;
     proWaitlistSuccess: string;
@@ -510,7 +511,8 @@ export const copy: TranslationCopy = {
     proWaitlistSubmit: 'Join waitlist',
     proWaitlistSubmitting: 'Joining...',
     proWaitlistPrivacy:
-      'We will only use your email for ClearPick Pro early access updates. Read the',
+      'We will only use your email for ClearPick Pro early access updates.',
+    proWaitlistPrivacyPrefix: 'Read the',
     proWaitlistPrivacyLink: 'privacy policy',
     proWaitlistPrivacySuffix: 'for details.',
     proWaitlistSuccess: 'Thanks for joining!',
