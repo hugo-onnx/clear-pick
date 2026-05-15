@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
+import { WAITLIST_ENDPOINT } from '@clearpick/shared';
 import {
   Dialog,
   DialogContent,
@@ -315,13 +316,8 @@ export function ResultsPanel({
       return;
     }
 
-    const endpoint = import.meta.env.VITE_WAITLIST_ENDPOINT?.trim();
-
-    if (!endpoint) {
-      setWaitlistStatus('error');
-      setWaitlistError(copy.proWaitlistMissingEndpoint);
-      return;
-    }
+    const endpoint =
+      import.meta.env.VITE_WAITLIST_ENDPOINT?.trim() || WAITLIST_ENDPOINT;
 
     setWaitlistStatus('submitting');
     setWaitlistError('');

@@ -1,0 +1,21 @@
+{
+  "name": "@clearpick/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --platform=browser --outfile=../web/dist/_worker.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clearpick/shared": "workspace:*",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

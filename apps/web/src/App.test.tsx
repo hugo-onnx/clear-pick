@@ -1513,7 +1513,34 @@ describe('App', () => {
     ).toHaveAttribute('href', '/privacy-policy');
   });
 
-  it('submits the Pro waitlist email to the configured endpoint', async () => {
+  it('submits the Pro waitlist email to the default endpoint', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(
+      screen.getByRole('button', { name: /join the pro waitlist/i }),
+    );
+    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
+    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/waitlist', {
+        body: JSON.stringify({ email: 'person@example.com' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+    });
+    expect(screen.getByText(/you are on the waitlist/i)).toBeInTheDocument();
+  });
+
+  it('submits the Pro waitlist email to a configured endpoint override', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
@@ -1538,7 +1565,6 @@ describe('App', () => {
         method: 'POST',
       });
     });
-    expect(screen.getByText(/you are on the waitlist/i)).toBeInTheDocument();
   });
 
   it('does not submit the Pro waitlist form with an invalid email', async () => {
@@ -1558,27 +1584,6 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /join waitlist/i }));
 
     expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it('explains when the Pro waitlist endpoint is not configured', async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-    saveScoredMatrix();
-
-    render(<App />);
-
-    await user.click(screen.getByRole('button', { name: /show results/i }));
-    await user.click(
-      screen.getByRole('button', { name: /join the pro waitlist/i }),
-    );
-    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
-    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
-
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      /waitlist is not configured yet/i,
-    );
   });
 
   it('surfaces Pro waitlist submission failures', async () => {
