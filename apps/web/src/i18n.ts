@@ -513,7 +513,7 @@ export const copy: TranslationCopy = {
       'We will only use your email for ClearPick Pro early access updates. Read the',
     proWaitlistPrivacyLink: 'privacy policy',
     proWaitlistPrivacySuffix: 'for details.',
-    proWaitlistSuccess: 'You are on the waitlist.',
+    proWaitlistSuccess: 'Thanks for joining!',
     proWaitlistInvalidEmail: 'Enter a valid email address.',
     proWaitlistMissingEndpoint:
       'The waitlist is not configured yet. Add VITE_WAITLIST_ENDPOINT to enable submissions.',
