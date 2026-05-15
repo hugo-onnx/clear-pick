@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   Bot,
+  CircleCheck,
   Download,
   Eye,
   ListOrdered,
@@ -810,13 +811,21 @@ export function ResultsPanel({
               </div>
 
               {waitlistStatus === 'succeeded' ? (
-                <p
-                  className="rounded-lg border border-border bg-muted px-3 py-2 text-center text-sm font-medium text-foreground"
+                <div
+                  className="flex flex-col items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-5 text-center shadow-[0_18px_50px_rgba(16,185,129,0.16)]"
                   id={waitlistSuccessId}
                   role="status"
                 >
-                  {copy.proWaitlistSuccess}
-                </p>
+                  <span
+                    aria-hidden="true"
+                    className="flex size-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+                  >
+                    <CircleCheck className="size-6" strokeWidth={2.5} />
+                  </span>
+                  <span className="text-base font-semibold text-foreground">
+                    {copy.proWaitlistSuccess}
+                  </span>
+                </div>
               ) : null}
 
               {waitlistStatus === 'error' && waitlistError ? (
