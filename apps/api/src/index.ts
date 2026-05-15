@@ -8,11 +8,40 @@ import {
 export interface Env {
   ASSETS: Fetcher;
   WAITLIST_DB: D1Database;
+  WAITLIST_RATE_LIMITER: {
+    limit(options: { key: string }): Promise<{ success: boolean }>;
+  };
 }
 
 const app = new Hono<{ Bindings: Env }>();
+const MAX_WAITLIST_BODY_BYTES = 4096;
 
 app.post('/api/waitlist', async (c) => {
+  const contentType = c.req.header('content-type') ?? '';
+
+  if (!contentType.toLowerCase().includes('application/json')) {
+    return c.json({ error: 'unsupported_media_type' }, 415);
+  }
+
+  const contentLength = c.req.header('content-length');
+
+  if (
+    contentLength &&
+    Number.isFinite(Number(contentLength)) &&
+    Number(contentLength) > MAX_WAITLIST_BODY_BYTES
+  ) {
+    return c.json({ error: 'request_too_large' }, 413);
+  }
+
+  const ip = c.req.header('cf-connecting-ip') ?? null;
+  const rateLimit = await c.env.WAITLIST_RATE_LIMITER.limit({
+    key: ip ?? 'anonymous',
+  });
+
+  if (!rateLimit.success) {
+    return c.json({ error: 'rate_limited' }, 429);
+  }
+
   let body: Partial<WaitlistSignupRequest>;
 
   try {
@@ -23,6 +52,10 @@ app.post('/api/waitlist', async (c) => {
 
   if (typeof body.email !== 'string' || !isValidWaitlistEmail(body.email)) {
     return c.json({ error: 'invalid_email' }, 400);
+  }
+
+  if (typeof body.website === 'string' && body.website.trim().length > 0) {
+    return c.body(null, 204);
   }
 
   const originalEmail = body.email.trim();
