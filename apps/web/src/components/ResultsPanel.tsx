@@ -751,6 +751,7 @@ export function ResultsPanel({
           open={isWaitlistDialogOpen}
         >
           <DialogContent
+            className="sm:max-w-[480px]"
             onCloseAutoFocus={(event) => {
               event.preventDefault();
               waitlistTriggerRef.current?.focus();
@@ -825,10 +826,10 @@ export function ResultsPanel({
                   <span className="font-mono text-xl font-medium text-cyan-950">
                     {copy.proWaitlistSuccess}
                   </span>
-                  <span className="mt-4 max-w-[19rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800">
-                    {
-                      "You're on the ClearPick Pro waitlist.\nWe'll be in touch soon."
-                    }
+                  <span className="mt-4 max-w-[24rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800 sm:[&>span:first-child]:whitespace-nowrap">
+                    <span>You're on the ClearPick Pro waitlist.</span>
+                    {'\n'}
+                    <span>We'll be in touch soon.</span>
                   </span>
                 </div>
               ) : null}
