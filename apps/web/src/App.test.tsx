@@ -1531,7 +1531,7 @@ describe('App', () => {
     expect(screen.getByLabelText(/email address/i)).not.toHaveFocus();
   });
 
-  it('submits the Pro waitlist email to the default endpoint', async () => {
+  it('submits the Pro waitlist email to the waitlist endpoint', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -1604,40 +1604,9 @@ describe('App', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('submits the Pro waitlist email to a configured endpoint override', async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
-    vi.stubGlobal('fetch', fetchMock);
-    saveScoredMatrix();
-
-    render(<App />);
-
-    await user.click(screen.getByRole('button', { name: /show results/i }));
-    await user.click(
-      screen.getByRole('button', { name: /join the pro waitlist/i }),
-    );
-    await user.type(screen.getByLabelText(/email address/i), 'person@example.com');
-    await user.click(screen.getByRole('button', { name: /join waitlist/i }));
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith('https://example.test/waitlist', {
-        body: JSON.stringify({
-          email: 'person@example.com',
-          website: '',
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
-    });
-  });
-
   it('does not submit the Pro waitlist form with an invalid email', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
     vi.stubGlobal('fetch', fetchMock);
     saveScoredMatrix();
 
@@ -1659,7 +1628,6 @@ describe('App', () => {
       .fn()
       .mockResolvedValueOnce(new Response(null, { status: 500 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    vi.stubEnv('VITE_WAITLIST_ENDPOINT', 'https://example.test/waitlist');
     vi.stubGlobal('fetch', fetchMock);
     saveScoredMatrix();
 
