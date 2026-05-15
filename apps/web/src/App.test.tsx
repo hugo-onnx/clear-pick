@@ -1513,6 +1513,21 @@ describe('App', () => {
     ).toHaveAttribute('href', '/privacy-policy');
   });
 
+  it('opens the Pro waitlist dialog without focusing the email field', async () => {
+    const user = userEvent.setup();
+    saveScoredMatrix();
+
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: /show results/i }));
+    await user.click(screen.getByRole('button', { name: /join the pro waitlist/i }));
+
+    expect(
+      screen.getByRole('dialog', { name: /join the pro waitlist/i }),
+    ).toHaveFocus();
+    expect(screen.getByLabelText(/email address/i)).not.toHaveFocus();
+  });
+
   it('submits the Pro waitlist email to the default endpoint', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
@@ -1644,7 +1659,9 @@ describe('App', () => {
     await user.click(requestButton);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/email address/i)).toHaveFocus();
+      expect(
+        screen.getByRole('dialog', { name: /join the pro waitlist/i }),
+      ).toHaveFocus();
     });
 
     await user.keyboard('{Escape}');
