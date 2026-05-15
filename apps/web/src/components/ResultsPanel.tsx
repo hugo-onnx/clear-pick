@@ -880,14 +880,17 @@ export function ResultsPanel({
             </form>
 
             <p className="text-center text-xs text-muted-foreground">
-              {copy.proWaitlistPrivacy}{' '}
-              <a
-                className="underline underline-offset-2 hover:no-underline"
-                href="/privacy-policy"
-              >
-                {copy.proWaitlistPrivacyLink}
-              </a>{' '}
-              {copy.proWaitlistPrivacySuffix}
+              <span className="block">{copy.proWaitlistPrivacy}</span>
+              <span className="block">
+                {copy.proWaitlistPrivacyPrefix}{' '}
+                <a
+                  className="underline underline-offset-2 hover:no-underline"
+                  href="/privacy-policy"
+                >
+                  {copy.proWaitlistPrivacyLink}
+                </a>{' '}
+                {copy.proWaitlistPrivacySuffix}
+              </span>
             </p>
           </DialogContent>
         </Dialog>
