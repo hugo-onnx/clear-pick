@@ -1530,7 +1530,10 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/waitlist', {
-        body: JSON.stringify({ email: 'person@example.com' }),
+        body: JSON.stringify({
+          email: 'person@example.com',
+          website: '',
+        }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -1576,7 +1579,10 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('https://example.test/waitlist', {
-        body: JSON.stringify({ email: 'person@example.com' }),
+        body: JSON.stringify({
+          email: 'person@example.com',
+          website: '',
+        }),
         headers: {
           'Content-Type': 'application/json',
         },
