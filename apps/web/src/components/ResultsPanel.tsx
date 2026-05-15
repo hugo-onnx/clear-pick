@@ -167,6 +167,7 @@ export function ResultsPanel({
   >('idle');
   const [waitlistError, setWaitlistError] = useState('');
   const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
+  const [waitlistWebsite, setWaitlistWebsite] = useState('');
   const rankingDetailsRef = useRef<HTMLElement | null>(null);
   const resetDialogRef = useRef<HTMLDivElement | null>(null);
   const resetTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -293,6 +294,7 @@ export function ResultsPanel({
   const handleOpenWaitlistDialog = () => {
     setWaitlistError('');
     setWaitlistStatus(hasJoinedWaitlist ? 'succeeded' : 'idle');
+    setWaitlistWebsite('');
     setIsWaitlistDialogOpen(true);
   };
 
@@ -302,6 +304,7 @@ export function ResultsPanel({
     if (isOpen) {
       setWaitlistError('');
       setWaitlistStatus(hasJoinedWaitlist ? 'succeeded' : 'idle');
+      setWaitlistWebsite('');
     }
   };
 
@@ -332,7 +335,10 @@ export function ResultsPanel({
 
     try {
       const response = await fetch(endpoint, {
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          website: waitlistWebsite,
+        }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -346,6 +352,7 @@ export function ResultsPanel({
       setWaitlistStatus('succeeded');
       setHasJoinedWaitlist(true);
       setWaitlistEmail('');
+      setWaitlistWebsite('');
     } catch {
       setWaitlistStatus('error');
       setWaitlistError(copy.proWaitlistSubmitError);
@@ -811,22 +818,34 @@ export function ResultsPanel({
                 </div>
               </div>
 
+              <input
+                aria-hidden="true"
+                autoComplete="off"
+                className="hidden"
+                disabled={waitlistStatus === 'submitting' || hasJoinedWaitlist}
+                name="website"
+                onChange={(event) => setWaitlistWebsite(event.target.value)}
+                tabIndex={-1}
+                type="text"
+                value={waitlistWebsite}
+              />
+
               {waitlistStatus === 'succeeded' ? (
                 <div
-                  className="flex flex-col items-center rounded-2xl border border-cyan-400/60 bg-cyan-400/10 px-5 py-8 text-center shadow-[0_18px_50px_rgba(8,145,178,0.12)]"
+                  className="flex flex-col items-center rounded-2xl border border-cyan-400/60 bg-cyan-400/10 px-5 py-6 text-center shadow-[0_18px_50px_rgba(8,145,178,0.12)]"
                   id={waitlistSuccessId}
                   role="status"
                 >
                   <span
                     aria-hidden="true"
-                    className="mb-5 flex size-16 items-center justify-center rounded-full bg-cyan-300/35 text-cyan-700"
+                    className="mb-4 flex size-14 items-center justify-center rounded-full bg-cyan-300/35 text-cyan-700"
                   >
-                    <Check className="size-8" strokeWidth={3} />
+                    <Check className="size-7" strokeWidth={3} />
                   </span>
                   <span className="font-mono text-xl font-medium text-cyan-950">
                     {copy.proWaitlistSuccess}
                   </span>
-                  <span className="mt-4 max-w-[24rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800 sm:[&>span:first-child]:whitespace-nowrap">
+                  <span className="mt-3 max-w-[24rem] whitespace-pre-line font-mono text-sm leading-6 text-cyan-800 sm:[&>span:first-child]:whitespace-nowrap">
                     <span>You're on the ClearPick Pro waitlist.</span>
                     {'\n'}
                     <span>We'll be in touch soon.</span>
