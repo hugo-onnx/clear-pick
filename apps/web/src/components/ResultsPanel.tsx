@@ -37,6 +37,24 @@ interface ResultsPanelProps {
   onReset: () => void;
 }
 
+const WAITLIST_SESSION_STORAGE_KEY = 'clearpick:pro-waitlist-submitted';
+
+function hasSubmittedWaitlistInSession(): boolean {
+  try {
+    return window.sessionStorage.getItem(WAITLIST_SESSION_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function storeWaitlistSubmittedInSession(): void {
+  try {
+    window.sessionStorage.setItem(WAITLIST_SESSION_STORAGE_KEY, 'true');
+  } catch {
+    // The in-memory state still prevents duplicate submits for this page view.
+  }
+}
+
 function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
 }
@@ -167,7 +185,9 @@ export function ResultsPanel({
     'idle' | 'submitting' | 'succeeded' | 'error'
   >('idle');
   const [waitlistError, setWaitlistError] = useState('');
-  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
+  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(
+    hasSubmittedWaitlistInSession,
+  );
   const [waitlistWebsite, setWaitlistWebsite] = useState('');
   const rankingDetailsRef = useRef<HTMLElement | null>(null);
   const resetDialogRef = useRef<HTMLDivElement | null>(null);
@@ -352,6 +372,7 @@ export function ResultsPanel({
 
       setWaitlistStatus('succeeded');
       setHasJoinedWaitlist(true);
+      storeWaitlistSubmittedInSession();
       setWaitlistEmail('');
       setWaitlistWebsite('');
     } catch {
@@ -889,16 +910,12 @@ export function ResultsPanel({
 
             <p className="text-center text-xs text-muted-foreground">
               <span className="block">{copy.proWaitlistPrivacy}</span>
-              <span className="block">
-                {copy.proWaitlistPrivacyPrefix}{' '}
-                <a
-                  className="underline underline-offset-2 hover:no-underline"
-                  href="/privacy-policy"
-                >
-                  {copy.proWaitlistPrivacyLink}
-                </a>{' '}
-                {copy.proWaitlistPrivacySuffix}
-              </span>
+              <a
+                className="block underline underline-offset-2 hover:no-underline"
+                href="/privacy-policy"
+              >
+                {copy.proWaitlistPrivacyLink}
+              </a>
             </p>
           </DialogContent>
         </Dialog>
