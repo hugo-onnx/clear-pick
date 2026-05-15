@@ -812,13 +812,13 @@ export function ResultsPanel({
 
               {waitlistStatus === 'succeeded' ? (
                 <div
-                  className="flex flex-col items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-5 text-center shadow-[0_18px_50px_rgba(16,185,129,0.16)]"
+                  className="flex flex-col items-center gap-3 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-5 text-center shadow-[0_18px_50px_rgba(8,145,178,0.16)]"
                   id={waitlistSuccessId}
                   role="status"
                 >
                   <span
                     aria-hidden="true"
-                    className="flex size-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+                    className="flex size-12 items-center justify-center rounded-full bg-cyan-600 text-white shadow-lg shadow-cyan-600/25"
                   >
                     <CircleCheck className="size-6" strokeWidth={2.5} />
                   </span>
